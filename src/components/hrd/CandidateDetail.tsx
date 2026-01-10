@@ -1,7 +1,16 @@
-import { useState } from 'react';
-import { ArrowLeft, Mail, Phone, FileText, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import DecisionPanel from './DecisionPanel';
+import { useState } from "react";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  FileText,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+} from "lucide-react";
+import { useApp } from "../../context/AppContext";
+import DecisionPanel from "./DecisionPanel";
 
 interface CandidateDetailProps {
   candidateId: string;
@@ -10,7 +19,7 @@ interface CandidateDetailProps {
 export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
   const { applications } = useApp();
   const [showDecisionPanel, setShowDecisionPanel] = useState(false);
-  const [decision, setDecision] = useState<'invite' | 'reject' | null>(null);
+  const [decision, setDecision] = useState<"invite" | "reject" | null>(null);
 
   const candidate = applications.find((app) => app.id === candidateId);
 
@@ -22,7 +31,7 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
     );
   }
 
-  const handleDecision = (type: 'invite' | 'reject') => {
+  const handleDecision = (type: "invite" | "reject") => {
     setDecision(type);
     setShowDecisionPanel(true);
   };
@@ -69,13 +78,25 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
                   <Phone className="w-4 h-4 mr-1" />
                   +62 812-3456-7890
                 </span>
+                {candidate.resumeLink && (
+                  <a
+                    href={candidate.resumeLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center text-blue-600 hover:text-blue-800"
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    CV PDF
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                )}
               </div>
             </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500 mb-2">Match Score</p>
             <p className="text-5xl font-bold text-blue-600">
-              {candidate.recommendationScore || '--'}
+              {candidate.recommendationScore || "--"}
             </p>
           </div>
         </div>
@@ -83,11 +104,15 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm text-gray-600 mb-1">Status</p>
-            <p className="font-semibold text-gray-900 capitalize">{candidate.status}</p>
+            <p className="font-semibold text-gray-900 capitalize">
+              {candidate.status}
+            </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm text-gray-600 mb-1">Applied Date</p>
-            <p className="font-semibold text-gray-900">{candidate.appliedDate}</p>
+            <p className="font-semibold text-gray-900">
+              {candidate.appliedDate}
+            </p>
           </div>
         </div>
 
@@ -97,13 +122,15 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
             CV Summary
           </h2>
           <p className="text-gray-700 leading-relaxed">
-            {candidate.cvSummary || 'No summary available'}
+            {candidate.cvSummary || "No summary available"}
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Authenticity Analysis</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Authenticity Analysis
+        </h2>
 
         {candidate.authenticityScore ? (
           <div className="space-y-4">
@@ -156,24 +183,29 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
                   className="bg-orange-600 h-3 rounded-full"
-                  style={{ width: `${candidate.authenticityScore.aiGenerated}%` }}
+                  style={{
+                    width: `${candidate.authenticityScore.aiGenerated}%`,
+                  }}
                 ></div>
               </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-              <p className="text-blue-900 font-semibold mb-1">Analysis Summary</p>
+              <p className="text-blue-900 font-semibold mb-1">
+                Analysis Summary
+              </p>
               <p className="text-blue-700 text-sm">
-                This candidate shows{' '}
+                This candidate shows{" "}
                 {candidate.authenticityScore.authentic >= 80
-                  ? 'high authenticity'
+                  ? "high authenticity"
                   : candidate.authenticityScore.authentic >= 60
-                  ? 'moderate authenticity'
-                  : 'low authenticity'}{' '}
-                in their responses. The content appears to be{' '}
+                  ? "moderate authenticity"
+                  : "low authenticity"}{" "}
+                in their responses. The content appears to be{" "}
                 {candidate.authenticityScore.aiGenerated < 15
-                  ? 'genuine and personally crafted'
-                  : 'potentially AI-assisted'}.
+                  ? "genuine and personally crafted"
+                  : "potentially AI-assisted"}
+                .
               </p>
             </div>
           </div>
@@ -182,19 +214,29 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
         )}
       </div>
 
-      {candidate.validationResponses && candidate.validationResponses.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Validation Log</h2>
-          <div className="space-y-4">
-            {candidate.validationResponses.map((response, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                <p className="font-semibold text-gray-900 mb-2">Q: {response.question}</p>
-                <p className="text-gray-700 bg-gray-50 p-3 rounded">A: {response.answer}</p>
-              </div>
-            ))}
+      {candidate.validationResponses &&
+        candidate.validationResponses.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Validation Log
+            </h2>
+            <div className="space-y-4">
+              {candidate.validationResponses.map((response, idx) => (
+                <div
+                  key={idx}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <p className="font-semibold text-gray-900 mb-2">
+                    Q: {response.question}
+                  </p>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                    A: {response.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className="bg-white rounded-lg shadow-md p-8">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Decision Panel</h2>
@@ -203,14 +245,14 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
         </p>
         <div className="flex space-x-4">
           <button
-            onClick={() => handleDecision('invite')}
+            onClick={() => handleDecision("invite")}
             className="flex-1 bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition font-semibold flex items-center justify-center space-x-2"
           >
             <CheckCircle className="w-5 h-5" />
             <span>Invite to Interview</span>
           </button>
           <button
-            onClick={() => handleDecision('reject')}
+            onClick={() => handleDecision("reject")}
             className="flex-1 bg-red-600 text-white py-4 rounded-lg hover:bg-red-700 transition font-semibold flex items-center justify-center space-x-2"
           >
             <XCircle className="w-5 h-5" />

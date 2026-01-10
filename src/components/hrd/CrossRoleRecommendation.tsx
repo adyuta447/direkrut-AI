@@ -1,16 +1,17 @@
-import { Search, TrendingUp, Users, Sparkles } from 'lucide-react';
-import { useState } from 'react';
-import { useApp } from '../../context/AppContext';
-import { mockJobs } from '../../mockData';
+import { Search, TrendingUp, Users, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { useApp } from "../../context/AppContext";
 
 export default function CrossRoleRecommendation() {
-  const { applications } = useApp();
-  const [selectedCandidate, setSelectedCandidate] = useState('');
-  const [recommendations, setRecommendations] = useState<Array<{
-    role: string;
-    matchScore: number;
-    reason: string;
-  }>>([]);
+  const { applications, jobs } = useApp();
+  const [selectedCandidate, setSelectedCandidate] = useState("");
+  const [recommendations, setRecommendations] = useState<
+    Array<{
+      role: string;
+      matchScore: number;
+      reason: string;
+    }>
+  >([]);
 
   const handleSearch = () => {
     if (!selectedCandidate) return;
@@ -20,13 +21,13 @@ export default function CrossRoleRecommendation() {
 
     const currentScore = candidate.recommendationScore || 75;
 
-    const crossRoleMatches = mockJobs
+    const crossRoleMatches = jobs
       .filter((job) => job.id !== candidate.jobId)
       .map((job) => {
         const variance = Math.floor(Math.random() * 30) - 15;
         const score = Math.min(95, Math.max(50, currentScore + variance));
 
-        let reason = '';
+        let reason = "";
         if (score >= 85) {
           reason = `Strong transferable skills and experience align well with ${job.title} requirements.`;
         } else if (score >= 70) {
@@ -38,7 +39,7 @@ export default function CrossRoleRecommendation() {
         return {
           role: `${job.title} at ${job.company}`,
           matchScore: score,
-          reason
+          reason,
         };
       })
       .sort((a, b) => b.matchScore - a.matchScore)
@@ -49,15 +50,10 @@ export default function CrossRoleRecommendation() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Cross-Role Recommendation</h1>
-        <p className="text-gray-600">
-          Find alternative role matches for candidates using AI-powered analysis
-        </p>
-      </div>
-
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Search for Recommendations</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Search for Recommendations
+        </h2>
 
         <div className="flex space-x-4">
           <div className="flex-1">
@@ -111,7 +107,9 @@ export default function CrossRoleRecommendation() {
                     <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                       {idx + 1}
                     </span>
-                    <h3 className="text-xl font-bold text-gray-900">{rec.role}</h3>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {rec.role}
+                    </h3>
                   </div>
                   <p className="text-gray-600 ml-11">{rec.reason}</p>
                 </div>
@@ -122,10 +120,10 @@ export default function CrossRoleRecommendation() {
                     <div
                       className={`text-3xl font-bold ${
                         rec.matchScore >= 85
-                          ? 'text-green-600'
+                          ? "text-green-600"
                           : rec.matchScore >= 70
-                          ? 'text-blue-600'
-                          : 'text-yellow-600'
+                          ? "text-blue-600"
+                          : "text-yellow-600"
                       }`}
                     >
                       {rec.matchScore}
@@ -149,12 +147,14 @@ export default function CrossRoleRecommendation() {
             <div className="flex items-start space-x-3">
               <Users className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div>
-                <p className="text-blue-900 font-semibold mb-1">AI Analysis Summary</p>
+                <p className="text-blue-900 font-semibold mb-1">
+                  AI Analysis Summary
+                </p>
                 <p className="text-blue-700">
-                  Based on the candidate's CV, skills, and validation responses, we've
-                  identified {recommendations.length} alternative roles where their
-                  transferable skills could be valuable. Consider reaching out to discuss
-                  these opportunities.
+                  Based on the candidate's CV, skills, and validation responses,
+                  we've identified {recommendations.length} alternative roles
+                  where their transferable skills could be valuable. Consider
+                  reaching out to discuss these opportunities.
                 </p>
               </div>
             </div>

@@ -1,15 +1,14 @@
-import { useState } from 'react';
-import { Upload, FileText, CheckCircle } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import { mockJobs } from '../../mockData';
+import { useState } from "react";
+import { Upload, FileText, CheckCircle } from "lucide-react";
+import { useApp } from "../../context/AppContext";
 
 interface ApplyPageProps {
   onNext: () => void;
 }
 
 export default function ApplyPage({ onNext }: ApplyPageProps) {
-  const { currentUser, addApplication } = useApp();
-  const [selectedJob, setSelectedJob] = useState('');
+  const { currentUser, addApplication, jobs } = useApp();
+  const [selectedJob, setSelectedJob] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -31,7 +30,7 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
     e.preventDefault();
     if (!selectedJob || !cvFile) return;
 
-    const job = mockJobs.find(j => j.id === selectedJob);
+    const job = jobs.find((j) => j.id === selectedJob);
     if (!job) return;
 
     const newApplication = {
@@ -41,9 +40,9 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
       jobId: job.id,
       jobTitle: job.title,
       cvFile: cvFile,
-      validationStatus: 'pending' as const,
-      status: 'submitted' as const,
-      appliedDate: new Date().toISOString().split('T')[0]
+      validationStatus: "pending" as const,
+      status: "submitted" as const,
+      appliedDate: new Date().toISOString().split("T")[0],
     };
 
     addApplication(newApplication);
@@ -52,11 +51,6 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Apply for a Position</h1>
-        <p className="text-gray-600">Upload your CV and select the position you're interested in</p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -69,7 +63,7 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Choose a position...</option>
-            {mockJobs.map(job => (
+            {jobs.map((job) => (
               <option key={job.id} value={job.id}>
                 {job.title} - {job.company}
               </option>
@@ -79,12 +73,16 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
           {selectedJob && (
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
               {(() => {
-                const job = mockJobs.find(j => j.id === selectedJob);
+                const job = jobs.find((j) => j.id === selectedJob);
                 return job ? (
                   <>
-                    <h3 className="font-semibold text-gray-900 mb-2">{job.title}</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      {job.title}
+                    </h3>
                     <p className="text-gray-700 mb-2">{job.company}</p>
-                    <p className="text-gray-600 text-sm mb-3">{job.description}</p>
+                    <p className="text-gray-600 text-sm mb-3">
+                      {job.description}
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {job.requirements.map((req, idx) => (
                         <span
@@ -108,21 +106,26 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
           </label>
 
           <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
               isDragging
-                ? 'border-blue-500 bg-blue-50'
+                ? "border-blue-500 bg-blue-50"
                 : cvFile
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-300 hover:border-gray-400'
+                ? "border-green-500 bg-green-50"
+                : "border-gray-300 hover:border-gray-400"
             }`}
           >
             {cvFile ? (
               <div className="flex flex-col items-center">
                 <CheckCircle className="w-12 h-12 text-green-600 mb-3" />
-                <p className="text-gray-900 font-semibold mb-1">{cvFile.name}</p>
+                <p className="text-gray-900 font-semibold mb-1">
+                  {cvFile.name}
+                </p>
                 <p className="text-gray-600 text-sm mb-4">
                   {(cvFile.size / 1024).toFixed(2)} KB
                 </p>

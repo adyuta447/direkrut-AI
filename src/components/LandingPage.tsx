@@ -1,8 +1,9 @@
-import { Briefcase, Users, Zap, CheckCircle } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { Briefcase, Users, Zap, CheckCircle, MapPin } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 export default function LandingPage() {
-  const { setCurrentPage } = useApp();
+  const { setCurrentPage, jobs } = useApp();
+  const featuredJobs = jobs.slice(0, 2);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -15,13 +16,13 @@ export default function LandingPage() {
             </div>
             <div className="space-x-4">
               <button
-                onClick={() => setCurrentPage('jobs')}
+                onClick={() => setCurrentPage("jobs")}
                 className="text-gray-600 hover:text-gray-900 font-medium"
               >
                 Browse Jobs
               </button>
               <button
-                onClick={() => setCurrentPage('auth')}
+                onClick={() => setCurrentPage("auth")}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
               >
                 Login
@@ -38,18 +39,19 @@ export default function LandingPage() {
             <span className="text-blue-600"> AI-Powered</span> Validation
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
-            Transform your recruitment process with intelligent CV analysis, automated skill validation,
-            and data-driven candidate recommendations. Save time, reduce bias, and find the perfect fit.
+            Transform your recruitment process with intelligent CV analysis,
+            automated skill validation, and data-driven candidate
+            recommendations. Save time, reduce bias, and find the perfect fit.
           </p>
           <div className="flex justify-center space-x-4">
             <button
-              onClick={() => setCurrentPage('auth')}
+              onClick={() => setCurrentPage("auth")}
               className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg"
             >
               Apply as Candidate
             </button>
             <button
-              onClick={() => setCurrentPage('auth')}
+              onClick={() => setCurrentPage("auth")}
               className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition shadow-lg border-2 border-blue-600"
             >
               Login as HRD
@@ -62,10 +64,12 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
               <Zap className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">AI Skill Validation</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              AI Skill Validation
+            </h3>
             <p className="text-gray-600">
-              Automatically validate candidate skills through intelligent conversational analysis,
-              going beyond what's written on the CV.
+              Automatically validate candidate skills through intelligent
+              conversational analysis, going beyond what's written on the CV.
             </p>
           </div>
 
@@ -73,10 +77,12 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-4">
               <Users className="w-6 h-6 text-cyan-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Matching</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              Smart Matching
+            </h3>
             <p className="text-gray-600">
-              Get recommendation scores and cross-role suggestions based on comprehensive
-              candidate analysis and skill assessment.
+              Get recommendation scores and cross-role suggestions based on
+              comprehensive candidate analysis and skill assessment.
             </p>
           </div>
 
@@ -84,10 +90,12 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Authenticity Check</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              Authenticity Check
+            </h3>
             <p className="text-gray-600">
-              Detect generic or AI-generated responses to ensure you're evaluating
-              genuine candidate capabilities and experience.
+              Detect generic or AI-generated responses to ensure you're
+              evaluating genuine candidate capabilities and experience.
             </p>
           </div>
         </div>
@@ -97,27 +105,48 @@ export default function LandingPage() {
             Featured Opportunities
           </h2>
           <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-gray-900">Frontend Developer</h3>
-                <span className="text-sm text-blue-600 font-semibold">Full-time</span>
+            {featuredJobs.map((job) => (
+              <div
+                key={job.id}
+                className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {job.title}
+                  </h3>
+                  <span className="text-sm text-blue-600 font-semibold">
+                    {job.type}
+                  </span>
+                </div>
+                <p className="text-gray-600 mb-1">{job.company}</p>
+                <p className="text-sm text-blue-600 font-semibold mb-2">
+                  {job.department}
+                </p>
+                <div className="flex items-center text-gray-500 text-sm">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {job.location} • Posted {job.posted}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {job.requirements.slice(0, 3).map((req, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold"
+                    >
+                      {req}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <p className="text-gray-600 mb-2">Tech Innovators Inc</p>
-              <p className="text-gray-500 text-sm">Jakarta • Posted 2 days ago</p>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-gray-900">Backend Engineer</h3>
-                <span className="text-sm text-blue-600 font-semibold">Full-time</span>
+            ))}
+            {featuredJobs.length === 0 && (
+              <div className="border border-dashed border-gray-200 rounded-lg p-6 text-center text-gray-500">
+                Belum ada job terbaru dari HRD.
               </div>
-              <p className="text-gray-600 mb-2">Cloud Solutions Ltd</p>
-              <p className="text-gray-500 text-sm">Bandung • Posted 5 days ago</p>
-            </div>
+            )}
           </div>
           <div className="text-center">
             <button
-              onClick={() => setCurrentPage('jobs')}
+              onClick={() => setCurrentPage("jobs")}
               className="text-blue-600 font-semibold hover:text-blue-700 transition"
             >
               View All Jobs →
@@ -128,7 +157,9 @@ export default function LandingPage() {
 
       <footer className="bg-gray-900 text-white py-8 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-400">© 2024 TalentAI. Revolutionizing recruitment with AI.</p>
+          <p className="text-gray-400">
+            © 2024 TalentAI. Revolutionizing recruitment with AI.
+          </p>
         </div>
       </footer>
     </div>

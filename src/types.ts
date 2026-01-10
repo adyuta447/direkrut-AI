@@ -1,4 +1,4 @@
-export type UserRole = 'applicant' | 'hrd';
+export type UserRole = "applicant" | "hrd";
 
 export interface User {
   id: string;
@@ -14,6 +14,7 @@ export interface Job {
   location: string;
   type: string;
   description: string;
+  department: string;
   requirements: string[];
   posted: string;
 }
@@ -25,11 +26,12 @@ export interface Application {
   jobId: string;
   jobTitle: string;
   cvFile?: File | null;
+  resumeLink?: string;
   cvSummary?: string;
-  validationStatus: 'pending' | 'in-progress' | 'completed';
+  validationStatus: "pending" | "in-progress" | "completed";
   validationResponses?: ValidationResponse[];
   recommendationScore?: number;
-  status: 'submitted' | 'under-review' | 'interview' | 'rejected';
+  status: "submitted" | "under-review" | "interview" | "rejected";
   appliedDate: string;
   authenticityScore?: {
     authentic: number;

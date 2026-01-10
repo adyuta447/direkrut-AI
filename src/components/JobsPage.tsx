@@ -1,18 +1,20 @@
-import { useState } from 'react';
-import { Search, MapPin, Briefcase, ArrowLeft } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { mockJobs } from '../mockData';
+import { useState } from "react";
+import { Search, MapPin, Briefcase, ArrowLeft } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 export default function JobsPage() {
-  const { setCurrentPage } = useApp();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const { setCurrentPage, jobs } = useApp();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
 
-  const filteredJobs = mockJobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !locationFilter || job.location.toLowerCase().includes(locationFilter.toLowerCase());
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.company.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLocation =
+      !locationFilter ||
+      job.location.toLowerCase().includes(locationFilter.toLowerCase());
     const matchesType = !typeFilter || job.type === typeFilter;
     return matchesSearch && matchesLocation && matchesType;
   });
@@ -23,7 +25,7 @@ export default function JobsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <button
-              onClick={() => setCurrentPage('landing')}
+              onClick={() => setCurrentPage("landing")}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -34,7 +36,7 @@ export default function JobsPage() {
               <span className="text-2xl font-bold text-gray-900">TalentAI</span>
             </div>
             <button
-              onClick={() => setCurrentPage('auth')}
+              onClick={() => setCurrentPage("auth")}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Login
@@ -44,7 +46,9 @@ export default function JobsPage() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Find Your Dream Job</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+          Find Your Dream Job
+        </h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="grid md:grid-cols-4 gap-4">
@@ -82,12 +86,20 @@ export default function JobsPage() {
         </div>
 
         <div className="space-y-4">
-          {filteredJobs.map(job => (
-            <div key={job.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+          {filteredJobs.map((job) => (
+            <div
+              key={job.id}
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{job.title}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    {job.title}
+                  </h2>
                   <p className="text-lg text-gray-700 mb-1">{job.company}</p>
+                  <p className="text-sm text-blue-600 font-semibold mb-2">
+                    {job.department}
+                  </p>
                   <div className="flex items-center space-x-4 text-gray-500">
                     <span className="flex items-center">
                       <MapPin className="w-4 h-4 mr-1" />
@@ -101,7 +113,7 @@ export default function JobsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setCurrentPage('auth')}
+                  onClick={() => setCurrentPage("auth")}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
                 >
                   Apply Now
@@ -124,7 +136,9 @@ export default function JobsPage() {
 
         {filteredJobs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No jobs found matching your criteria.</p>
+            <p className="text-gray-500 text-lg">
+              No jobs found matching your criteria.
+            </p>
           </div>
         )}
       </div>
