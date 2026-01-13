@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { Briefcase, ArrowLeft } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useState } from "react";
+import { Briefcase, ArrowLeft } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
 export default function AuthPage() {
   const { setCurrentUser, setCurrentPage } = useApp();
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState<'applicant' | 'hrd'>('applicant');
+  const [role, setRole] = useState<"applicant" | "hrd">("applicant");
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''
+    name: "",
+    email: "",
+    password: "",
+    company: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -17,31 +18,35 @@ export default function AuthPage() {
 
     const user = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.name || formData.email.split('@')[0],
+      name: formData.name || formData.email.split("@")[0],
       email: formData.email,
-      role: role
+      role: role,
     };
 
     setCurrentUser(user);
-    setCurrentPage(role === 'applicant' ? 'applicant-dashboard' : 'hrd-dashboard');
+    setCurrentPage(
+      role === "applicant" ? "applicant-dashboard" : "hrd-dashboard"
+    );
   };
 
   const handleGoogleLogin = () => {
     const user = {
       id: Math.random().toString(36).substr(2, 9),
-      name: 'Demo User',
-      email: 'demo@example.com',
-      role: role
+      name: "Demo User",
+      email: "demo@example.com",
+      role: role,
     };
 
     setCurrentUser(user);
-    setCurrentPage(role === 'applicant' ? 'applicant-dashboard' : 'hrd-dashboard');
+    setCurrentPage(
+      role === "applicant" ? "applicant-dashboard" : "hrd-dashboard"
+    );
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center px-4">
       <button
-        onClick={() => setCurrentPage('landing')}
+        onClick={() => setCurrentPage("landing")}
         className="absolute top-8 left-8 flex items-center space-x-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -55,30 +60,32 @@ export default function AuthPage() {
         </div>
 
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+          {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">I am a:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            I am a:
+          </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setRole('applicant')}
+              onClick={() => setRole("applicant")}
               className={`py-3 px-4 rounded-lg border-2 font-semibold transition ${
-                role === 'applicant'
-                  ? 'border-blue-600 bg-blue-50 text-blue-600'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                role === "applicant"
+                  ? "border-blue-600 bg-blue-50 text-blue-600"
+                  : "border-gray-300 text-gray-700 hover:border-gray-400"
               }`}
             >
               Candidate
             </button>
             <button
               type="button"
-              onClick={() => setRole('hrd')}
+              onClick={() => setRole("hrd")}
               className={`py-3 px-4 rounded-lg border-2 font-semibold transition ${
-                role === 'hrd'
-                  ? 'border-blue-600 bg-blue-50 text-blue-600'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                role === "hrd"
+                  ? "border-blue-600 bg-blue-50 text-blue-600"
+                  : "border-gray-300 text-gray-700 hover:border-gray-400"
               }`}
             >
               HRD
@@ -116,44 +123,76 @@ export default function AuthPage() {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            <span className="px-2 bg-white text-gray-500">
+              Or continue with email
+            </span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 required={!isLogin}
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="John Doe"
               />
             </div>
           )}
 
+          {!isLogin && role === "hrd" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company Name
+              </label>
+              <input
+                type="text"
+                required={!isLogin && role === "hrd"}
+                value={formData.company}
+                onChange={(e) =>
+                  setFormData({ ...formData, company: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="PT Teknologi Indonesia"
+              />
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
               type="email"
               required
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
               required
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="••••••••"
             />
@@ -163,7 +202,7 @@ export default function AuthPage() {
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
           >
-            {isLogin ? 'Sign In' : 'Sign Up'}
+            {isLogin ? "Sign In" : "Sign Up"}
           </button>
         </form>
 
@@ -173,7 +212,7 @@ export default function AuthPage() {
             onClick={() => setIsLogin(!isLogin)}
             className="text-blue-600 font-semibold hover:text-blue-700"
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? "Sign Up" : "Sign In"}
           </button>
         </p>
       </div>
