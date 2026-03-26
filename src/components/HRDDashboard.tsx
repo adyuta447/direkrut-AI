@@ -5,11 +5,12 @@ import {
   TrendingUp,
   Target,
   LogOut,
-  Briefcase,
   ClipboardList,
   Menu,
   X,
   Search,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import CandidateTable from "./hrd/CandidateTable";
@@ -26,41 +27,29 @@ type HRDView =
   | "job-management";
 
 export default function HRDDashboard() {
-  const { currentUser, setCurrentUser, setCurrentPage } = useApp();
+  const { currentUser, setCurrentUser, setCurrentPage, darkMode, toggleDarkMode } = useApp();
   const [activeView, setActiveView] = useState<HRDView>("dashboard");
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
-    null
-  );
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const pageMetadata = {
-    dashboard: {
-      title: "Candidate Dashboard",
-      subtitle: "Review and manage candidate applications",
-    },
-    detail: {
-      title: "Candidate Detail",
-      subtitle: "View detailed candidate information and analysis",
-    },
-    "cross-role": {
-      title: "Cross-Role Recommendation",
-      subtitle:
-        "Find alternative role matches for candidates using AI-powered analysis",
-    },
-    "gap-analysis": {
-      title: "Gap & Growth Projection",
-      subtitle:
-        "Analyze skill gaps and create development plans for candidates",
-    },
-    "job-management": {
-      title: "Job Management",
-      subtitle:
-        "Add or update job postings that appear on landing page & job board",
-    },
+    dashboard: { title: "Candidate Dashboard", subtitle: "Review and manage candidate applications" },
+    detail: { title: "Candidate Detail", subtitle: "Detailed candidate information and analysis" },
+    "cross-role": { title: "Cross-Role Match", subtitle: "Find alternative role matches with AI" },
+    "gap-analysis": { title: "Gap & Growth", subtitle: "Analyze skill gaps and development plans" },
+    "job-management": { title: "Job Management", subtitle: "Add or update job postings" },
   };
 
-  const currentPage = pageMetadata[activeView];
+  const navItems = [
+    { id: "dashboard" as const, label: "Candidates", icon: Users },
+    { id: "detail" as const, label: "Candidate Detail", icon: FileText, disabled: !selectedCandidateId },
+    { id: "cross-role" as const, label: "Cross-Role Match", icon: Target },
+    { id: "gap-analysis" as const, label: "Gap & Growth", icon: TrendingUp },
+    { id: "job-management" as const, label: "Job Management", icon: ClipboardList },
+  ];
+
+  const currentPageMeta = pageMetadata[activeView];
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -73,162 +62,113 @@ export default function HRDDashboard() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex relative">
-      {/* Overlay for mobile */}
+    <div className="h-screen bg-white dark:bg-zinc-950 flex relative overflow-hidden">
+      {/* Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-        ></div>
+        />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`w-64 bg-white shadow-lg flex flex-col fixed lg:sticky top-0 h-screen z-40 transform transition-transform duration-300 ${
+        className={`w-60 bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800 fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Briefcase className="w-8 h-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">TalentAI</span>
+        <div className="p-5 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-sm font-bold tracking-tight">TalentAI</span>
+            <button
+              onClick={toggleDarkMode}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              {darkMode ? (
+                <Sun className="w-3.5 h-3.5 text-zinc-400" />
+              ) : (
+                <Moon className="w-3.5 h-3.5 text-zinc-500" />
+              )}
+            </button>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">HRD Portal</p>
-            <p className="font-semibold text-gray-900">{currentUser?.name}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 font-bold text-sm flex-shrink-0">
+              {currentUser?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate">{currentUser?.name}</p>
+              <p className="text-xs text-zinc-400 truncate">HRD Portal</p>
+            </div>
           </div>
         </div>
 
-        <nav className="p-4 flex-1 overflow-y-auto">
-          <button
-            onClick={() => {
-              setActiveView("dashboard");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "dashboard"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            <span className="font-medium">Candidate Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("detail");
-              setSidebarOpen(false);
-            }}
-            disabled={!selectedCandidateId}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "detail"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="font-medium">Candidate Detail</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("cross-role");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "cross-role"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Target className="w-5 h-5" />
-            <span className="font-medium">Cross-Role Match</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("gap-analysis");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "gap-analysis"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <TrendingUp className="w-5 h-5" />
-            <span className="font-medium">Gap & Growth</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("job-management");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "job-management"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <ClipboardList className="w-5 h-5" />
-            <span className="font-medium">Job Management</span>
-          </button>
+        <nav className="p-3 flex-1 overflow-y-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 px-2 mb-3">Navigation</p>
+          {navItems.map(({ id, label, icon: Icon, disabled }) => (
+            <button
+              key={id}
+              onClick={() => {
+                if (!disabled) {
+                  setActiveView(id);
+                  setSidebarOpen(false);
+                }
+              }}
+              disabled={disabled}
+              className={`sidebar-item mb-1 ${
+                activeView === id
+                  ? "sidebar-item-active"
+                  : disabled
+                  ? "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
+                  : "sidebar-item-inactive"
+              }`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span>{label}</span>
+            </button>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 mt-auto">
+        <div className="px-2 pb-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+            className="sidebar-item sidebar-item-inactive"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <span className="text-xs">Sign Out</span>
           </button>
         </div>
       </aside>
 
+      {/* Main */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Navbar */}
-        <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
-          {/* Mobile Menu Button */}
+        {/* Topbar */}
+        <header className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between gap-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition"
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
           >
-            {sidebarOpen ? (
-              <X className="w-6 h-6 text-gray-700" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-700" />
-            )}
+            {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-              {currentPage.title}
-            </h1>
-            <p className="text-sm lg:text-base text-gray-600 mt-1">
-              {currentPage.subtitle}
-            </p>
+            <h1 className="text-base font-semibold truncate">{currentPageMeta.title}</h1>
+            <p className="text-xs text-zinc-400 mt-0.5 truncate">{currentPageMeta.subtitle}</p>
           </div>
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-[280px] h-[42px] pl-12 pr-4 bg-gray-50 rounded-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+              className="w-52 h-9 pl-9 pr-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-700 dark:text-zinc-300 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-700"
             />
           </div>
-        </div>
+        </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
           {activeView === "dashboard" && (
-            <CandidateTable
-              onViewCandidate={handleViewCandidate}
-              searchTerm={searchTerm}
-            />
+            <CandidateTable onViewCandidate={handleViewCandidate} searchTerm={searchTerm} />
           )}
           {activeView === "detail" && selectedCandidateId && (
             <CandidateDetail candidateId={selectedCandidateId} />

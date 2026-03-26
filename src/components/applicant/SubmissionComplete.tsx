@@ -1,60 +1,90 @@
-import { CheckCircle, Clock, FileText } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, Clock, FileText, ArrowRight } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import AIInterviewPage from "./AIInterviewPage";
+import SchedulingModal from "./SchedulingModal";
 
 export default function SubmissionComplete() {
   const { currentUser, applications } = useApp();
+  const [aiInterviewOpen, setAiInterviewOpen] = useState(false);
+  const [schedulingOpen, setSchedulingOpen] = useState(false);
 
   const userApplications = applications.filter(
     (app) => app.applicantId === currentUser?.id
   );
+  const hasInterviewStatus = userApplications.some((app) => app.status === "interview");
+
+  if (aiInterviewOpen) {
+    return <AIInterviewPage onClose={() => setAiInterviewOpen(false)} />;
+  }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="min-h-full p-6 lg:p-8">
+      {schedulingOpen && (
+        <SchedulingModal onClose={() => setSchedulingOpen(false)} />
+      )}
+
       {userApplications.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">No applications submitted yet</p>
-          <p className="text-gray-400 mt-2">
-            Apply for a position to get started
-          </p>
+        <div className="flex flex-col items-center justify-center min-h-64 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-14 text-center">
+          <FileText className="w-10 h-10 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">No applications yet</p>
+          <p className="text-xs text-zinc-400 mt-1">Apply for a position to get started</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 flex items-start space-x-4">
-            <CheckCircle className="w-8 h-8 text-green-600 flex-shrink-0 mt-1" />
-            <div>
-              <h2 className="text-xl font-bold text-green-900 mb-2">
-                Application Submitted Successfully!
-              </h2>
-              <p className="text-green-700">
-                Your application and skill validation have been completed. The
-                HRD team will review your submission and contact you soon.
-              </p>
-            </div>
-          </div>
-
-          {userApplications.map((app) => (
-            <div key={app.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {app.jobTitle}
-                  </h3>
-                  <p className="text-gray-600">Applied on {app.appliedDate}</p>
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* AI Interview CTA — full-width, shown when shortlisted */}
+          {hasInterviewStatus && (
+            <div className="bg-zinc-900 dark:bg-white rounded-xl p-6 text-white dark:text-zinc-900">
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 dark:bg-zinc-900/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-xs">AI</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">AI Interview Ready</p>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500">First-round interview — ~20-30 min</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-zinc-300 dark:text-zinc-600 leading-relaxed max-w-lg">
+                    You've been shortlisted. Complete the AI interview below before your team interview.
+                    It covers role-specific technical and behavioral questions.
+                  </p>
                 </div>
-                <span
-                  className={`px-4 py-2 rounded-full font-semibold ${
-                    app.status === "interview"
-                      ? "bg-green-100 text-green-700"
-                      : app.status === "under-review"
-                      ? "bg-blue-100 text-blue-700"
-                      : app.status === "rejected"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setAiInterviewOpen(true)}
+                    className="inline-flex items-center gap-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 transition-opacity whitespace-nowrap"
+                  >
+                    Start Interview
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setSchedulingOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 border border-zinc-700 dark:border-zinc-300 text-zinc-400 dark:text-zinc-600 px-5 py-2.5 rounded-xl text-xs font-medium hover:bg-white/5 dark:hover:bg-zinc-900/5 transition-colors"
+                  >
+                    Schedule Technical
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Application cards */}
+          {userApplications.map((app) => (
+            <div
+              key={app.id}
+              className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-sm">{app.jobTitle}</h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">Applied {app.appliedDate}</p>
+                </div>
+                <span className="text-xs font-medium px-2.5 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                   {app.status === "interview"
-                    ? "Interview Scheduled"
+                    ? "Interview Stage"
                     : app.status === "under-review"
                     ? "Under Review"
                     : app.status === "rejected"
@@ -63,41 +93,36 @@ export default function SubmissionComplete() {
                 </span>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">
-                    Validation Status
-                  </p>
-                  <div className="flex items-center space-x-2">
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-3.5">
+                  <p className="text-xs text-zinc-400 mb-2">Validation</p>
+                  <div className="flex items-center gap-2">
                     {app.validationStatus === "completed" ? (
                       <>
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <span className="font-semibold text-gray-900">
-                          Completed
-                        </span>
+                        <CheckCircle className="w-4 h-4 text-zinc-500" />
+                        <span className="text-sm font-semibold">Completed</span>
                       </>
                     ) : (
                       <>
-                        <Clock className="w-5 h-5 text-yellow-600" />
-                        <span className="font-semibold text-gray-900">
-                          Pending
-                        </span>
+                        <Clock className="w-4 h-4 text-zinc-400" />
+                        <span className="text-sm font-semibold">Pending</span>
                       </>
                     )}
                   </div>
                 </div>
 
                 {app.recommendationScore && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-1">Match Score</p>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-3.5">
+                    <p className="text-xs text-zinc-400 mb-2">Match Score</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-zinc-200 dark:bg-zinc-700 rounded-full h-1.5">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="bg-zinc-900 dark:bg-white h-1.5 rounded-full"
                           style={{ width: `${app.recommendationScore}%` }}
-                        ></div>
+                        />
                       </div>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-sm font-bold tabular-nums">
                         {app.recommendationScore}%
                       </span>
                     </div>
@@ -105,24 +130,16 @@ export default function SubmissionComplete() {
                 )}
               </div>
 
-              {app.status === "interview" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-blue-900 font-semibold mb-1">Next Steps</p>
-                  <p className="text-blue-700">
-                    You will receive an email with interview details and
-                    schedule soon. Please check your inbox regularly.
+              {/* Status note */}
+              {(app.status === "interview" || app.status === "under-review") && (
+                <div className="mt-3 p-3.5 border border-zinc-100 dark:border-zinc-700/50 rounded-xl">
+                  <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-0.5">
+                    {app.status === "interview" ? "Action Required" : "In Progress"}
                   </p>
-                </div>
-              )}
-
-              {app.status === "under-review" && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-900 font-semibold mb-1">
-                    In Progress
-                  </p>
-                  <p className="text-yellow-700">
-                    Your application is being reviewed by our HRD team. We'll
-                    notify you of any updates.
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    {app.status === "interview"
+                      ? "Complete the AI interview above, then the team will reach out about your final interview."
+                      : "Your application is under review. We'll notify you of any updates via email."}
                   </p>
                 </div>
               )}

@@ -1,14 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  Briefcase,
-  Building2,
-  ClipboardList,
-  Edit3,
-  Save,
-  Plus,
-  MapPin,
-  CalendarClock,
-} from "lucide-react";
+import { Edit3, Save, Plus, MapPin } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Job } from "../../types";
 
@@ -45,22 +36,17 @@ export default function JobManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.title.trim() ||
-      !form.department.trim() ||
-      !form.description.trim()
-    ) {
-      setMessage("Lengkapi minimal judul, department, dan deskripsi.");
+    if (!form.title.trim() || !form.department.trim() || !form.description.trim()) {
+      setMessage("Please fill in at least title, department, and description.");
       return;
     }
 
     const requirements = form.requirementsText
       .split(",")
-      .map((req) => req.trim())
+      .map((r) => r.trim())
       .filter(Boolean);
 
     const existingJob = jobs.find((job) => job.id === editingId);
-
     const payload: Job = {
       id: editingId ?? Date.now().toString(),
       title: form.title.trim(),
@@ -75,14 +61,15 @@ export default function JobManagement() {
 
     if (editingId) {
       updateJob(payload.id, payload);
-      setMessage("Job updated.");
+      setMessage("Job updated successfully.");
     } else {
       addJob(payload);
-      setMessage("Job ditambahkan dan tampil di landing page.");
+      setMessage("Job added and now visible on the job board.");
     }
 
     setForm(initialForm);
     setEditingId(null);
+    setTimeout(() => setMessage(""), 3000);
   };
 
   const handleEdit = (job: Job) => {
@@ -96,244 +83,193 @@ export default function JobManagement() {
       type: job.type,
       company: job.company,
     });
-    setMessage("Editing mode - simpan untuk memperbarui.");
+    setMessage("");
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-end">
-        <div className="flex items-center space-x-3 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-semibold">
-          <Plus className="w-5 h-5" />
-          <span>{editingId ? "Edit Job" : "Add Job"}</span>
-        </div>
+    <div className="p-8 max-w-4xl mx-auto space-y-5">
+      {/* Header */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">Management</p>
+        <h2 className="text-3xl font-bold tracking-tight">Job Board</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          Add or update job postings visible on the landing page and job board.
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-5 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-blue-600" />
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Total Jobs", value: jobs.length },
+          { label: "Departments", value: totalDepartments },
+          { label: "Latest Post", value: jobs[0]?.posted || "—" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-4"
+          >
+            <p className="text-xs text-zinc-400 mb-1">{stat.label}</p>
+            <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Total Jobs</p>
-            <p className="text-2xl font-bold text-gray-900">{jobs.length}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-5 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Departments</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {totalDepartments}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-5 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-            <CalendarClock className="w-5 h-5 text-indigo-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Latest Posting</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {jobs[0]?.posted || "N/A"}
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center space-x-3 mb-4">
-          {editingId ? (
-            <Edit3 className="w-5 h-5 text-blue-600" />
-          ) : (
-            <ClipboardList className="w-5 h-5 text-blue-600" />
+      {/* Form */}
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+            {editingId ? "Edit Posting" : "New Posting"}
+          </p>
+          {editingId && (
+            <button
+              type="button"
+              onClick={() => { setEditingId(null); setForm(initialForm); setMessage(""); }}
+              className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            >
+              Cancel edit
+            </button>
           )}
-          <h2 className="text-xl font-semibold text-gray-900">
-            {editingId ? "Edit Job Posting" : "Add Job Posting"}
-          </h2>
         </div>
         <form className="grid md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
-          <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Job Title
-            </label>
+          <div>
+            <label className="label">Job Title</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field"
               value={form.title}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, title: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
               placeholder="Software Engineer"
             />
           </div>
-          <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Department
-            </label>
+          <div>
+            <label className="label">Department</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field"
               value={form.department}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, department: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
               placeholder="Engineering"
             />
           </div>
-          <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location
-            </label>
+          <div>
+            <label className="label">Location</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field"
               value={form.location}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, location: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
               placeholder="Jakarta / Remote"
             />
           </div>
-          <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Job Type
-            </label>
-            <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          <div>
+            <label className="label">Job Type</label>
+            <select
+              className="input-field"
               value={form.type}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, type: e.target.value }))
-              }
-              placeholder="Full-time / Contract"
-            />
+              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+            >
+              <option>Full-time</option>
+              <option>Part-time</option>
+              <option>Contract</option>
+              <option>Internship</option>
+            </select>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Required Skills
-            </label>
+            <label className="label">Required Skills <span className="normal-case text-zinc-300 dark:text-zinc-700">(comma separated)</span></label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field"
               value={form.requirementsText}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  requirementsText: e.target.value,
-                }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, requirementsText: e.target.value }))}
               placeholder="React, TypeScript, Tailwind"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Pisahkan dengan koma, contoh: React, TypeScript, Tailwind.
-            </p>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
+            <label className="label">Description</label>
             <textarea
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field resize-none"
               rows={4}
               value={form.description}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Describe the role and expectations"
+              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              placeholder="Describe the role and expectations..."
             />
           </div>
-          <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Company
-            </label>
+          <div>
+            <label className="label">Company</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="input-field"
               value={form.company}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, company: e.target.value }))
-              }
+              onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
               placeholder="TalentAI"
             />
           </div>
-          <div className="md:col-span-1 flex items-end justify-end space-x-3">
-            {editingId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(initialForm);
-                  setMessage("Beralih ke mode tambah.");
-                }}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
-              >
-                Batal edit
-              </button>
-            )}
+          <div className="flex items-end justify-end">
             <button
               type="submit"
-              className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="btn-primary flex items-center gap-2 py-3"
             >
-              {editingId ? (
-                <Save className="w-4 h-4" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              <span>{editingId ? "Simpan Perubahan" : "Tambah Job"}</span>
+              {editingId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {editingId ? "Save Changes" : "Add Job"}
             </button>
           </div>
         </form>
-        {message && <p className="text-sm text-blue-600 mt-3">{message}</p>}
+        {message && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            {message}
+          </p>
+        )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Job List */}
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Daftar Job</h3>
-          <span className="text-sm text-gray-500">
-            Klik edit untuk memperbarui.
-          </span>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">All Postings</p>
+          <span className="text-xs text-zinc-400">{jobs.length} jobs</span>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="border border-gray-200 rounded-lg p-4 hover:border-blue-200 transition"
+              className="group flex items-start justify-between p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
-                      {job.department}
-                    </span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
-                      {job.type}
-                    </span>
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">
-                    {job.title}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {job.company} • {job.location}
-                  </p>
-                  <p className="text-gray-700 mt-2 mb-3">{job.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {job.requirements.map((req, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold"
-                      >
-                        {req}
-                      </span>
-                    ))}
-                  </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                    {job.department}
+                  </span>
+                  <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                    {job.type}
+                  </span>
                 </div>
-                <button
-                  onClick={() => handleEdit(job)}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-semibold"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
+                <h4 className="text-sm font-semibold">{job.title}</h4>
+                <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1">
+                  {job.company}
+                  <span>·</span>
+                  <MapPin className="w-3 h-3" />
+                  {job.location}
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed line-clamp-2">
+                  {job.description}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {job.requirements.map((req, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded-lg"
+                    >
+                      {req}
+                    </span>
+                  ))}
+                </div>
               </div>
+              <button
+                onClick={() => handleEdit(job)}
+                className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors ml-4 flex-shrink-0"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Edit
+              </button>
             </div>
           ))}
-          {jobs.length === 0 && <p className="text-gray-500">Belum ada job.</p>}
+          {jobs.length === 0 && (
+            <p className="text-sm text-zinc-400 text-center py-8">No jobs posted yet.</p>
+          )}
         </div>
       </div>
     </div>

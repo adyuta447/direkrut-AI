@@ -1,44 +1,43 @@
 import { useState } from "react";
 import {
-  FileText,
+  Upload,
   MessageSquare,
   CheckCircle,
-  Upload,
   LogOut,
-  Briefcase,
   Menu,
   X,
-  Search,
+  Sun,
+  Moon,
+  Video,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import ApplyPage from "./applicant/ApplyPage";
 import ValidationChat from "./applicant/ValidationChat";
 import SubmissionComplete from "./applicant/SubmissionComplete";
+import CandidateAISimulation from "./applicant/CandidateAISimulation";
 
-type ApplicantView = "apply" | "validation" | "complete";
+type ApplicantView = "apply" | "validation" | "ai-practice" | "complete";
 
 export default function ApplicantDashboard() {
-  const { currentUser, setCurrentUser, setCurrentPage } = useApp();
+  const { currentUser, setCurrentUser, setCurrentPage, darkMode, toggleDarkMode } = useApp();
   const [activeView, setActiveView] = useState<ApplicantView>("apply");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
-  const pageMetadata = {
-    apply: {
-      title: "Apply for a Position",
-      subtitle: "Upload your CV and select the position you're interested in",
-    },
-    validation: {
-      title: "AI Skill Validation",
-      subtitle: "Answer questions to validate your skills and experience",
-    },
-    complete: {
-      title: "Application Status",
-      subtitle: "View your submission status and next steps",
-    },
+  const pageMetadata: Record<ApplicantView, { title: string; subtitle: string }> = {
+    apply: { title: "Apply for a Position", subtitle: "Upload your CV and select the position" },
+    validation: { title: "AI Skill Validation", subtitle: "Answer questions to validate your skills" },
+    "ai-practice": { title: "AI Interview Practice", subtitle: "Simulate the AI interview before the real session" },
+    complete: { title: "Application Status", subtitle: "View your submission status and next steps" },
   };
 
-  const currentPage = pageMetadata[activeView];
+  const navItems = [
+    { id: "apply" as const, label: "Apply & Upload CV", icon: Upload },
+    { id: "validation" as const, label: "AI Skill Validation", icon: MessageSquare },
+    { id: "ai-practice" as const, label: "AI Interview Practice", icon: Video },
+    { id: "complete" as const, label: "Status & Interview", icon: CheckCircle },
+  ];
+
+  const currentPageMeta = pageMetadata[activeView];
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -46,132 +45,93 @@ export default function ApplicantDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex relative">
-      {/* Overlay for mobile */}
+    <div className="h-screen bg-white dark:bg-zinc-950 flex relative overflow-hidden">
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-        ></div>
+        />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`w-64 bg-white shadow-lg fixed lg:sticky top-0 h-screen z-40 transform transition-transform duration-300 ${
+        className={`w-56 bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800 fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Briefcase className="w-8 h-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">TalentAI</span>
+        {/* Brand + user */}
+        <div className="px-4 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-sm font-bold tracking-tight">TalentAI</span>
+            <button
+              onClick={toggleDarkMode}
+              className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              {darkMode ? <Sun className="w-3.5 h-3.5 text-zinc-400" /> : <Moon className="w-3.5 h-3.5 text-zinc-500" />}
+            </button>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Welcome back,</p>
-            <p className="font-semibold text-gray-900">{currentUser?.name}</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 font-bold text-xs flex-shrink-0">
+              {currentUser?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold truncate">{currentUser?.name}</p>
+              <p className="text-xs text-zinc-400 truncate">Candidate</p>
+            </div>
           </div>
         </div>
 
-        <nav className="p-4">
-          <button
-            onClick={() => {
-              setActiveView("apply");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "apply"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Upload className="w-5 h-5" />
-            <span className="font-medium">Apply & Upload CV</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("validation");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "validation"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">AI Skill Validation</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveView("complete");
-              setSidebarOpen(false);
-            }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition ${
-              activeView === "complete"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">Submission Status</span>
-          </button>
+        {/* Nav */}
+        <nav className="flex-1 py-3 px-2 overflow-y-auto">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 px-2 mb-2">
+            Navigation
+          </p>
+          {navItems.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => { setActiveView(id); setSidebarOpen(false); }}
+              className={`sidebar-item mb-0.5 ${activeView === id ? "sidebar-item-active" : "sidebar-item-inactive"}`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span className="text-xs">{label}</span>
+            </button>
+          ))}
         </nav>
 
-        <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200">
+        {/* Logout */}
+        <div className="px-2 pb-3 border-t border-zinc-100 dark:border-zinc-800 pt-3">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+            className="sidebar-item sidebar-item-inactive text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <span className="text-xs">Sign Out</span>
           </button>
         </div>
       </aside>
 
+      {/* Main panel */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Navbar */}
-        <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
-          {/* Mobile Menu Button */}
+        {/* Top bar */}
+        <header className="flex-shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 px-5 py-3.5 flex items-center justify-between gap-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition"
+            className="lg:hidden w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700"
           >
-            {sidebarOpen ? (
-              <X className="w-6 h-6 text-gray-700" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-700" />
-            )}
+            {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-              {currentPage.title}
-            </h1>
-            <p className="text-sm lg:text-base text-gray-600 mt-1">
-              {currentPage.subtitle}
-            </p>
+            <h1 className="text-sm font-semibold truncate">{currentPageMeta.title}</h1>
+            <p className="text-xs text-zinc-400 truncate">{currentPageMeta.subtitle}</p>
           </div>
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-[280px] h-[42px] pl-12 pr-4 bg-gray-50 rounded-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-            />
-          </div>
-        </div>
+        </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          {activeView === "apply" && (
-            <ApplyPage onNext={() => setActiveView("validation")} />
-          )}
-          {activeView === "validation" && (
-            <ValidationChat onComplete={() => setActiveView("complete")} />
-          )}
+        {/* Content — fills remaining space */}
+        <main className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
+          {activeView === "apply" && <ApplyPage onNext={() => setActiveView("validation")} />}
+          {activeView === "validation" && <ValidationChat onComplete={() => setActiveView("complete")} />}
+          {activeView === "ai-practice" && <CandidateAISimulation />}
           {activeView === "complete" && <SubmissionComplete />}
         </main>
       </div>

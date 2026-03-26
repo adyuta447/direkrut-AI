@@ -1,4 +1,4 @@
-import { TrendingUp, Target, BookOpen, Award } from "lucide-react";
+import { Target } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 
@@ -8,6 +8,12 @@ interface SkillGap {
   requiredLevel: number;
   priority: "high" | "medium" | "low";
 }
+
+const PRIORITY_STYLE = {
+  high: "text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800",
+  medium: "text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+  low: "text-zinc-500 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800",
+};
 
 export default function GapAnalysis() {
   const { applications } = useApp();
@@ -22,226 +28,157 @@ export default function GapAnalysis() {
     if (!selectedCandidate) return;
 
     const mockGaps: SkillGap[] = [
-      {
-        skill: "React Advanced Patterns",
-        currentLevel: 60,
-        requiredLevel: 85,
-        priority: "high",
-      },
-      {
-        skill: "TypeScript",
-        currentLevel: 70,
-        requiredLevel: 90,
-        priority: "high",
-      },
-      {
-        skill: "Testing & TDD",
-        currentLevel: 50,
-        requiredLevel: 80,
-        priority: "medium",
-      },
-      {
-        skill: "Performance Optimization",
-        currentLevel: 55,
-        requiredLevel: 75,
-        priority: "medium",
-      },
-      {
-        skill: "System Design",
-        currentLevel: 40,
-        requiredLevel: 70,
-        priority: "low",
-      },
-    ];
-
-    const mockProjection =
-      "With focused training and mentorship, this candidate can reach the required proficiency level in 3-6 months. " +
-      "High priority gaps should be addressed within the first 2 months through structured learning programs. " +
-      "The candidate shows strong foundational knowledge and demonstrates good learning ability based on their validation responses.";
-
-    const mockRecommendations = [
-      "Enroll in advanced React patterns course (Udemy, Frontend Masters)",
-      "Pair programming sessions with senior developers",
-      "Weekly code review participation to improve code quality",
-      "Complete TypeScript deep dive certification",
-      "Assign mentor for system design guidance",
+      { skill: "React Advanced Patterns", currentLevel: 60, requiredLevel: 85, priority: "high" },
+      { skill: "TypeScript", currentLevel: 70, requiredLevel: 90, priority: "high" },
+      { skill: "Testing & TDD", currentLevel: 50, requiredLevel: 80, priority: "medium" },
+      { skill: "Performance Optimization", currentLevel: 55, requiredLevel: 75, priority: "medium" },
+      { skill: "System Design", currentLevel: 40, requiredLevel: 70, priority: "low" },
     ];
 
     setAnalysis({
       gaps: mockGaps,
-      growthProjection: mockProjection,
-      recommendations: mockRecommendations,
+      growthProjection:
+        "With focused training and mentorship, this candidate can reach required proficiency in 3–6 months. High priority gaps should be addressed within the first 2 months through structured learning. The candidate shows strong foundational knowledge and good learning ability.",
+      recommendations: [
+        "Enroll in advanced React patterns course (Frontend Masters)",
+        "Pair programming sessions with senior developers",
+        "Weekly code review participation",
+        "Complete TypeScript deep dive certification",
+        "Assign a mentor for system design guidance",
+      ],
     });
   };
 
   return (
-    <div className="p-8">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
-          Select Candidate for Analysis
-        </h2>
+    <div className="p-8 max-w-4xl mx-auto space-y-5">
+      {/* Header */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">AI Tool</p>
+        <h2 className="text-3xl font-bold tracking-tight">Gap & Growth Analysis</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          Identify skill gaps and build a development plan for any candidate.
+        </p>
+      </div>
 
-        <div className="flex space-x-4">
-          <div className="flex-1">
-            <select
-              value={selectedCandidate}
-              onChange={(e) => setSelectedCandidate(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Choose a candidate...</option>
-              {applications.map((app) => (
-                <option key={app.id} value={app.id}>
-                  {app.applicantName} - {app.jobTitle} (Score:{" "}
-                  {app.recommendationScore || "N/A"})
-                </option>
-              ))}
-            </select>
-          </div>
-
+      {/* Selector */}
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+        <label className="label">Select Candidate</label>
+        <div className="flex gap-3">
+          <select
+            value={selectedCandidate}
+            onChange={(e) => setSelectedCandidate(e.target.value)}
+            className="input-field flex-1"
+          >
+            <option value="">Choose a candidate...</option>
+            {applications.map((app) => (
+              <option key={app.id} value={app.id}>
+                {app.applicantName} — {app.jobTitle} (Score: {app.recommendationScore || "N/A"})
+              </option>
+            ))}
+          </select>
           <button
             onClick={handleAnalyze}
             disabled={!selectedCandidate}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="btn-primary flex items-center gap-2 px-5 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           >
-            <Target className="w-5 h-5" />
-            <span>Analyze Gaps</span>
+            <Target className="w-4 h-4" />
+            Analyze
           </button>
         </div>
       </div>
 
-      {analysis && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <Target className="w-6 h-6 mr-2 text-blue-600" />
-              Skill Gap Analysis
-            </h2>
-
-            <div className="space-y-4">
-              {analysis.gaps.map((gap, idx) => (
-                <div
-                  key={idx}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {gap.skill}
-                      </h3>
-                      <span
-                        className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                          gap.priority === "high"
-                            ? "bg-red-100 text-red-700"
-                            : gap.priority === "medium"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {gap.priority.toUpperCase()} PRIORITY
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {gap.requiredLevel - gap.currentLevel}
-                        <span className="text-sm text-gray-500 font-normal">
-                          {" "}
-                          pt gap
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Current Level</span>
-                        <span className="font-semibold text-blue-600">
-                          {gap.currentLevel}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${gap.currentLevel}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Required Level</span>
-                        <span className="font-semibold text-green-600">
-                          {gap.requiredLevel}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-green-600 h-2 rounded-full"
-                          style={{ width: `${gap.requiredLevel}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <TrendingUp className="w-6 h-6 mr-2 text-green-600" />
-              Growth Projection
-            </h2>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <p className="text-green-900 leading-relaxed">
-                {analysis.growthProjection}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <BookOpen className="w-6 h-6 mr-2 text-blue-600" />
-              Development Recommendations
-            </h2>
-            <div className="space-y-3">
-              {analysis.recommendations.map((rec, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg"
-                >
-                  <Award className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-blue-900">{rec}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Action Plan
-            </h2>
-            <div className="space-y-3">
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
-                Generate Training Plan
-              </button>
-              <button className="w-full bg-white border-2 border-blue-600 text-blue-600 py-3 rounded-lg hover:bg-blue-50 transition font-semibold">
-                Share with Candidate
-              </button>
-              <button className="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition font-semibold">
-                Export Report
-              </button>
-            </div>
-          </div>
+      {/* Empty state */}
+      {selectedCandidate && !analysis && (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-12 text-center">
+          <Target className="w-10 h-10 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
+          <p className="text-sm text-zinc-400">Click "Analyze" to see detailed skill gap analysis</p>
         </div>
       )}
 
-      {selectedCandidate && !analysis && (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">
-            Click "Analyze Gaps" to see detailed skill gap analysis
-          </p>
+      {/* Results */}
+      {analysis && (
+        <div className="space-y-4">
+          {/* Skill Gaps */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
+              Skill Gaps
+            </p>
+            <div className="space-y-5">
+              {analysis.gaps.map((gap, idx) => (
+                <div key={idx}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{gap.skill}</span>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-lg ${PRIORITY_STYLE[gap.priority]}`}>
+                        {gap.priority}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums">
+                      {gap.requiredLevel - gap.currentLevel}pt gap
+                    </span>
+                  </div>
+                  <div className="relative h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full">
+                    <div
+                      className="absolute left-0 top-0 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all"
+                      style={{ width: `${gap.requiredLevel}%` }}
+                    />
+                    <div
+                      className="absolute left-0 top-0 h-2 rounded-full bg-zinc-900 dark:bg-white transition-all"
+                      style={{ width: `${gap.currentLevel}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5 text-xs text-zinc-400">
+                    <span>Current: {gap.currentLevel}%</span>
+                    <span>Required: {gap.requiredLevel}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Growth Projection */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
+              Growth Projection
+            </p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              {analysis.growthProjection}
+            </p>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
+              Development Recommendations
+            </p>
+            <div className="space-y-2">
+              {analysis.recommendations.map((rec, idx) => (
+                <div key={idx} className="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                  <span className="text-xs font-mono text-zinc-300 dark:text-zinc-600 mt-0.5">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{rec}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Action Plan */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
+              Action Plan
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {["Generate Training Plan", "Share with Candidate", "Export Report"].map((action) => (
+                <button
+                  key={action}
+                  className="py-2.5 px-4 text-sm font-medium border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  {action}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

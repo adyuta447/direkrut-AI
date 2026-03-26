@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Send, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Send, Calendar, Clock, Check } from 'lucide-react';
 import { Application } from '../../types';
 import { useApp } from '../../context/AppContext';
 
@@ -13,13 +13,13 @@ export default function DecisionPanel({ candidate, decision, onBack }: DecisionP
   const { updateApplication } = useApp();
   const [emailSubject, setEmailSubject] = useState(
     decision === 'invite'
-      ? `Interview Invitation - ${candidate.jobTitle} Position`
-      : `Application Update - ${candidate.jobTitle} Position`
+      ? `Interview Invitation — ${candidate.jobTitle}`
+      : `Application Update — ${candidate.jobTitle}`
   );
   const [emailBody, setEmailBody] = useState(
     decision === 'invite'
       ? `Dear ${candidate.applicantName},\n\nWe are pleased to inform you that your application for the ${candidate.jobTitle} position has been reviewed and we would like to invite you for an interview.\n\nPlease let us know your availability for the interview in the coming week.\n\nWe look forward to meeting you.\n\nBest regards,\nHR Team`
-      : `Dear ${candidate.applicantName},\n\nThank you for your interest in the ${candidate.jobTitle} position and for taking the time to apply.\n\nAfter careful consideration, we have decided to move forward with other candidates whose qualifications more closely match our current needs.\n\nWe encourage you to apply for future openings that match your skills and experience. Based on your profile, you might be a good fit for:\n- Similar roles in different departments\n- Entry-level positions to gain more experience\n\nWe wish you all the best in your job search.\n\nBest regards,\nHR Team`
+      : `Dear ${candidate.applicantName},\n\nThank you for your interest in the ${candidate.jobTitle} position.\n\nAfter careful consideration, we have decided to move forward with other candidates whose qualifications more closely match our current needs.\n\nWe encourage you to apply for future openings that match your skills.\n\nBest regards,\nHR Team`
   );
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewTime, setInterviewTime] = useState('');
@@ -31,21 +31,19 @@ export default function DecisionPanel({ candidate, decision, onBack }: DecisionP
       status: decision === 'invite' ? 'interview' : 'rejected'
     });
     setShowConfirmation(true);
-    setTimeout(() => {
-      onBack();
-    }, 2000);
+    setTimeout(() => { onBack(); }, 2500);
   };
 
   if (showConfirmation) {
     return (
       <div className="p-8 flex items-center justify-center h-full">
-        <div className="bg-white rounded-lg shadow-xl p-12 text-center max-w-md">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Send className="w-10 h-10 text-green-600" />
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-12 text-center max-w-md">
+          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Check className="w-7 h-7 text-zinc-900 dark:text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Sent Successfully!</h2>
-          <p className="text-gray-600">
-            The candidate has been notified of your decision.
+          <h2 className="text-xl font-bold mb-2">Email Sent</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {candidate.applicantName} has been notified.
           </p>
         </div>
       </div>
@@ -53,166 +51,140 @@ export default function DecisionPanel({ candidate, decision, onBack }: DecisionP
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-4xl mx-auto space-y-4">
       <button
         onClick={onBack}
-        className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6"
+        className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-2"
       >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="font-medium">Back to Candidate Detail</span>
+        <ArrowLeft className="w-4 h-4" />
+        Back to Candidate
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {decision === 'invite' ? 'Interview Invitation' : 'Application Rejection'}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight mb-1">
+          {decision === 'invite' ? 'Invite to Interview' : 'Reject Application'}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {decision === 'invite'
-            ? 'Prepare and send interview invitation to the candidate'
+            ? 'Prepare and send the interview invitation'
             : 'Send rejection notice with career suggestions'}
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          {decision === 'invite' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Interview Details</h2>
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Left */}
+        <div className="space-y-4">
+          {/* Candidate info */}
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">Candidate</p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                {candidate.applicantName.charAt(0)}
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{candidate.applicantName}</p>
+                <p className="text-xs text-zinc-400">{candidate.jobTitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+              <p className="text-xs text-zinc-400">Match Score</p>
+              <p className="text-2xl font-bold">{candidate.recommendationScore || '--'}</p>
+            </div>
+          </div>
 
+          {/* Interview details (invite only) */}
+          {decision === 'invite' && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">Interview Details</p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Interview Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setInterviewType('hr')}
-                      className={`py-2 px-4 rounded-lg border-2 font-semibold transition ${
-                        interviewType === 'hr'
-                          ? 'border-blue-600 bg-blue-50 text-blue-600'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                      }`}
-                    >
-                      HR Interview
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInterviewType('technical')}
-                      className={`py-2 px-4 rounded-lg border-2 font-semibold transition ${
-                        interviewType === 'technical'
-                          ? 'border-blue-600 bg-blue-50 text-blue-600'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                      }`}
-                    >
-                      Technical
-                    </button>
+                  <label className="label">Interview Type</label>
+                  <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+                    {(['hr', 'technical'] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setInterviewType(t)}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                          interviewType === t
+                            ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white'
+                            : 'text-zinc-500 dark:text-zinc-400'
+                        }`}
+                      >
+                        {t === 'hr' ? 'HR Interview' : 'Technical'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    Interview Date
+                  <label className="label">
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Date</span>
                   </label>
                   <input
                     type="date"
                     value={interviewDate}
                     onChange={(e) => setInterviewDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="w-4 h-4 inline mr-1" />
-                    Interview Time
+                  <label className="label">
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Time</span>
                   </label>
                   <input
                     type="time"
                     value={interviewTime}
                     onChange={(e) => setInterviewTime(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   />
                 </div>
               </div>
             </div>
           )}
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Candidate Information</h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="font-semibold text-gray-900">{candidate.applicantName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Position</p>
-                <p className="font-semibold text-gray-900">{candidate.jobTitle}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Match Score</p>
-                <p className="font-semibold text-blue-600 text-2xl">
-                  {candidate.recommendationScore || '--'}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Email Preview</h2>
-
+        {/* Right: Email editor */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">Email Preview</p>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subject
-              </label>
+              <label className="label">Subject</label>
               <input
                 type="text"
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-field"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message Body
-              </label>
+              <label className="label">Message</label>
               <textarea
                 value={emailBody}
                 onChange={(e) => setEmailBody(e.target.value)}
-                rows={12}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={10}
+                className="input-field resize-none"
               />
             </div>
 
             {decision === 'invite' && interviewDate && interviewTime && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-900 font-semibold mb-1">Interview Schedule</p>
-                <p className="text-blue-700">
-                  <strong>Type:</strong> {interviewType === 'hr' ? 'HR Interview' : 'Technical Interview'}
-                </p>
-                <p className="text-blue-700">
-                  <strong>Date:</strong> {new Date(interviewDate).toLocaleDateString()}
-                </p>
-                <p className="text-blue-700">
-                  <strong>Time:</strong> {interviewTime}
-                </p>
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+                <p className="font-semibold text-zinc-700 dark:text-zinc-300">Interview Summary</p>
+                <p>Type: {interviewType === 'hr' ? 'HR Interview' : 'Technical Interview'}</p>
+                <p>Date: {new Date(interviewDate).toLocaleDateString()}</p>
+                <p>Time: {interviewTime}</p>
               </div>
             )}
 
             <button
               onClick={handleSend}
-              className={`w-full py-3 rounded-lg font-semibold text-white transition flex items-center justify-center space-x-2 ${
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-colors ${
                 decision === 'invite'
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-red-600 hover:bg-red-700'
+                  ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:opacity-80'
+                  : 'border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'
               }`}
             >
-              <Send className="w-5 h-5" />
-              <span>Confirm & Send Email</span>
+              <Send className="w-4 h-4" />
+              Confirm & Send Email
             </button>
           </div>
         </div>

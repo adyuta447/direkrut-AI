@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Search, MapPin, Briefcase, ArrowLeft } from "lucide-react";
+import { Search, MapPin, ArrowLeft, Sun, Moon } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export default function JobsPage() {
-  const { setCurrentPage, jobs } = useApp();
+  const { setCurrentPage, jobs, darkMode, toggleDarkMode } = useApp();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -20,125 +20,153 @@ export default function JobsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800/60">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setCurrentPage("landing")}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back</span>
+              <ArrowLeft className="w-4 h-4" />
+              Back
             </button>
-            <div className="flex items-center space-x-2">
-              <Briefcase className="w-8 h-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">TalentAI</span>
-            </div>
+            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+            <span className="text-sm font-bold tracking-tight">TalentAI</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleDarkMode}
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-zinc-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-zinc-500" />
+              )}
+            </button>
             <button
               onClick={() => setCurrentPage("auth")}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="btn-primary"
             >
-              Login
+              Sign in
             </button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          Find Your Dream Job
-        </h1>
-
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="md:col-span-2 relative">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by job title or company..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Location"
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Types</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-            </select>
-          </div>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+        {/* Header */}
+        <div className="mb-12">
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">Open Positions</p>
+          <h1 className="text-5xl lg:text-6xl font-bold tracking-tight mb-4">
+            Find Your<br />Dream Role.
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 text-base max-w-lg">
+            {filteredJobs.length} position{filteredJobs.length !== 1 ? "s" : ""} available
+          </p>
         </div>
 
-        <div className="space-y-4">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-10">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search role or company..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-11"
+            />
+          </div>
+          <div className="relative">
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Location"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="input-field pl-11 sm:w-44"
+            />
+          </div>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="input-field sm:w-40"
+          >
+            <option value="">All Types</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+          </select>
+        </div>
+
+        {/* Job List */}
+        <div className="space-y-3">
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition"
+              className="group p-6 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {job.title}
-                  </h2>
-                  <p className="text-lg text-gray-700 mb-1">{job.company}</p>
-                  <p className="text-sm text-blue-600 font-semibold mb-2">
-                    {job.department}
-                  </p>
-                  <div className="flex items-center space-x-4 text-gray-500">
-                    <span className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {job.location}
-                    </span>
-                    <span className="flex items-center">
-                      <Briefcase className="w-4 h-4 mr-1" />
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h2 className="text-base font-semibold">{job.title}</h2>
+                    <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
                       {job.type}
                     </span>
-                    <span className="text-sm">Posted {job.posted}</span>
+                    <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                      {job.department}
+                    </span>
+                  </div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{job.company}</p>
+                  <div className="flex items-center gap-3 text-xs text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {job.location}
+                    </span>
+                    <span>·</span>
+                    <span>{job.posted}</span>
+                  </div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3 leading-relaxed max-w-2xl">
+                    {job.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {job.requirements.map((req, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2.5 py-1 rounded-lg font-medium"
+                      >
+                        {req}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <button
                   onClick={() => setCurrentPage("auth")}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="flex-shrink-0 btn-primary self-start"
                 >
                   Apply Now
                 </button>
-              </div>
-              <p className="text-gray-600 mb-4">{job.description}</p>
-              <div className="flex flex-wrap gap-2">
-                {job.requirements.map((req, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium"
-                  >
-                    {req}
-                  </span>
-                ))}
               </div>
             </div>
           ))}
         </div>
 
         {filteredJobs.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No jobs found matching your criteria.
-            </p>
+          <div className="text-center py-24">
+            <p className="text-zinc-400 text-base">No positions found matching your criteria.</p>
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setLocationFilter("");
+                setTypeFilter("");
+              }}
+              className="mt-4 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline transition-colors"
+            >
+              Clear filters
+            </button>
           </div>
         )}
       </div>

@@ -49,62 +49,63 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
     onNext();
   };
 
+  const selectedJobData = jobs.find((j) => j.id === selectedJob);
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Position
-          </label>
+    <div className="p-8 max-w-3xl mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Position Select */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
+          <label className="label">Select Position</label>
           <select
             value={selectedJob}
             onChange={(e) => setSelectedJob(e.target.value)}
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input-field"
           >
             <option value="">Choose a position...</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.title} - {job.company}
+                {job.title} — {job.company}
               </option>
             ))}
           </select>
 
-          {selectedJob && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              {(() => {
-                const job = jobs.find((j) => j.id === selectedJob);
-                return job ? (
-                  <>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      {job.title}
-                    </h3>
-                    <p className="text-gray-700 mb-2">{job.company}</p>
-                    <p className="text-gray-600 text-sm mb-3">
-                      {job.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {job.requirements.map((req, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-white text-blue-700 px-3 py-1 rounded-full text-sm font-medium"
-                        >
-                          {req}
-                        </span>
-                      ))}
-                    </div>
-                  </>
-                ) : null;
-              })()}
+          {selectedJobData && (
+            <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-700/50">
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                  {selectedJobData.type}
+                </span>
+                <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                  {selectedJobData.department}
+                </span>
+                <span className="text-xs border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-lg">
+                  {selectedJobData.location}
+                </span>
+              </div>
+              <h3 className="font-semibold text-sm mb-1">{selectedJobData.title}</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">{selectedJobData.company}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">
+                {selectedJobData.description}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedJobData.requirements.map((req, idx) => (
+                  <span
+                    key={idx}
+                    className="text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2.5 py-1 rounded-lg font-medium"
+                  >
+                    {req}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Upload Your CV
-          </label>
-
+        {/* Upload CV */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
+          <label className="label">Upload Your CV</label>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -112,24 +113,22 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition ${
+            className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
               isDragging
-                ? "border-blue-500 bg-blue-50"
+                ? "border-zinc-400 bg-zinc-50 dark:bg-zinc-800"
                 : cvFile
-                ? "border-green-500 bg-green-50"
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-950/20"
+                : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
             }`}
           >
             {cvFile ? (
               <div className="flex flex-col items-center">
-                <CheckCircle className="w-12 h-12 text-green-600 mb-3" />
-                <p className="text-gray-900 font-semibold mb-1">
-                  {cvFile.name}
+                <CheckCircle className="w-10 h-10 text-emerald-500 mb-3" />
+                <p className="font-medium text-sm mb-1">{cvFile.name}</p>
+                <p className="text-xs text-zinc-400 mb-4">
+                  {(cvFile.size / 1024).toFixed(1)} KB
                 </p>
-                <p className="text-gray-600 text-sm mb-4">
-                  {(cvFile.size / 1024).toFixed(2)} KB
-                </p>
-                <label className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium">
+                <label className="text-xs font-medium text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer underline underline-offset-2 transition-colors">
                   Change file
                   <input
                     type="file"
@@ -141,14 +140,14 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <Upload className="w-12 h-12 text-gray-400 mb-3" />
-                <p className="text-gray-700 font-medium mb-1">
-                  Drag and drop your CV here, or click to browse
+                <Upload className="w-10 h-10 text-zinc-300 dark:text-zinc-600 mb-3" />
+                <p className="font-medium text-sm mb-1">
+                  Drag & drop your CV here
                 </p>
-                <p className="text-gray-500 text-sm mb-4">
-                  Supported formats: PDF, DOC, DOCX (Max 5MB)
+                <p className="text-xs text-zinc-400 mb-5">
+                  PDF, DOC, DOCX up to 5MB
                 </p>
-                <label className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 cursor-pointer transition">
+                <label className="btn-primary cursor-pointer">
                   Select File
                   <input
                     type="file"
@@ -163,14 +162,15 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
           </div>
         </div>
 
-        <div className="flex justify-end space-x-4">
+        {/* Submit */}
+        <div className="flex justify-end">
           <button
             type="submit"
             disabled={!selectedJob || !cvFile}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center space-x-2"
+            className="inline-flex items-center gap-2 btn-primary disabled:opacity-40 disabled:cursor-not-allowed py-3 px-7"
           >
-            <span>Continue to Validation</span>
-            <FileText className="w-5 h-5" />
+            <FileText className="w-4 h-4" />
+            Continue to Validation
           </button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, Application, Job } from "../types";
 import { mockApplications, mockJobs } from "../mockData";
 
@@ -13,6 +13,8 @@ interface AppContextType {
   updateJob: (id: string, updates: Partial<Job>) => void;
   currentPage: string;
   setCurrentPage: (page: string) => void;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -23,6 +25,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useState<Application[]>(mockApplications);
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
   const [currentPage, setCurrentPage] = useState("landing");
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem("talentai-dark");
+    return stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("talentai-dark", String(darkMode));
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const addApplication = (app: Application) => {
     setApplications((prev) => [...prev, app]);
@@ -57,6 +74,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateJob,
         currentPage,
         setCurrentPage,
+        darkMode,
+        toggleDarkMode,
       }}
     >
       {children}
