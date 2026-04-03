@@ -304,7 +304,7 @@ export default function CandidateAISimulation() {
             {camOn ? (
               <>
                 <img
-                  src="/public/aiinterview.png"
+                  src="/aiinterview.png"
                   alt="User Feed"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
