@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, ArrowRight, CheckCircle, ArrowLeft } from "lucide-react";
+import { Send, X, ArrowRight, ArrowLeft } from "lucide-react";
 import { Application } from "../../types";
 
 interface AIInterviewSimulationProps {
@@ -61,12 +61,14 @@ export default function AIInterviewSimulation({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const simulateNextAnswer = () => {
     if (currentQuestion >= questions.length || isTyping) return;
 
-    const answer = candidateResponses[currentQuestion] || "I believe I have the right skills for this role and am eager to contribute to the team.";
+    const answer =
+      candidateResponses[currentQuestion] ||
+      "I believe I have the right skills for this role and am eager to contribute to the team.";
 
     setMessages((prev) => [
       ...prev,
@@ -79,7 +81,11 @@ export default function AIInterviewSimulation({
         const next = currentQuestion + 1;
         setMessages((prev) => [
           ...prev,
-          { role: "ai", content: "Thank you for sharing that. Moving on:", timestamp: getTime() },
+          {
+            role: "ai",
+            content: "Thank you for sharing that. Moving on:",
+            timestamp: getTime(),
+          },
           { role: "ai", content: questions[next], timestamp: getTime() },
         ]);
         setCurrentQuestion(next);
@@ -110,131 +116,132 @@ export default function AIInterviewSimulation({
     }
   }, [isAutoRunning, isTyping, currentQuestion, isComplete]);
 
-  const progress = isComplete ? 100 : ((currentQuestion + 1) / questions.length) * 100;
+  const progress = isComplete
+    ? 100
+    : ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <div className="h-full flex flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div className="h-full flex flex-col bg-white dark:bg-[#0a0a0a] font-sans">
       {/* Header */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 px-6 py-4">
+      <div className="bg-transparent border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 py-5">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={onClose}
-                className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Back
+                <ArrowLeft className="w-4 h-4 text-zinc-900 dark:text-white" />
               </button>
-              <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-xl bg-zinc-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-                  <span className="text-white dark:text-zinc-900 font-bold text-xs">AI</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold">AI Interview Simulation</p>
-                  <p className="text-xs text-zinc-400">
-                    {candidate.applicantName} · {candidate.jobTitle}
+              <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800" />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-100">
+                    Live Simulation
                   </p>
                 </div>
+                <p className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase">
+                  {candidate.applicantName} • {candidate.jobTitle}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-400 font-mono">
-                {Math.min(currentQuestion + 1, questions.length)}/{questions.length}
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] font-mono tracking-widest text-zinc-400">
+                {Math.min(currentQuestion + 1, questions.length)} /{" "}
+                {questions.length}
               </span>
+
               {!isComplete && !isAutoRunning && (
                 <button
                   onClick={handleAutoRun}
-                  className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg font-medium hover:opacity-80 transition-opacity"
+                  className="text-[9px] font-bold uppercase tracking-widest border border-zinc-900 dark:border-white text-zinc-900 dark:text-white px-4 py-2 rounded-full hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-zinc-900 transition-colors"
                 >
                   Auto-run
                 </button>
               )}
+
               {isAutoRunning && !isComplete && (
-                <span className="text-xs text-zinc-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Simulating...
+                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Simulating
                 </span>
               )}
+
               <button
                 onClick={onClose}
-                className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
               >
-                <X className="w-3.5 h-3.5 text-zinc-500" />
+                <X className="w-4 h-4 text-zinc-500" />
               </button>
             </div>
           </div>
-          <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1">
+          <div className="w-full bg-zinc-100 dark:bg-zinc-800/50 h-[2px]">
             <div
-              className="bg-zinc-900 dark:bg-white h-1 rounded-full transition-all duration-700"
+              className="bg-zinc-900 dark:bg-white h-[2px] transition-all duration-700 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
       </div>
 
+      {/* Success Banner */}
       {isComplete && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-800/30 px-6 py-2.5">
-          <div className="max-w-3xl mx-auto flex items-center gap-2">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
-              Simulation complete — {candidate.applicantName}'s interview session recorded.
+        <div className="bg-transparent border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 py-4">
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <img src="/public/success.svg" alt="Success" className="w-4 h-4" />
+            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white">
+              Simulation complete — Session Recorded
             </p>
           </div>
         </div>
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-3xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="max-w-3xl mx-auto space-y-6">
           {messages.map((message, idx) => (
             <div
               key={idx}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col ${
+                message.role === "user" ? "items-end" : "items-start"
+              }`}
             >
-              {message.role === "ai" && (
-                <div className="w-7 h-7 rounded-xl bg-zinc-900 dark:bg-white flex items-center justify-center mr-2.5 flex-shrink-0 mt-0.5">
-                  <span className="text-white dark:text-zinc-900 font-bold text-xs">AI</span>
-                </div>
-              )}
-              <div className="flex flex-col gap-1 max-w-2xl">
-                <div
-                  className={`px-4 py-3 rounded-xl text-sm leading-relaxed ${
-                    message.role === "ai"
-                      ? "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
-                      : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-                  }`}
-                >
-                  {message.content}
-                </div>
-                <div className={`flex items-center gap-1.5 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                  {message.role === "user" && (
-                    <div className="w-5 h-5 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-zinc-500">
-                        {candidate.applicantName.charAt(0)}
-                      </span>
-                    </div>
-                  )}
-                  <span className="text-xs text-zinc-300 dark:text-zinc-600">
-                    {message.timestamp}
-                  </span>
-                </div>
+              <div
+                className={`flex items-center gap-2 mb-1.5 px-1 ${
+                  message.role === "user" ? "flex-row-reverse" : ""
+                }`}
+              >
+                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">
+                  {message.role === "ai" ? "System AI" : candidate.applicantName}
+                </span>
+                <span className="text-[9px] font-mono tracking-widest text-zinc-300 dark:text-zinc-600">
+                  {message.timestamp}
+                </span>
+              </div>
+              <div
+                className={`max-w-[85%] sm:max-w-[75%] px-5 py-4 text-[13px] leading-relaxed ${
+                  message.role === "ai"
+                    ? "bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-200 rounded-3xl rounded-tl-sm"
+                    : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-3xl rounded-tr-sm"
+                }`}
+              >
+                {message.content}
               </div>
             </div>
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="w-7 h-7 rounded-xl bg-zinc-900 dark:bg-white flex items-center justify-center mr-2.5 flex-shrink-0">
-                <span className="text-white dark:text-zinc-900 font-bold text-xs">AI</span>
-              </div>
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 px-4 py-3 rounded-xl">
-                <div className="flex items-center gap-1.5">
-                  {[0, 0.2, 0.4].map((delay, i) => (
+            <div className="flex flex-col items-start">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 px-1">
+                System AI
+              </span>
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 px-5 py-4 rounded-3xl rounded-tl-sm">
+                <div className="flex gap-1.5">
+                  {[0, 0.15, 0.3].map((delay, i) => (
                     <div
                       key={i}
-                      className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-pulse"
                       style={{ animationDelay: `${delay}s` }}
                     />
                   ))}
@@ -242,35 +249,35 @@ export default function AIInterviewSimulation({
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-4" />
         </div>
       </div>
 
       {/* Action bar */}
-      <div className="bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-4">
+      <div className="bg-transparent border-t border-zinc-200/60 dark:border-zinc-800/60 px-6 py-5">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           {isComplete ? (
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={onClose}
-                className="flex-1 inline-flex items-center justify-center gap-2 btn-primary py-3"
-              >
-                Back to Candidate Detail
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={onClose}
+              className="w-full inline-flex items-center justify-center gap-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-4 rounded-full text-[11px] font-bold uppercase tracking-widest hover:opacity-80 transition-all duration-300"
+            >
+              Close Simulation
+              <ArrowRight className="w-4 h-4" />
+            </button>
           ) : (
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-sm text-zinc-400 dark:text-zinc-500">
-                {isAutoRunning ? "Auto-simulating candidate responses..." : "Click 'Next Answer' to simulate the candidate's response step by step, or use 'Auto-run' to simulate the full session."}
+            <div className="flex items-center gap-4 w-full">
+              <div className="flex-1 p-4 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200/50 dark:border-zinc-800/50 rounded-full text-[10px] font-mono tracking-widest uppercase text-zinc-400 dark:text-zinc-500">
+                {isAutoRunning
+                  ? "> Executing auto-simulation sequence..."
+                  : "> Awaiting manual trigger for next response..."}
               </div>
               {!isAutoRunning && (
                 <button
                   onClick={simulateNextAnswer}
                   disabled={isTyping || isComplete}
-                  className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4 ml-0.5" />
                 </button>
               )}
             </div>
