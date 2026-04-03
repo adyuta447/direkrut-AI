@@ -44,7 +44,7 @@ export default function AIInterviewSimulation({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: `Hello ${candidate.applicantName}! I'm the TalentAI Interviewer. This is your first-round interview for the ${candidate.jobTitle} position. Let's get started — please answer each question naturally and thoroughly. Ready?`,
+      content: `Hello ${candidate.applicantName}! I'm the DirekrutAI Interviewer. This is your first-round interview for the ${candidate.jobTitle} position. Let's get started — please answer each question naturally and thoroughly. Ready?`,
       timestamp: getTime(),
     },
     {

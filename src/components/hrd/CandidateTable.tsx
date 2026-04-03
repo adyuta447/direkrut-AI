@@ -8,6 +8,8 @@ import {
   BarChart3,
   PieChart,
   CheckCircle2,
+  ChevronDown,
+  FileText,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import {
@@ -65,7 +67,6 @@ export default function CandidateTable({
     return "text-zinc-900 dark:text-white";
   };
 
-  const totalResumes = applications.filter((a) => a.resumeLink).length;
   const avgScore =
     applications.filter((a) => a.recommendationScore).length > 0
       ? Math.round(
@@ -84,9 +85,6 @@ export default function CandidateTable({
           authenticityScores.length
       )
     : undefined;
-  const pendingValidation = applications.filter(
-    (a) => a.validationStatus !== "completed"
-  ).length;
 
   const statCards = [
     { label: "Total Applications", value: applications.length, accent: "text-zinc-900 dark:text-white" },
@@ -143,29 +141,31 @@ export default function CandidateTable({
   const statusColors = ["#A1A1AA", "#71717A", "#18181B", "#D4D4D8"];
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 lg:p-5">
       {/* Page Header */}
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">HRD Portal</p>
-        <h2 className="text-3xl font-bold tracking-tight">Candidates</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          {applications.length} total applications · {filteredApplications.length} shown
-        </p>
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">HRD Portal</p>
+          <h2 className="text-2xl font-bold tracking-tight">Candidates</h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            {applications.length} total · {filteredApplications.length} shown
+          </p>
+        </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-4">
-            <p className="text-xs text-zinc-400 mb-1">{card.label}</p>
+          <div key={card.label} className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-3">
+            <p className="text-xs text-zinc-400 mb-0.5">{card.label}</p>
             <p className={`text-2xl font-bold tracking-tight ${card.accent}`}>{card.value}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-4 mb-5">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-3 mb-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
@@ -181,7 +181,7 @@ export default function CandidateTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-field pl-10 sm:w-44"
+              className="appearance-none input-field pl-10 pr-8 sm:w-44"
             >
               <option value="">All Statuses</option>
               <option value="submitted">Submitted</option>
@@ -189,12 +189,13 @@ export default function CandidateTable({
               <option value="interview">Interview</option>
               <option value="rejected">Rejected</option>
             </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Candidate Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden mb-5">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden mb-3">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -226,9 +227,14 @@ export default function CandidateTable({
                   </td>
                   <td className="px-5 py-4 text-sm">
                     {app.resumeLink ? (
-                      <a href={app.resumeLink} target="_blank" rel="noreferrer"
-                        className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-medium underline underline-offset-2 transition-colors">
-                        View CV
+                      <a
+                        href={app.resumeLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="View CV"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
                       </a>
                     ) : (
                       <span className="text-zinc-300 dark:text-zinc-600">—</span>

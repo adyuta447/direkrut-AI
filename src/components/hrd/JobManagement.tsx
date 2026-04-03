@@ -20,7 +20,7 @@ const initialForm: JobFormState = {
   requirementsText: "",
   location: "Jakarta",
   type: "Full-time",
-  company: "TalentAI",
+  company: "DirekrutAI",
 };
 
 export default function JobManagement() {
@@ -55,7 +55,7 @@ export default function JobManagement() {
       requirements: requirements.length ? requirements : ["General skills"],
       location: form.location.trim() || "Jakarta",
       type: form.type.trim() || "Full-time",
-      company: form.company.trim() || "TalentAI",
+      company: form.company.trim() || "DirekrutAI",
       posted: editingId && existingJob ? existingJob.posted : "Today",
     };
 
@@ -87,12 +87,12 @@ export default function JobManagement() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-5">
+    <div className="p-4 lg:p-5 space-y-4">
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">Management</p>
-        <h2 className="text-3xl font-bold tracking-tight">Job Board</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Management</p>
+        <h2 className="text-2xl font-bold tracking-tight">Job Board</h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
           Add or update job postings visible on the landing page and job board.
         </p>
       </div>
@@ -196,7 +196,7 @@ export default function JobManagement() {
               className="input-field"
               value={form.company}
               onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
-              placeholder="TalentAI"
+              placeholder="DirekrutAI"
             />
           </div>
           <div className="flex items-end justify-end">

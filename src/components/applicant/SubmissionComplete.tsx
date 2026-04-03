@@ -19,7 +19,7 @@ export default function SubmissionComplete() {
   }
 
   return (
-    <div className="min-h-full p-6 lg:p-8">
+    <div className="min-h-full p-4 lg:p-5">
       {schedulingOpen && (
         <SchedulingModal onClose={() => setSchedulingOpen(false)} />
       )}
@@ -31,7 +31,7 @@ export default function SubmissionComplete() {
           <p className="text-xs text-zinc-400 mt-1">Apply for a position to get started</p>
         </div>
       ) : (
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="space-y-4">
           {/* AI Interview CTA — full-width, shown when shortlisted */}
           {hasInterviewStatus && (
             <div className="bg-zinc-900 dark:bg-white rounded-xl p-6 text-white dark:text-zinc-900">

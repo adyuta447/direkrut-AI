@@ -23,7 +23,7 @@ export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
     {
       role: "ai",
       content:
-        "Welcome to your TalentAI interview session. I'm your AI Interviewer for today. This is a standard first-round conversation — just be yourself and answer naturally. Ready to begin?",
+        "Welcome to your DirekrutAI interview session. I'm your AI Interviewer for today. This is a standard first-round conversation — just be yourself and answer naturally. Ready to begin?",
     },
     {
       role: "ai",

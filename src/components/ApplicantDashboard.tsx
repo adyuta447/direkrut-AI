@@ -26,7 +26,7 @@ export default function ApplicantDashboard() {
   const pageMetadata: Record<ApplicantView, { title: string; subtitle: string }> = {
     apply: { title: "Apply for a Position", subtitle: "Upload your CV and select the position" },
     validation: { title: "AI Skill Validation", subtitle: "Answer questions to validate your skills" },
-    "ai-practice": { title: "AI Interview Practice", subtitle: "Simulate the AI interview before the real session" },
+    "ai-practice": { title: "Video Interview Simulation", subtitle: "Practice with AI in a simulated video call — not evaluated" },
     complete: { title: "Application Status", subtitle: "View your submission status and next steps" },
   };
 
@@ -63,7 +63,7 @@ export default function ApplicantDashboard() {
         {/* Brand + user */}
         <div className="px-4 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-sm font-bold tracking-tight">TalentAI</span>
+            <span className="text-sm font-bold tracking-tight">DirektutAI</span>
             <button
               onClick={toggleDarkMode}
               className="w-7 h-7 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"

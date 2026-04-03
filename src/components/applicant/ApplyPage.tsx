@@ -52,8 +52,8 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
   const selectedJobData = jobs.find((j) => j.id === selectedJob);
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="min-h-full p-4 lg:p-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Position Select */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
           <label className="label">Select Position</label>
@@ -117,13 +117,13 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
               isDragging
                 ? "border-zinc-400 bg-zinc-50 dark:bg-zinc-800"
                 : cvFile
-                ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-950/20"
+                ? "border-zinc-400 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/50"
                 : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
             }`}
           >
             {cvFile ? (
               <div className="flex flex-col items-center">
-                <CheckCircle className="w-10 h-10 text-emerald-500 mb-3" />
+                <CheckCircle className="w-10 h-10 text-zinc-400 mb-3" />
                 <p className="font-medium text-sm mb-1">{cvFile.name}</p>
                 <p className="text-xs text-zinc-400 mb-4">
                   {(cvFile.size / 1024).toFixed(1)} KB

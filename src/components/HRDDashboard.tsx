@@ -79,7 +79,7 @@ export default function HRDDashboard() {
       >
         <div className="p-5 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center justify-between mb-5">
-            <span className="text-sm font-bold tracking-tight">TalentAI</span>
+            <span className="text-sm font-bold tracking-tight">DirekrutAI</span>
             <button
               onClick={toggleDarkMode}
               className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"

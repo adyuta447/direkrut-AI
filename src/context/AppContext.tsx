@@ -26,7 +26,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
   const [currentPage, setCurrentPage] = useState("landing");
   const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem("talentai-dark");
+    const stored = localStorage.getItem("DirekrutAI-dark");
     return stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 
@@ -36,7 +36,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       document.documentElement.classList.remove("dark");
     }
-    localStorage.setItem("talentai-dark", String(darkMode));
+    localStorage.setItem("DirekrutAI-dark", String(darkMode));
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);

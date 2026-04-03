@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 
@@ -32,12 +32,12 @@ export default function CrossRoleRecommendation() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-5">
+    <div className="p-4 lg:p-5 space-y-4">
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-2">AI Tool</p>
-        <h2 className="text-3xl font-bold tracking-tight">Cross-Role Match</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">AI Tool</p>
+        <h2 className="text-2xl font-bold tracking-tight">Cross-Role Match</h2>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
           Discover alternative roles where a candidate's transferable skills would be valuable.
         </p>
       </div>
@@ -46,18 +46,21 @@ export default function CrossRoleRecommendation() {
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
         <label className="label">Select Candidate</label>
         <div className="flex gap-3">
-          <select
-            value={selectedCandidate}
-            onChange={(e) => setSelectedCandidate(e.target.value)}
-            className="input-field flex-1"
-          >
-            <option value="">Choose a candidate...</option>
-            {applications.map((app) => (
-              <option key={app.id} value={app.id}>
-                {app.applicantName} — {app.jobTitle}
-              </option>
-            ))}
-          </select>
+          <div className="relative flex-1">
+            <select
+              value={selectedCandidate}
+              onChange={(e) => setSelectedCandidate(e.target.value)}
+              className="appearance-none input-field w-full pr-8"
+            >
+              <option value="">Choose a candidate...</option>
+              {applications.map((app) => (
+                <option key={app.id} value={app.id}>
+                  {app.applicantName} — {app.jobTitle}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+          </div>
           <button
             onClick={handleSearch}
             disabled={!selectedCandidate}

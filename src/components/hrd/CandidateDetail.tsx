@@ -61,7 +61,7 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-4">
+    <div className="p-4 lg:p-5 space-y-4">
       {showScheduling && (
         <HRDSchedulingModal
           candidateName={candidate.applicantName}
