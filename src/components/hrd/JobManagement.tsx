@@ -31,12 +31,16 @@ export default function JobManagement() {
 
   const totalDepartments = useMemo(
     () => new Set(jobs.map((job) => job.department)).size,
-    [jobs]
+    [jobs],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.department.trim() || !form.description.trim()) {
+    if (
+      !form.title.trim() ||
+      !form.department.trim() ||
+      !form.description.trim()
+    ) {
       setMessage("Please fill in at least title, department, and description.");
       return;
     }
@@ -90,7 +94,9 @@ export default function JobManagement() {
     <div className="p-4 lg:p-5 space-y-4">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">Management</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">
+          Management
+        </p>
         <h2 className="text-2xl font-bold tracking-tight">Job Board</h2>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
           Add or update job postings visible on the landing page and job board.
@@ -123,7 +129,11 @@ export default function JobManagement() {
           {editingId && (
             <button
               type="button"
-              onClick={() => { setEditingId(null); setForm(initialForm); setMessage(""); }}
+              onClick={() => {
+                setEditingId(null);
+                setForm(initialForm);
+                setMessage("");
+              }}
               className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
             >
               Cancel edit
@@ -136,7 +146,9 @@ export default function JobManagement() {
             <input
               className="input-field"
               value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, title: e.target.value }))
+              }
               placeholder="Software Engineer"
             />
           </div>
@@ -145,7 +157,9 @@ export default function JobManagement() {
             <input
               className="input-field"
               value={form.department}
-              onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, department: e.target.value }))
+              }
               placeholder="Engineering"
             />
           </div>
@@ -154,7 +168,9 @@ export default function JobManagement() {
             <input
               className="input-field"
               value={form.location}
-              onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, location: e.target.value }))
+              }
               placeholder="Jakarta / Remote"
             />
           </div>
@@ -164,7 +180,9 @@ export default function JobManagement() {
               <select
                 className="appearance-none input-field pr-8"
                 value={form.type}
-                onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, type: e.target.value }))
+                }
               >
                 <option>Full-time</option>
                 <option>Part-time</option>
@@ -175,11 +193,18 @@ export default function JobManagement() {
             </div>
           </div>
           <div className="md:col-span-2">
-            <label className="label">Required Skills <span className="normal-case text-zinc-300 dark:text-zinc-700">(comma separated)</span></label>
+            <label className="label">
+              Required Skills{" "}
+              <span className="normal-case text-zinc-300 dark:text-zinc-700">
+                (comma separated)
+              </span>
+            </label>
             <input
               className="input-field"
               value={form.requirementsText}
-              onChange={(e) => setForm((p) => ({ ...p, requirementsText: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, requirementsText: e.target.value }))
+              }
               placeholder="React, TypeScript, Tailwind"
             />
           </div>
@@ -189,7 +214,9 @@ export default function JobManagement() {
               className="input-field resize-none"
               rows={4}
               value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
+              }
               placeholder="Describe the role and expectations..."
             />
           </div>
@@ -198,7 +225,9 @@ export default function JobManagement() {
             <input
               className="input-field"
               value={form.company}
-              onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, company: e.target.value }))
+              }
               placeholder="DirekrutAI"
             />
           </div>
@@ -207,7 +236,11 @@ export default function JobManagement() {
               type="submit"
               className="btn-primary flex items-center gap-2 py-3"
             >
-              {editingId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {editingId ? (
+                <Save className="w-4 h-4" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
               {editingId ? "Save Changes" : "Add Job"}
             </button>
           </div>
@@ -222,7 +255,9 @@ export default function JobManagement() {
       {/* Job List */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">All Postings</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+            All Postings
+          </p>
           <span className="text-xs text-zinc-400">{jobs.length} jobs</span>
         </div>
         <div className="space-y-3">
@@ -271,7 +306,9 @@ export default function JobManagement() {
             </div>
           ))}
           {jobs.length === 0 && (
-            <p className="text-sm text-zinc-400 text-center py-8">No jobs posted yet.</p>
+            <p className="text-sm text-zinc-400 text-center py-8">
+              No jobs posted yet.
+            </p>
           )}
         </div>
       </div>

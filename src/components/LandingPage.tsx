@@ -398,7 +398,7 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-100 dark:border-zinc-800 py-8 px-6 lg:px-10">
         <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="text-sm font-black tracking-tight uppercase">DirekrutAI</span>
-          <p className="text-xs text-zinc-400">© 2024 DirekrutAI — Revolutionizing recruitment with AI</p>
+          <p className="text-xs text-zinc-400">© 2026 DirekrutAI — Revolutionizing recruitment with AI</p>
           <div className="flex gap-5">
             {["Privacy", "Terms", "Contact"].map((link) => (
               <button key={link} className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest font-medium">
