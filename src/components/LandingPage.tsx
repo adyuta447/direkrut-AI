@@ -330,39 +330,65 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ───────────────────────────────────────────── */}
-      <section className="px-6 lg:px-10 pb-28">
+      <section className="px-6 lg:px-8 pb-28">
         <div className="max-w-screen-xl mx-auto">
-          <div className="bg-zinc-950 dark:bg-white rounded-2xl overflow-hidden">
-            <div className="px-10 lg:px-16 py-16 lg:py-20 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
+          <div className="bg-zinc-950 dark:bg-white rounded-3xl overflow-hidden">
+            <div className="px-10 lg:px-16 py-16 lg:py-14 grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-10 lg:gap-6">
+
+              {/* Left — Eyebrow + Headline */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-500 mb-6">Get Started</p>
-                <h2 className="text-5xl lg:text-7xl font-black text-white dark:text-zinc-900 tracking-tighter leading-none uppercase mb-0">
+                <h2 className="text-5xl lg:text-6xl font-black text-white dark:text-zinc-900 tracking-tighter leading-none uppercase">
                   Ready to<br />hire right?
                 </h2>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+
+              {/* Center — Image + floating badges */}
+              <div className="relative group mx-auto">
+                <div className="absolute inset-0 bg-white/5 dark:bg-zinc-900/10 blur-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <img
+                  src="/cta.svg"
+                  alt="AI recruitment illustration"
+                  width={420}
+                  height={400}
+                  className="relative w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] object-contain opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500 ease-out"
+                />
+
+                {/* Floating badge — company count, bottom-left */}
+                <div className="absolute -bottom-3 -left-4 bg-zinc-900 dark:bg-white/90 backdrop-blur-sm border border-white/10 dark:border-zinc-200 rounded-xl px-3.5 py-2 flex items-center gap-2 shadow-xl">
+                  <span className="text-white dark:text-zinc-900 font-black text-sm tabular-nums">500+</span>
+                  <span className="text-zinc-400 dark:text-zinc-500 text-xs">companies</span>
+                </div>
+
+                {/* Floating pills — features, top-right */}
+                <div className="absolute -top-3 -right-4 flex flex-col gap-1.5 items-end">
+                  {["AI Validation", "Smart Matching", "Auto-Scheduling"].map((f) => (
+                    <span
+                      key={f}
+                      className="bg-white/10 dark:bg-zinc-900/80 backdrop-blur-sm border border-white/10 dark:border-zinc-200 text-white/70 dark:text-zinc-600 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right — Buttons */}
+              <div className="flex flex-row gap-3 lg:justify-end flex-wrap">
                 <button
                   onClick={() => setCurrentPage("auth")}
-                  className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-6 py-3.5 rounded-xl font-semibold text-sm hover:opacity-80 transition-opacity"
+                  className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-8 py-3.5 rounded-xl font-semibold text-sm hover:opacity-80 transition-opacity w-full lg:w-auto"
                 >
                   Start Hiring
                 </button>
                 <button
                   onClick={() => setCurrentPage("jobs")}
-                  className="border border-zinc-700 dark:border-zinc-300 text-zinc-400 dark:text-zinc-500 px-6 py-3.5 rounded-xl font-semibold text-sm hover:border-zinc-500 dark:hover:border-zinc-400 transition-colors"
+                  className="border border-zinc-700 dark:border-zinc-300 text-zinc-400 dark:text-zinc-500 px-8 py-3.5 rounded-xl font-semibold text-sm hover:border-zinc-500 dark:hover:border-zinc-400 transition-colors w-full lg:w-auto"
                 >
                   Browse Jobs
                 </button>
               </div>
-            </div>
-            {/* Bottom strip */}
-            <div className="border-t border-zinc-800 dark:border-zinc-200 px-10 lg:px-16 py-5 flex items-center justify-between">
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">Join 500+ companies using DirekrutAI</p>
-              <div className="flex gap-6">
-                {["AI Validation", "Smart Matching", "Auto-Scheduling"].map((f) => (
-                  <span key={f} className="text-xs text-zinc-700 dark:text-zinc-400 font-medium">{f}</span>
-                ))}
-              </div>
+
             </div>
           </div>
         </div>

@@ -27,6 +27,14 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoResize = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 200) + "px";
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,6 +45,9 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
 
     setMessages((prev) => [...prev, { role: "user", content: currentInput }]);
     setCurrentInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     setIsTyping(true);
 
     setTimeout(() => {
@@ -147,26 +158,47 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
 
       {/* Input */}
       <div className="bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-4">
-        <div className="max-w-3xl mx-auto flex gap-3">
-          <textarea
-            value={currentInput}
-            onChange={(e) => setCurrentInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your answer here... (Enter to send)"
-            rows={2}
-            className="flex-1 input-field resize-none py-3"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!currentInput.trim() || isTyping}
-            className="w-11 h-11 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed self-end flex-shrink-0"
-          >
-            {currentQuestion < validationQuestions.length - 1 ? (
-              <Send className="w-4 h-4" />
-            ) : (
-              <ArrowRight className="w-4 h-4" />
-            )}
-          </button>
+        <div className="max-w-3xl mx-auto">
+          {/* Contained input card */}
+          <div className="relative bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus-within:border-zinc-400 dark:focus-within:border-zinc-500 focus-within:bg-white dark:focus-within:bg-zinc-800 transition-all duration-200">
+            <textarea
+              ref={textareaRef}
+              value={currentInput}
+              onChange={(e) => { setCurrentInput(e.target.value); autoResize(); }}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your answer..."
+              rows={1}
+              disabled={isTyping}
+              className="w-full bg-transparent px-5 pt-4 pb-12 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-600 resize-none overflow-hidden focus:outline-none leading-relaxed disabled:opacity-50"
+            />
+
+            {/* Bottom bar inside card */}
+            <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between">
+              <span className="text-[11px] text-zinc-400 dark:text-zinc-600 select-none">
+                {currentInput.length > 0
+                  ? `${currentInput.length} chars · Enter to send`
+                  : "Shift + Enter for new line"}
+              </span>
+
+              <button
+                onClick={handleSend}
+                disabled={!currentInput.trim() || isTyping}
+                className="group/btn inline-flex items-center gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold px-4 py-2 rounded-xl hover:opacity-80 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {currentQuestion < validationQuestions.length - 1 ? (
+                  <>
+                    Send
+                    <Send className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+                  </>
+                ) : (
+                  <>
+                    Finish
+                    <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

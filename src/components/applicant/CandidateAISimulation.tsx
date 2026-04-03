@@ -86,7 +86,7 @@ export default function CandidateAISimulation() {
         setAiSpeaking(true);
         setTimeout(() => setAiSpeaking(false), 3000);
       } else {
-        const closing = "Great job! That concludes your practice session. Your responses have been noted. You can review the transcript and practice again anytime.";
+        const closing = "Thank you for completing the interview. Your responses have been recorded and will be reviewed by the hiring team. You'll receive feedback within 2-3 business days. Good luck!";
         setMessages((prev) => [...prev, { role: "ai", text: closing }]);
         setCurrentCaption("Practice complete.");
         setCallRunning(false);
@@ -133,10 +133,10 @@ export default function CandidateAISimulation() {
             </span>
           </div>
 
-          <h2 className="text-3xl font-bold tracking-tight mb-2">AI Interview Simulation</h2>
+          <h2 className="text-3xl font-bold tracking-tight mb-2">AI Video Interview</h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-sm mb-8 leading-relaxed">
-            Simulated video interview with the DirekrutAI AI Interviewer. Practice your answers before the real session —{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">responses are not evaluated.</span>
+            Video interview session with the DirekrutAI AI Interviewer. Answer each question clearly and naturally —{" "}
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">your responses will be evaluated.</span>
           </p>
 
           {/* Device toggles */}
@@ -169,17 +169,17 @@ export default function CandidateAISimulation() {
             onClick={startCall}
             className="inline-flex items-center gap-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3.5 rounded-xl font-semibold text-sm hover:opacity-80 transition-opacity"
           >
-            Join Practice Session
+            Join Interview Session
             <ChevronRight className="w-4 h-4" />
           </button>
           <p className="text-xs text-zinc-400 mt-3">
-            {QUESTIONS.length} questions · Practice only
+            {QUESTIONS.length} questions
           </p>
         </div>
 
         {/* Right — questions list */}
         <div className="w-full lg:w-64 xl:w-72 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Practice Questions</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Interview Questions</p>
           <div className="space-y-2.5">
             {QUESTIONS.map((q, i) => (
               <div key={i} className="flex items-start gap-2">
@@ -202,9 +202,9 @@ export default function CandidateAISimulation() {
         <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-5">
           <span className="font-bold text-sm text-zinc-500 dark:text-zinc-400">AI</span>
         </div>
-        <h2 className="text-2xl font-bold mb-2">Practice Complete</h2>
+        <h2 className="text-2xl font-bold mb-2">Interview Complete</h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-md mb-6 leading-relaxed">
-          You answered all {QUESTIONS.length} questions. Review your transcript below or practice again.
+          You answered all {QUESTIONS.length} questions. Your responses have been recorded and submitted for review.
         </p>
         <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-left mb-6 max-h-60 overflow-y-auto">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Transcript</p>
@@ -223,7 +223,7 @@ export default function CandidateAISimulation() {
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Practice Again
+            Redo Interview
           </button>
           <button
             onClick={reset}
@@ -258,7 +258,7 @@ export default function CandidateAISimulation() {
             />
           </div>
         </div>
-        <p className="text-xs text-zinc-400">Practice Mode</p>
+        <p className="text-xs text-zinc-400">Interview Session</p>
       </div>
 
       {/* Video area */}

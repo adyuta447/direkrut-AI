@@ -40,13 +40,6 @@ export default function AuthPage() {
         {/* Brand */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-black text-white tracking-tight uppercase">DirekrutAI</span>
-          <button
-            onClick={() => setCurrentPage("landing")}
-            className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors uppercase tracking-widest"
-          >
-            <ArrowLeft className="w-3 h-3" />
-            Back
-          </button>
         </div>
 
         {/* Big type */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, CheckCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, ChevronDown } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
 interface ApplyPageProps {
@@ -57,19 +57,22 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
         {/* Position Select */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
           <label className="label">Select Position</label>
-          <select
-            value={selectedJob}
-            onChange={(e) => setSelectedJob(e.target.value)}
-            required
-            className="input-field"
-          >
-            <option value="">Choose a position...</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.title} — {job.company}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedJob}
+              onChange={(e) => setSelectedJob(e.target.value)}
+              required
+              className="appearance-none input-field pr-8"
+            >
+              <option value="">Choose a position...</option>
+              {jobs.map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.title} — {job.company}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+          </div>
 
           {selectedJobData && (
             <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-700/50">

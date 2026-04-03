@@ -26,14 +26,14 @@ export default function ApplicantDashboard() {
   const pageMetadata: Record<ApplicantView, { title: string; subtitle: string }> = {
     apply: { title: "Apply for a Position", subtitle: "Upload your CV and select the position" },
     validation: { title: "AI Skill Validation", subtitle: "Answer questions to validate your skills" },
-    "ai-practice": { title: "Video Interview Simulation", subtitle: "Practice with AI in a simulated video call — not evaluated" },
+    "ai-practice": { title: "AI Video Interview", subtitle: "Your AI-powered video interview session" },
     complete: { title: "Application Status", subtitle: "View your submission status and next steps" },
   };
 
   const navItems = [
     { id: "apply" as const, label: "Apply & Upload CV", icon: Upload },
     { id: "validation" as const, label: "AI Skill Validation", icon: MessageSquare },
-    { id: "ai-practice" as const, label: "AI Interview Practice", icon: Video },
+    { id: "ai-practice" as const, label: "AI Video Interview", icon: Video },
     { id: "complete" as const, label: "Status & Interview", icon: CheckCircle },
   ];
 

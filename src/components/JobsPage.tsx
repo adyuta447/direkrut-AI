@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, MapPin, ArrowLeft, Sun, Moon, ArrowUpRight, X, ChevronDown } from "lucide-react";
+import { Search, MapPin, Sun, Moon, ArrowUpRight, X, ChevronDown } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export default function JobsPage() {
@@ -36,20 +36,16 @@ export default function JobsPage() {
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white flex flex-col">
 
       {/* ── NAV ─────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800/60 flex-shrink-0">
-        <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800/50">
+        <div className="max-w-screen-xl mx-auto px-6 lg:px-10 py-4 flex justify-between items-center">
+          <span className="text-sm font-bold tracking-tight">DirekrutAI</span>
+          <div className="flex items-center gap-6">
             <button
               onClick={() => setCurrentPage("landing")}
-              className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors uppercase tracking-widest"
+              className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors tracking-wide uppercase"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back
+              Home
             </button>
-            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
-            <span className="text-sm font-black tracking-tight uppercase">DirekrutAI</span>
-          </div>
-          <div className="flex items-center gap-3">
             <button
               onClick={toggleDarkMode}
               className="w-8 h-8 flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
@@ -67,7 +63,7 @@ export default function JobsPage() {
       </nav>
 
       {/* ── PAGE HEADER ─────────────────────────────────── */}
-      <div className="border-b border-zinc-100 dark:border-zinc-800 px-6 lg:px-10 pt-12 pb-8 max-w-screen-xl mx-auto w-full">
+      <div className="border-b border-zinc-100 dark:border-zinc-800 px-6 lg:px-10 pt-28 pb-8 max-w-screen-xl mx-auto w-full">
         <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-zinc-400 mb-4">Open Positions</p>
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <h1 className="text-5xl lg:text-7xl font-black tracking-tighter leading-none uppercase">
@@ -116,7 +112,7 @@ export default function JobsPage() {
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
           </div>
           {/* Clear */}
           {hasFilters && (

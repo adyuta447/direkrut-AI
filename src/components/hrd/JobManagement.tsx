@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Edit3, Save, Plus, MapPin } from "lucide-react";
+import { Edit3, Save, Plus, MapPin, ChevronDown } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Job } from "../../types";
 
@@ -160,16 +160,19 @@ export default function JobManagement() {
           </div>
           <div>
             <label className="label">Job Type</label>
-            <select
-              className="input-field"
-              value={form.type}
-              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
-            >
-              <option>Full-time</option>
-              <option>Part-time</option>
-              <option>Contract</option>
-              <option>Internship</option>
-            </select>
+            <div className="relative">
+              <select
+                className="appearance-none input-field pr-8"
+                value={form.type}
+                onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+              >
+                <option>Full-time</option>
+                <option>Part-time</option>
+                <option>Contract</option>
+                <option>Internship</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            </div>
           </div>
           <div className="md:col-span-2">
             <label className="label">Required Skills <span className="normal-case text-zinc-300 dark:text-zinc-700">(comma separated)</span></label>
