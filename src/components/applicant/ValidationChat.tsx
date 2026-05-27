@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, ArrowRight } from "lucide-react";
-import { validationQuestions } from "../../mockData";
+
+// For this specific view, we'll hardcode Indonesian questions
+const validationQuestionsId = [
+  "Bisa tolong ceritakan secara singkat tentang pengalaman kerja terakhir Anda?",
+  "Apa pencapaian terbesar yang pernah Anda raih dalam karir Anda sejauh ini?",
+  "Bagaimana cara Anda menyelesaikan masalah yang kompleks di tempat kerja?",
+  "Mengapa Anda tertarik untuk bergabung dengan perusahaan kami di posisi ini?"
+];
 
 interface ValidationChatProps {
   onComplete: () => void;
@@ -16,11 +23,11 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
     {
       role: "ai",
       content:
-        "Hello! I've reviewed your CV and I have a few questions to validate your skills and experience. Let's begin:",
+        "Halo! Saya telah meninjau CV Anda dan saya memiliki beberapa pertanyaan awal untuk memvalidasi keahlian Anda. Mari kita mulai:",
     },
     {
       role: "ai",
-      content: validationQuestions[0],
+      content: validationQuestionsId[0],
     },
   ]);
   const [currentInput, setCurrentInput] = useState("");
@@ -51,12 +58,12 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
     setIsTyping(true);
 
     setTimeout(() => {
-      if (currentQuestion < validationQuestions.length - 1) {
+      if (currentQuestion < validationQuestionsId.length - 1) {
         const nextQuestion = currentQuestion + 1;
         setMessages((prev) => [
           ...prev,
-          { role: "ai", content: "Thank you. Next question:" },
-          { role: "ai", content: validationQuestions[nextQuestion] },
+          { role: "ai", content: "Terima kasih. Pertanyaan selanjutnya:" },
+          { role: "ai", content: validationQuestionsId[nextQuestion] },
         ]);
         setCurrentQuestion(nextQuestion);
       } else {
@@ -65,12 +72,12 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
           {
             role: "ai",
             content:
-              "Thank you for completing the validation! Your responses have been recorded and will be carefully analyzed. You can now view your application status.",
+              "Terima kasih telah menyelesaikan proses validasi! Jawaban Anda telah kami rekam dan akan dianalisis secara mendalam oleh sistem. Anda sekarang bisa melihat status lamaran Anda.",
           },
         ]);
         setTimeout(() => {
           onComplete();
-        }, 2000);
+        }, 3000);
       }
       setIsTyping(false);
     }, 1500);
@@ -83,28 +90,25 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
     }
   };
 
-  const progress = ((currentQuestion + 1) / validationQuestions.length) * 100;
+  const progress = ((currentQuestion + 1) / validationQuestionsId.length) * 100;
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#0a0a0a] font-sans">
+    <div className="h-full flex flex-col bg-canvas font-sans border border-hairline max-w-[1584px] mx-auto w-full">
       {/* Progress Header */}
-      <div className="bg-transparent border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 py-5 flex-shrink-0">
-        <div className="max-w-3xl mx-auto flex flex-col gap-4">
+      <div className="bg-surface-1 border-b border-hairline px-6 py-4 flex-shrink-0">
+        <div className="max-w-3xl mx-auto flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-100">
-                System Validation
-              </span>
-            </div>
-            <span className="text-[10px] font-mono tracking-widest text-zinc-400">
-              {Math.min(currentQuestion + 1, validationQuestions.length)} /{" "}
-              {validationQuestions.length}
+            <span className="text-[14px] font-semibold text-ink">
+              Validasi Sistem
+            </span>
+            <span className="text-[12px] text-ink-muted">
+              {Math.min(currentQuestion + 1, validationQuestionsId.length)} /{" "}
+              {validationQuestionsId.length}
             </span>
           </div>
-          <div className="w-full bg-zinc-100 dark:bg-zinc-800/50 h-[2px]">
+          <div className="w-full bg-[#e0e0e0] h-1 mt-2">
             <div
-              className="bg-zinc-900 dark:bg-white h-[2px] transition-all duration-700 ease-out"
+              className="bg-primary h-1 transition-all duration-700 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -121,14 +125,14 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
                 message.role === "user" ? "items-end" : "items-start"
               }`}
             >
-              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 px-1">
-                {message.role === "ai" ? "System" : "Candidate"}
+              <span className="text-[12px] text-ink-muted mb-1 px-1">
+                {message.role === "ai" ? "Sistem AI" : "Kandidat"}
               </span>
               <div
-                className={`max-w-[85%] sm:max-w-[75%] px-5 py-4 text-[13px] leading-relaxed ${
+                className={`max-w-[85%] sm:max-w-[75%] px-5 py-4 text-[14px] leading-[1.5] ${
                   message.role === "ai"
-                    ? "bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-800 dark:text-zinc-200 rounded-3xl rounded-tl-sm"
-                    : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-3xl rounded-tr-sm"
+                    ? "bg-surface-1 border border-hairline text-ink"
+                    : "bg-ink text-white"
                 }`}
               >
                 {message.content}
@@ -138,15 +142,15 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
 
           {isTyping && (
             <div className="flex flex-col items-start">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 px-1">
-                System
+              <span className="text-[12px] text-ink-muted mb-1 px-1">
+                Sistem AI
               </span>
-              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 px-5 py-4 rounded-3xl rounded-tl-sm">
+              <div className="bg-surface-1 border border-hairline px-5 py-4">
                 <div className="flex gap-1.5">
                   {[0, 0.15, 0.3].map((delay, i) => (
                     <div
                       key={i}
-                      className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-pulse"
+                      className="w-1.5 h-1.5 bg-ink-muted animate-pulse"
                       style={{ animationDelay: `${delay}s` }}
                     />
                   ))}
@@ -160,9 +164,9 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
       </div>
 
       {/* Input Panel */}
-      <div className="bg-transparent border-t border-zinc-200/60 dark:border-zinc-800/60 px-6 py-5 flex-shrink-0">
+      <div className="border-t border-hairline bg-surface-1 px-6 py-5 flex-shrink-0">
         <div className="max-w-3xl mx-auto">
-          <div className="relative flex items-end gap-2 bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-1.5 focus-within:border-zinc-400 dark:focus-within:border-zinc-600 transition-colors">
+          <div className="relative flex items-end gap-2 bg-canvas border-b border-hairline focus-within:border-primary transition-none">
             <textarea
               ref={textareaRef}
               value={currentInput}
@@ -171,31 +175,31 @@ export default function ValidationChat({ onComplete }: ValidationChatProps) {
                 autoResize();
               }}
               onKeyDown={handleKeyPress}
-              placeholder="Type your response..."
+              placeholder="Ketik balasan Anda..."
               rows={1}
               disabled={isTyping}
-              className="flex-1 bg-transparent px-4 py-3 text-[13px] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 resize-none overflow-hidden focus:outline-none min-h-[44px] max-h-[160px] leading-relaxed disabled:opacity-50"
+              className="flex-1 bg-transparent px-4 py-3 text-[14px] text-ink placeholder-ink-muted resize-none overflow-hidden focus:outline-none min-h-[44px] max-h-[160px] leading-[1.5] disabled:opacity-50"
             />
 
             <button
               onClick={handleSend}
               disabled={!currentInput.trim() || isTyping}
-              className="w-10 h-10 flex items-center justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 mb-0.5 mr-0.5"
+              className="w-10 h-10 flex items-center justify-center bg-primary text-white hover:bg-[#0353e9] transition-none disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 m-1"
             >
-              {currentQuestion < validationQuestions.length - 1 ? (
-                <Send className="w-4 h-4 ml-0.5" />
+              {currentQuestion < validationQuestionsId.length - 1 ? (
+                <Send className="w-4 h-4" />
               ) : (
                 <ArrowRight className="w-4 h-4" />
               )}
             </button>
           </div>
 
-          <div className="flex justify-between items-center mt-3 px-2">
-            <p className="text-[9px] font-medium uppercase tracking-widest text-zinc-400">
-              Press Enter to Submit
+          <div className="flex justify-between items-center mt-2 px-1">
+            <p className="text-[12px] text-ink-muted">
+              Tekan Enter untuk Mengirim
             </p>
-            <p className="text-[9px] font-mono tracking-widest text-zinc-400">
-              {currentInput.length} CHARS
+            <p className="text-[12px] text-ink-muted">
+              {currentInput.length} karakter
             </p>
           </div>
         </div>

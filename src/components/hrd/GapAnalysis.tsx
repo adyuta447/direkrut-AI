@@ -1,181 +1,255 @@
-import { Target, ChevronDown } from "lucide-react";
+import { Target, ChevronDown, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 
-interface SkillGap {
+interface SkillMatch {
   skill: string;
-  currentLevel: number;
-  requiredLevel: number;
-  priority: "high" | "medium" | "low";
+  matchLevel: "Tinggi" | "Menengah" | "Rendah";
+  evidence: string;
 }
 
-const PRIORITY_STYLE = {
-  high: "text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800",
-  medium: "text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
-  low: "text-zinc-500 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800",
+const MATCH_STYLE = {
+  Tinggi: "text-[#198038] bg-[#defbe6] border-[#198038]",
+  Menengah: "text-[#f1c21b] bg-[#fcf0d3] border-[#f1c21b]",
+  Rendah: "text-[#da1e28] bg-[#fff1f1] border-[#da1e28]",
 };
 
 export default function GapAnalysis() {
-  const { applications } = useApp();
+  const { applications, jobs } = useApp();
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [analysis, setAnalysis] = useState<{
-    gaps: SkillGap[];
-    growthProjection: string;
+    matches: SkillMatch[];
+    overallAssessment: string;
     recommendations: string[];
   } | null>(null);
 
   const handleAnalyze = () => {
     if (!selectedCandidate) return;
+    
+    const candidate = applications.find(app => app.id === selectedCandidate);
+    if (!candidate) return;
 
-    const mockGaps: SkillGap[] = [
-      { skill: "React Advanced Patterns", currentLevel: 60, requiredLevel: 85, priority: "high" },
-      { skill: "TypeScript", currentLevel: 70, requiredLevel: 90, priority: "high" },
-      { skill: "Testing & TDD", currentLevel: 50, requiredLevel: 80, priority: "medium" },
-      { skill: "Performance Optimization", currentLevel: 55, requiredLevel: 75, priority: "medium" },
-      { skill: "System Design", currentLevel: 40, requiredLevel: 70, priority: "low" },
-    ];
+    const title = candidate.jobTitle.toLowerCase();
+    let mockMatches: SkillMatch[] = [];
+    let overallAssessment = "";
+    let recommendations: string[] = [];
+
+    if (title.includes("marketing") || title.includes("pemasaran")) {
+      mockMatches = [
+        { 
+          skill: "Digital Marketing & SEO", 
+          matchLevel: "Tinggi", 
+          evidence: `Ditemukan di CV: 'Menjalankan kampanye SEO yang meningkatkan trafik organik sebesar 45%.'`,
+        },
+        { 
+          skill: "Content Strategy", 
+          matchLevel: "Tinggi", 
+          evidence: "Ditemukan di CV: 'Memimpin tim konten untuk kampanye peluncuran produk kuartal 3.'",
+        },
+        { 
+          skill: "Data Analytics (Google Analytics)", 
+          matchLevel: "Menengah", 
+          evidence: "Ditemukan di CV: 'Terbiasa membaca metrik dasar analitik.' (Perlu sertifikasi lanjutan)",
+        },
+        { 
+          skill: "B2B Sales", 
+          matchLevel: "Rendah", 
+          evidence: "Tidak ada bukti langsung mengenai negosiasi atau penjualan B2B pada riwayat sebelumnya.",
+        },
+      ];
+      overallAssessment = `Kandidat sangat kuat di bidang pemasaran digital dan pembuatan konten. Mereka cocok untuk peran pemasaran inti, namun akan membutuhkan pelatihan terkait analitik data lanjutan dan proses penjualan B2B.`;
+      recommendations = [
+        "Uji pemahaman analitik data mereka menggunakan studi kasus singkat.",
+        "Diskusikan ketertarikan mereka untuk belajar tentang konversi B2B.",
+      ];
+    } else if (title.includes("design") || title.includes("desain") || title.includes("ui") || title.includes("ux")) {
+      mockMatches = [
+        { 
+          skill: "UI/UX Prototyping (Figma)", 
+          matchLevel: "Tinggi", 
+          evidence: "Ditemukan di CV: 'Mendesain ulang sistem desain dan prototipe aplikasi seluler menggunakan Figma.'",
+        },
+        { 
+          skill: "User Research & Testing", 
+          matchLevel: "Tinggi", 
+          evidence: "Ditemukan di CV: 'Melakukan wawancara pengguna dan A/B testing untuk memvalidasi alur checkout.'",
+        },
+        { 
+          skill: "HTML/CSS Dasar", 
+          matchLevel: "Menengah", 
+          evidence: "Ditemukan di CV: 'Bekerja sama dengan developer dalam implementasi desain UI.'",
+        },
+        { 
+          skill: "3D Animation", 
+          matchLevel: "Rendah", 
+          evidence: "Tidak ditemukan referensi mengenai animasi 3D atau motion design lanjutan.",
+        },
+      ];
+      overallAssessment = `Kandidat memiliki fondasi UI/UX yang sangat kuat serta terbiasa dengan riset pengguna. Keterampilan pengkodean front-end dasar mereka adalah nilai tambah, namun tidak dapat diandalkan untuk animasi 3D.`;
+      recommendations = [
+        "Fokuskan wawancara pada portofolio dan proses pemecahan masalah (design thinking).",
+        "Tanyakan bagaimana cara mereka berkolaborasi dengan tim engineering."
+      ];
+    } else {
+      mockMatches = [
+        { 
+          skill: "Keahlian Inti Sesuai Peran", 
+          matchLevel: "Tinggi", 
+          evidence: `Ditemukan di CV: 'Berpengalaman 3 tahun di bidang yang relevan dengan ${candidate.jobTitle}.'`,
+        },
+        { 
+          skill: "Manajemen Proyek", 
+          matchLevel: "Tinggi", 
+          evidence: "Ditemukan di CV: 'Telah memimpin 2 proyek berskala menengah dengan keberhasilan 100% on-time.'",
+        },
+        { 
+          skill: "Analisis Sistem Lanjutan", 
+          matchLevel: "Menengah", 
+          evidence: "Ditemukan di CV: 'Turut serta membantu perancangan sistem internal.' (Butuh validasi tingkat kemandirian)",
+        },
+        { 
+          skill: "Keterampilan Lintas-Fungsi (Cross-functional)", 
+          matchLevel: "Rendah", 
+          evidence: "Tidak ada bukti spesifik mengenai kolaborasi lintas divisi yang kompleks dalam skala besar.",
+        },
+      ];
+      overallAssessment = `Kandidat menunjukkan profil yang solid untuk peran ${candidate.jobTitle}. Pengalaman inti mereka valid dan didukung oleh pengalaman manajemen proyek skala menengah. Membutuhkan peningkatan dalam memimpin inisiatif lintas-divisi.`;
+      recommendations = [
+        `Gali lebih dalam mengenai tanggung jawab mereka sebelumnya di bidang ${candidate.jobTitle}.`,
+        "Sediakan mentor untuk melatih kemampuan kepemimpinan dan komunikasi lintas departemen.",
+        "Jelaskan ekspektasi terkait inisiatif independen yang harus mereka ambil."
+      ];
+    }
 
     setAnalysis({
-      gaps: mockGaps,
-      growthProjection:
-        "With focused training and mentorship, this candidate can reach required proficiency in 3–6 months. High priority gaps should be addressed within the first 2 months through structured learning. The candidate shows strong foundational knowledge and good learning ability.",
-      recommendations: [
-        "Enroll in advanced React patterns course (Frontend Masters)",
-        "Pair programming sessions with senior developers",
-        "Weekly code review participation",
-        "Complete TypeScript deep dive certification",
-        "Assign a mentor for system design guidance",
-      ],
+      matches: mockMatches,
+      overallAssessment,
+      recommendations,
     });
   };
 
   return (
-    <div className="p-4 lg:p-5 space-y-4">
+    <div className="p-6 lg:p-8 space-y-6 font-sans">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">AI Tool</p>
-        <h2 className="text-2xl font-bold tracking-tight">Gap & Growth Analysis</h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-          Identify skill gaps and build a development plan for any candidate.
+        <p className="text-[12px] font-semibold text-ink-muted mb-2 uppercase tracking-widest">Alat AI</p>
+        <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Validasi Kompetensi (AI)</h2>
+        <p className="text-[16px] text-ink-muted">
+          Validasi keterampilan kandidat secara langsung terhadap bukti yang ditemukan di CV mereka.
         </p>
       </div>
 
       {/* Selector */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-        <label className="label">Select Candidate</label>
-        <div className="flex gap-3">
+      <div className="bg-canvas border border-hairline p-6">
+        <label className="block text-[14px] text-ink font-semibold mb-3">Pilih Lamaran Kandidat</label>
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <select
               value={selectedCandidate}
-              onChange={(e) => setSelectedCandidate(e.target.value)}
-              className="appearance-none input-field w-full pr-8"
+              onChange={(e) => {
+                setSelectedCandidate(e.target.value);
+                setAnalysis(null);
+              }}
+              className="input-field appearance-none w-full pr-10 cursor-pointer"
             >
-              <option value="">Choose a candidate...</option>
+              <option value="">Pilih lamaran...</option>
               {applications.map((app) => (
                 <option key={app.id} value={app.id}>
-                  {app.applicantName} — {app.jobTitle} (Score: {app.recommendationScore || "N/A"})
+                  {app.applicantName} — {app.jobTitle}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
           </div>
           <button
             onClick={handleAnalyze}
             disabled={!selectedCandidate}
-            className="btn-primary flex items-center gap-2 px-5 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="btn-primary flex items-center justify-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             <Target className="w-4 h-4" />
-            Analyze
+            Analisis CV
           </button>
         </div>
       </div>
 
       {/* Empty state */}
       {selectedCandidate && !analysis && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-12 text-center">
-          <Target className="w-10 h-10 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
-          <p className="text-sm text-zinc-400">Click "Analyze" to see detailed skill gap analysis</p>
+        <div className="bg-surface-1 border border-hairline p-16 text-center">
+          <Target className="w-12 h-12 text-ink-muted mx-auto mb-4" />
+          <p className="text-[16px] text-ink">Klik "Analisis CV" untuk mengekstrak bukti relevan dengan lowongan kerja kandidat.</p>
         </div>
       )}
 
       {/* Results */}
       {analysis && (
-        <div className="space-y-4">
-          {/* Skill Gaps */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-              Skill Gaps
+        <div className="space-y-6 animate-in slide-in-from-bottom-4">
+          {/* Skill Matches */}
+          <div className="bg-canvas border border-hairline p-6">
+            <p className="text-[18px] font-normal text-ink mb-6">
+              Validasi Keterampilan & Bukti
             </p>
-            <div className="space-y-5">
-              {analysis.gaps.map((gap, idx) => (
-                <div key={idx}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{gap.skill}</span>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-lg ${PRIORITY_STYLE[gap.priority]}`}>
-                        {gap.priority}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold tabular-nums">
-                      {gap.requiredLevel - gap.currentLevel}pt gap
+            <div className="space-y-6">
+              {analysis.matches.map((match, idx) => (
+                <div key={idx} className="border-l-4 border-hairline pl-4">
+                  <div className="flex flex-wrap items-center gap-4 mb-2">
+                    <span className="text-[16px] font-semibold text-ink">{match.skill}</span>
+                    <span className={`text-[12px] font-semibold px-2 py-1 border uppercase tracking-widest ${MATCH_STYLE[match.matchLevel]}`}>
+                      Kecocokan {match.matchLevel}
                     </span>
                   </div>
-                  <div className="relative h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-                    <div
-                      className="absolute left-0 top-0 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all"
-                      style={{ width: `${gap.requiredLevel}%` }}
-                    />
-                    <div
-                      className="absolute left-0 top-0 h-2 rounded-full bg-zinc-900 dark:bg-white transition-all"
-                      style={{ width: `${gap.currentLevel}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-1.5 text-xs text-zinc-400">
-                    <span>Current: {gap.currentLevel}%</span>
-                    <span>Required: {gap.requiredLevel}%</span>
+                  <div className="bg-surface-1 border border-hairline p-4 mt-2">
+                    <p className="text-[12px] font-semibold text-ink-muted mb-1 flex items-center gap-1.5 uppercase tracking-widest">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Bukti AI Diekstrak dari CV
+                    </p>
+                    <p className="text-[14px] text-ink leading-[1.5]">
+                      "{match.evidence}"
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Growth Projection */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-              Growth Projection
-            </p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              {analysis.growthProjection}
-            </p>
-          </div>
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Growth Projection */}
+            <div className="bg-canvas border border-hairline p-6">
+              <p className="text-[18px] font-normal text-ink mb-4">
+                Penilaian Keseluruhan
+              </p>
+              <p className="text-[14px] text-ink leading-[1.5]">
+                {analysis.overallAssessment}
+              </p>
+            </div>
 
-          {/* Recommendations */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-              Development Recommendations
-            </p>
-            <div className="space-y-2">
-              {analysis.recommendations.map((rec, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <span className="text-xs font-mono text-zinc-300 dark:text-zinc-600 mt-0.5">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{rec}</p>
-                </div>
-              ))}
+            {/* Recommendations */}
+            <div className="bg-canvas border border-hairline p-6">
+              <p className="text-[18px] font-normal text-ink mb-4">
+                Tindakan yang Disarankan
+              </p>
+              <div className="space-y-3">
+                {analysis.recommendations.map((rec, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-3 bg-surface-1 border border-hairline">
+                    <span className="text-[12px] font-semibold text-ink-muted mt-0.5">
+                      {idx + 1}.
+                    </span>
+                    <p className="text-[14px] text-ink">{rec}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Action Plan */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-              Action Plan
+          <div className="bg-surface-1 border border-hairline p-6">
+            <p className="text-[18px] font-normal text-ink mb-4">
+              Langkah Selanjutnya
             </p>
-            <div className="grid grid-cols-3 gap-3">
-              {["Generate Training Plan", "Share with Candidate", "Export Report"].map((action) => (
+            <div className="flex flex-wrap gap-4">
+              {["Buat Panduan Wawancara", "Bagikan Laporan ke Manajer", "Ekspor PDF"].map((action) => (
                 <button
                   key={action}
-                  className="py-2.5 px-4 text-sm font-medium border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  className="px-4 py-2 text-[14px] font-normal border border-primary text-primary hover:bg-primary hover:text-white transition-none"
                 >
                   {action}
                 </button>

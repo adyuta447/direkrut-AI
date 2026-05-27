@@ -6,8 +6,6 @@ import {
   LogOut,
   Menu,
   X,
-  Sun,
-  Moon,
   Video,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
@@ -23,8 +21,6 @@ export default function ApplicantDashboard() {
     currentUser,
     setCurrentUser,
     setCurrentPage,
-    darkMode,
-    toggleDarkMode,
   } = useApp();
   const [activeView, setActiveView] = useState<ApplicantView>("apply");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,32 +30,32 @@ export default function ApplicantDashboard() {
     { title: string; subtitle: string }
   > = {
     apply: {
-      title: "Apply for Position",
-      subtitle: "Upload your document and select the target role",
+      title: "Kirim Lamaran",
+      subtitle: "Unggah dokumen Anda dan pilih peran target",
     },
     validation: {
-      title: "AI Validation",
-      subtitle: "System validation sequence based on your profile",
+      title: "Validasi AI",
+      subtitle: "Urutan validasi sistem berdasarkan profil Anda",
     },
     "ai-practice": {
-      title: "AI Video Interview",
-      subtitle: "Interactive autonomous interview session",
+      title: "Wawancara Video AI",
+      subtitle: "Sesi wawancara otonom interaktif",
     },
     complete: {
-      title: "Status Board",
-      subtitle: "Track your current application state",
+      title: "Status Lamaran",
+      subtitle: "Lacak posisi lamaran Anda saat ini",
     },
   };
 
   const navItems = [
-    { id: "apply" as const, label: "Submit Application", icon: Upload },
+    { id: "apply" as const, label: "Kirim Lamaran", icon: Upload },
     {
       id: "validation" as const,
-      label: "System Validation",
+      label: "Validasi Sistem",
       icon: MessageSquare,
     },
-    { id: "ai-practice" as const, label: "AI Interview", icon: Video },
-    { id: "complete" as const, label: "Status Board", icon: CheckCircle },
+    { id: "ai-practice" as const, label: "Wawancara AI", icon: Video },
+    { id: "complete" as const, label: "Status Lamaran", icon: CheckCircle },
   ];
 
   const currentPageMeta = pageMetadata[activeView];
@@ -70,110 +66,102 @@ export default function ApplicantDashboard() {
   };
 
   return (
-    <div className="h-screen bg-white dark:bg-[#0a0a0a] font-sans flex relative overflow-hidden">
+    <div className="h-screen bg-canvas font-sans flex relative overflow-hidden">
       {/* Overlay for Mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-md z-30 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-[#393939]/60 backdrop-blur-sm z-30 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Carbon Style */}
       <aside
-        className={`w-72 bg-white dark:bg-[#0a0a0a] border-r border-zinc-200/60 dark:border-zinc-800/60 fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-transform duration-500 ease-out ${
+        className={`w-72 bg-surface-1 border-r border-hairline fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-transform duration-500 ease-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Brand & User Area */}
-        <div className="p-6 lg:p-8 border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <div className="p-6 lg:p-8 border-b border-hairline">
           <div className="flex items-center justify-between mb-8">
-            <span className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">
-              Direkrut<span className="text-zinc-400">AI</span>
+            <span className="text-[20px] font-semibold text-ink">
+              Direkrut AI
             </span>
-            <button
-              onClick={toggleDarkMode}
-              className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              {darkMode ? (
-                <Sun className="w-4 h-4 text-zinc-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-zinc-600" />
-              )}
-            </button>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center text-white dark:text-zinc-900 font-black text-lg flex-shrink-0">
+            <div className="w-12 h-12 bg-canvas border border-hairline flex items-center justify-center text-ink font-semibold text-[20px] flex-shrink-0">
               {currentUser?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-zinc-900 dark:text-white truncate uppercase tracking-widest">
+              <p className="text-[14px] font-semibold text-ink truncate">
                 {currentUser?.name}
               </p>
-              <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 truncate uppercase tracking-widest mt-0.5">
-                Candidate
+              <p className="text-[12px] text-ink-muted truncate">
+                Kandidat
               </p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 lg:p-6 flex-1 overflow-y-auto space-y-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 px-4 mb-4">
-            Main Menu
+        <nav className="flex-1 overflow-y-auto">
+          <p className="text-[12px] font-semibold uppercase text-ink-muted px-8 py-4">
+            Menu Utama
           </p>
-          {navItems.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => {
-                setActiveView(id);
-                setSidebarOpen(false);
-              }}
-              className={`flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-                activeView === id
-                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-                  : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
-              }`}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span>{label}</span>
-            </button>
-          ))}
+          <div className="flex flex-col">
+            {navItems.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => {
+                  setActiveView(id);
+                  setSidebarOpen(false);
+                }}
+                className={`flex items-center gap-4 px-8 py-4 w-full text-[14px] font-normal transition-none border-l-4 ${
+                  activeView === id
+                    ? "bg-canvas text-primary border-primary font-semibold"
+                    : "text-ink hover:bg-canvas border-transparent"
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 lg:p-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
+        <div className="border-t border-hairline">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            className="flex items-center gap-4 px-8 py-6 w-full text-[14px] font-normal text-[#da1e28] hover:bg-[#fff1f1] transition-none"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span>End Session</span>
+            <span>Keluar</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-white dark:bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-canvas">
         {/* Topbar */}
-        <header className="bg-transparent border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 lg:px-12 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+        <header className="bg-canvas border-b border-hairline px-6 lg:px-12 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden w-12 h-12 flex items-center justify-center rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="lg:hidden w-12 h-12 flex items-center justify-center border border-hairline bg-surface-1 hover:bg-surface-2 transition-none"
             >
               {sidebarOpen ? (
-                <X className="w-5 h-5 text-zinc-900 dark:text-white" />
+                <X className="w-5 h-5 text-ink" />
               ) : (
-                <Menu className="w-5 h-5 text-zinc-900 dark:text-white" />
+                <Menu className="w-5 h-5 text-ink" />
               )}
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl lg:text-3xl font-black tracking-tighter text-zinc-900 dark:text-white truncate mb-1">
+              <h1 className="text-[28px] font-light text-ink truncate mb-1">
                 {currentPageMeta.title}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 truncate">
+              <p className="text-[14px] text-ink-muted truncate">
                 {currentPageMeta.subtitle}
               </p>
             </div>
@@ -181,7 +169,7 @@ export default function ApplicantDashboard() {
         </header>
 
         {/* Dynamic Main View */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-[#0a0a0a]">
+        <main className="flex-1 overflow-y-auto bg-canvas">
           {activeView === "apply" && (
             <ApplyPage onNext={() => setActiveView("validation")} />
           )}

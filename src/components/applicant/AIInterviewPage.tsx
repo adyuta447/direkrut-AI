@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 interface AIInterviewPageProps {
@@ -7,9 +7,9 @@ interface AIInterviewPageProps {
 
 export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
   const [indicators] = useState([
-    { id: "eye", label: "Eye Tracking", status: true },
-    { id: "outfit", label: "Neat Outfit", status: true },
-    { id: "tab", label: "Tab Browser", status: false },
+    { id: "eye", label: "Pelacakan Mata", status: true },
+    { id: "outfit", label: "Pakaian Rapi", status: true },
+    { id: "tab", label: "Perpindahan Tab", status: false },
   ]);
 
   const [metrics] = useState({
@@ -18,18 +18,18 @@ export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
   });
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-zinc-900">
+    <div className="h-full flex flex-col bg-canvas font-sans">
       {/* Header */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
+      <div className="border-b border-hairline bg-surface-1 px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-medium text-zinc-900 dark:text-white">
-            AI VIDEO INTERVIEW
+          <h1 className="text-[16px] font-semibold text-ink uppercase">
+            WAWANCARA VIDEO AI
           </h1>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="w-8 h-8 flex items-center justify-center border border-hairline hover:bg-canvas transition-none"
           >
-            <X className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+            <X className="w-4 h-4 text-ink" />
           </button>
         </div>
       </div>
@@ -37,28 +37,29 @@ export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
       {/* Main Content - Two Column Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: User Video */}
-        <div className="flex-1 border-r border-zinc-200 dark:border-zinc-800 p-6">
-          <div className="h-full bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                USER VIDEO
-              </div>
-            </div>
+        <div className="flex-1 border-r border-hairline p-6 bg-canvas">
+          <div className="h-full bg-surface-1 border border-hairline flex items-center justify-center relative overflow-hidden">
+             <img src="/aiinterview.png" className="w-full h-full object-cover opacity-80" alt="Video Anda" />
+             <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-ink/80 text-white px-4 py-2 text-[14px] font-semibold">
+                  VIDEO ANDA
+                </div>
+             </div>
           </div>
         </div>
 
         {/* Right: AI Panel */}
-        <div className="w-96 border-l border-zinc-200 dark:border-zinc-800 p-6 flex flex-col">
+        <div className="w-96 border-l border-hairline p-6 flex flex-col bg-canvas">
           {/* Indicators Section */}
           <div className="mb-8">
             <div className="space-y-3">
               {indicators.map((indicator) => (
                 <div
                   key={indicator.id}
-                  className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors flex items-center justify-center ${
+                  className={`px-4 py-3 border text-[14px] font-semibold transition-none flex items-center justify-center uppercase ${
                     indicator.status
-                      ? "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                      : "border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300"
+                      ? "border-hairline bg-surface-1 text-ink"
+                      : "border-[#da1e28] bg-[#fff1f1] text-[#da1e28]"
                   }`}
                 >
                   {indicator.label}
@@ -70,21 +71,21 @@ export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
           {/* Metrics Section */}
           <div className="flex gap-3 mb-8">
             {/* Score */}
-            <div className="flex-1 px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-[#F0FDF4] dark:bg-green-950">
-              <div className="text-xs text-zinc-600 dark:text-green-300 font-medium mb-1">
-                Score
+            <div className="flex-1 px-4 py-3 border border-hairline bg-[#defbe6]">
+              <div className="text-[12px] text-[#198038] font-semibold mb-1 uppercase">
+                Skor
               </div>
-              <div className="text-2xl font-semibold text-green-700 dark:text-green-400">
+              <div className="text-[24px] font-light text-[#198038]">
                 {metrics.score}%
               </div>
             </div>
 
             {/* Violations */}
-            <div className="flex-1 px-4 py-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950">
-              <div className="text-xs text-red-600 dark:text-red-300 font-medium mb-1">
-                Violations
+            <div className="flex-1 px-4 py-3 border border-[#da1e28] bg-[#fff1f1]">
+              <div className="text-[12px] text-[#da1e28] font-semibold mb-1 uppercase">
+                Pelanggaran
               </div>
-              <div className="text-2xl font-semibold text-red-700 dark:text-red-400">
+              <div className="text-[24px] font-light text-[#da1e28]">
                 {metrics.violations}
               </div>
             </div>
@@ -92,10 +93,10 @@ export default function AIInterviewPage({ onClose }: AIInterviewPageProps) {
 
           {/* AI Video - Bottom Right */}
           <div className="flex-1 flex items-end justify-end">
-            <div className="w-48 h-32 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center justify-center">
+            <div className="w-48 h-32 bg-surface-1 border border-hairline flex items-center justify-center">
               <div className="text-center">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                  AI VIDEO
+                <div className="text-[12px] text-ink-muted font-semibold uppercase">
+                  VIDEO AI
                 </div>
               </div>
             </div>

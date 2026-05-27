@@ -9,6 +9,9 @@ import {
   XCircle,
   Video,
   Calendar,
+  BarChart3,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import DecisionPanel from "./DecisionPanel";
@@ -17,21 +20,23 @@ import AIInterviewSimulation from "./AIInterviewSimulation";
 
 interface CandidateDetailProps {
   candidateId: string;
+  onBack: () => void;
 }
 
-export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
+export default function CandidateDetail({ candidateId, onBack }: CandidateDetailProps) {
   const { applications } = useApp();
   const [showDecisionPanel, setShowDecisionPanel] = useState(false);
   const [decision, setDecision] = useState<"invite" | "reject" | null>(null);
   const [showScheduling, setShowScheduling] = useState(false);
   const [showAIInterview, setShowAIInterview] = useState(false);
+  const [showMatchDetails, setShowMatchDetails] = useState(false);
 
   const candidate = applications.find((app) => app.id === candidateId);
 
   if (!candidate) {
     return (
-      <div className="p-8 text-zinc-500 dark:text-zinc-400 text-sm">
-        Candidate not found.
+      <div className="p-8 text-ink-muted text-[14px]">
+        Kandidat tidak ditemukan.
       </div>
     );
   }
@@ -61,7 +66,7 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
   }
 
   return (
-    <div className="p-4 lg:p-5 space-y-4">
+    <div className="p-6 lg:p-8 space-y-6">
       {showScheduling && (
         <HRDSchedulingModal
           candidateName={candidate.applicantName}
@@ -71,34 +76,34 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
 
       {/* Back */}
       <button
-        onClick={() => window.history.back()}
-        className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-2"
+        onClick={onBack}
+        className="flex items-center gap-2 text-[14px] text-ink hover:underline transition-none mb-4"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Dashboard
+        Kembali ke Manajemen Pelamar
       </button>
 
       {/* Hero card */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 font-bold text-xl flex-shrink-0">
+      <div className="bg-canvas border border-hairline p-6 relative">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 bg-surface-1 border border-hairline flex items-center justify-center text-ink font-semibold text-[24px] flex-shrink-0">
               {candidate.applicantName.charAt(0)}
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight mb-1">
+              <h1 className="text-[28px] font-light text-ink mb-1">
                 {candidate.applicantName}
               </h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">
+              <p className="text-[16px] text-ink-muted mb-4">
                 {candidate.jobTitle}
               </p>
-              <div className="flex flex-wrap gap-3 text-xs text-zinc-400 dark:text-zinc-500">
-                <span className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5" />
-                  {candidate.applicantId}@example.com
+              <div className="flex flex-wrap gap-4 text-[14px] text-ink-muted">
+                <span className="flex items-center gap-1.5">
+                  <Mail className="w-4 h-4" />
+                  {candidate.applicantId}@email.com
                 </span>
-                <span className="flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5">
+                  <Phone className="w-4 h-4" />
                   +62 812-3456-7890
                 </span>
                 {candidate.resumeLink && (
@@ -106,136 +111,181 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
                     href={candidate.resumeLink}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                    className="flex items-center gap-1.5 text-primary hover:underline transition-none"
                   >
-                    <FileText className="w-3.5 h-3.5" />
-                    View CV
-                    <ExternalLink className="w-3 h-3" />
+                    <FileText className="w-4 h-4" />
+                    Lihat CV
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}
               </div>
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-xs text-zinc-400 mb-1">Match Score</p>
-            <p className="text-5xl font-bold tracking-tight">
-              {candidate.recommendationScore || "--"}
+            <p className="text-[12px] text-ink-muted mb-1 uppercase font-semibold">Skor Kecocokan AI</p>
+            <p className="text-[42px] font-light text-ink">
+              {candidate.recommendationScore ? `${candidate.recommendationScore}%` : "--"}
             </p>
+            <button
+              onClick={() => setShowMatchDetails(!showMatchDetails)}
+              className="text-[12px] text-primary mt-1 hover:underline flex items-center justify-end gap-1 w-full"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              Lihat Detail Metrik AI
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-zinc-100 dark:border-zinc-800">
-          <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-3">
-            <p className="text-xs text-zinc-400 mb-1">Status</p>
-            <p className="text-sm font-semibold capitalize">{candidate.status.replace("-", " ")}</p>
+        {/* Detailed Match Evidence (Slug / Drill-down) */}
+        {showMatchDetails && (
+          <div className="mt-6 border-t border-hairline pt-6 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[16px] font-semibold text-ink flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                Detail Analisis Kecocokan AI
+              </h3>
+              <button onClick={() => setShowMatchDetails(false)}>
+                <X className="w-4 h-4 text-ink-muted hover:text-ink" />
+              </button>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-surface-1 border border-hairline p-4">
+                <p className="text-[12px] font-semibold uppercase text-ink-muted mb-3">Dari Bukti CV (Bobot 60%)</p>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-[14px] mb-1">
+                      <span className="text-ink">Relevansi Pengalaman</span>
+                      <span className="font-semibold text-[#198038]">Tinggi (90%)</span>
+                    </div>
+                    <p className="text-[12px] text-ink-muted leading-[1.5]">
+                      "Disebutkan 3x di CV terkait pengalaman langsung pada proyek serupa."
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[14px] mb-1">
+                      <span className="text-ink">Pendidikan & Sertifikasi</span>
+                      <span className="font-semibold text-[#f1c21b]">Menengah (70%)</span>
+                    </div>
+                    <p className="text-[12px] text-ink-muted leading-[1.5]">
+                      "Memiliki gelar relevan, namun sertifikasi spesifik tidak ditemukan."
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-surface-1 border border-hairline p-4">
+                <p className="text-[12px] font-semibold uppercase text-ink-muted mb-3">Dari Wawancara AI (Bobot 40%)</p>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-[14px] mb-1">
+                      <span className="text-ink">Pemahaman Teknis/Praktikal</span>
+                      <span className="font-semibold text-[#198038]">Sangat Baik (88%)</span>
+                    </div>
+                    <p className="text-[12px] text-ink-muted leading-[1.5]">
+                      "Menyinggung studi kasus relevan 2x saat menjawab pertanyaan."
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[14px] mb-1">
+                      <span className="text-ink">Kecocokan Budaya (Culture Fit)</span>
+                      <span className="font-semibold text-ink">Baik (82%)</span>
+                    </div>
+                    <p className="text-[12px] text-ink-muted leading-[1.5]">
+                      "Gaya komunikasi profesional dan kolaboratif."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 bg-[#e5f6ff] border border-[#0f62fe] p-3 flex gap-3 items-start">
+               <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+               <p className="text-[12px] text-ink leading-[1.5]">
+                 <span className="font-semibold">Kesimpulan AI:</span> Kandidat ini menunjukkan korelasi yang kuat antara apa yang ditulis di CV dengan apa yang disampaikan saat wawancara. Probabilitas kecocokan sangat tinggi.
+               </p>
+            </div>
           </div>
-          <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-3">
-            <p className="text-xs text-zinc-400 mb-1">Applied</p>
-            <p className="text-sm font-semibold">{candidate.appliedDate}</p>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-hairline">
+          <div className="bg-surface-1 p-4">
+            <p className="text-[12px] text-ink-muted mb-1 font-semibold uppercase">Status</p>
+            <p className="text-[16px] font-normal text-ink capitalize">
+              {candidate.status === "under-review" ? "Administrasi" : candidate.status === "interview" ? "Wawancara" : candidate.status === "rejected" ? "Ditolak" : "Terkirim"}
+            </p>
+          </div>
+          <div className="bg-surface-1 p-4">
+            <p className="text-[12px] text-ink-muted mb-1 font-semibold uppercase">Tanggal Melamar</p>
+            <p className="text-[16px] font-normal text-ink">{candidate.appliedDate}</p>
           </div>
         </div>
       </div>
 
       {/* AI Interview + Manual Schedule Actions */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-          Interview Actions
+      <div className="bg-canvas border border-hairline p-6">
+        <p className="text-[14px] font-semibold text-ink mb-6">
+          Tindakan Wawancara
         </p>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-4">
           <button
             onClick={() => setShowAIInterview(true)}
-            className="flex items-center gap-3 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left group"
+            className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 border border-hairline hover:bg-surface-1 transition-none text-left h-full"
           >
-            <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition-colors">
-              <Video className="w-4 h-4 text-zinc-500" />
+            <div className="w-full sm:w-24 sm:h-24 bg-surface-2 border border-hairline flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+               {/* Screenshot of interview */}
+               <img src="/aiinterview.png" className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Tangkapan Layar Wawancara" />
+               <div className="relative z-10 w-8 h-8 bg-ink rounded-full flex items-center justify-center">
+                 <Video className="w-4 h-4 text-white" />
+               </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold">AI Interview Simulation</p>
-              <p className="text-xs text-zinc-400 mt-0.5">Preview how the AI will interview this candidate</p>
+            <div className="flex-1">
+              <p className="text-[16px] font-semibold text-ink">Simulasi Wawancara Video AI</p>
+              <p className="text-[12px] text-ink-muted mt-1 leading-[1.5]">
+                Tinjau rekaman tangkapan layar, transkrip, dan cara AI mewawancarai kandidat ini secara otomatis.
+              </p>
             </div>
           </button>
+          
           <button
             onClick={() => setShowScheduling(true)}
-            className="flex items-center gap-3 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left group"
+            className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 border border-hairline hover:bg-surface-1 transition-none text-left h-full"
           >
-            <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition-colors">
-              <Calendar className="w-4 h-4 text-zinc-500" />
+            <div className="w-full sm:w-24 sm:h-24 bg-surface-2 border border-hairline flex items-center justify-center flex-shrink-0 transition-none">
+              <Calendar className="w-8 h-8 text-ink-muted" />
             </div>
-            <div>
-              <p className="text-sm font-semibold">Schedule Manual Interview</p>
-              <p className="text-xs text-zinc-400 mt-0.5">Book a technical or HR interview slot</p>
+            <div className="flex-1">
+              <p className="text-[16px] font-semibold text-ink">Jadwalkan Wawancara Manual</p>
+              <p className="text-[12px] text-ink-muted mt-1 leading-[1.5]">
+                Pesan jadwal wawancara teknis atau wawancara HRD secara langsung dengan kandidat.
+              </p>
             </div>
           </button>
         </div>
       </div>
 
       {/* CV Summary */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-          CV Summary
+      <div className="bg-canvas border border-hairline p-6">
+        <p className="text-[14px] font-semibold text-ink mb-4">
+          Ringkasan CV (AI Ekstraksi)
         </p>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-          {candidate.cvSummary || "No summary available."}
+        <p className="text-[16px] text-ink leading-[1.5]">
+          {candidate.cvSummary || "Tidak ada ringkasan yang tersedia."}
         </p>
       </div>
 
-      {/* Authenticity Analysis */}
-      {candidate.authenticityScore && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-            Authenticity Analysis
-          </p>
-          <div className="space-y-4">
-            {[
-              { label: "Authentic Content", value: candidate.authenticityScore.authentic },
-              { label: "Generic Responses", value: candidate.authenticityScore.generic },
-              { label: "AI-Generated Content", value: candidate.authenticityScore.aiGenerated },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className="text-sm font-bold tabular-nums">{value}%</span>
-                </div>
-                <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5">
-                  <div
-                    className="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all"
-                    style={{ width: `${value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-            <p className="text-xs font-semibold mb-1">Analysis</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              This candidate shows{" "}
-              {candidate.authenticityScore.authentic >= 80
-                ? "high authenticity"
-                : candidate.authenticityScore.authentic >= 60
-                ? "moderate authenticity"
-                : "low authenticity"}{" "}
-              in their responses. Content appears{" "}
-              {candidate.authenticityScore.aiGenerated < 15
-                ? "genuine and personally crafted."
-                : "potentially AI-assisted."}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Validation Log */}
       {candidate.validationResponses && candidate.validationResponses.length > 0 && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4">
-            Validation Log
+        <div className="bg-canvas border border-hairline p-6">
+          <p className="text-[14px] font-semibold text-ink mb-6">
+            Log Validasi Wawancara AI
           </p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {candidate.validationResponses.map((response, idx) => (
-              <div key={idx} className="border border-zinc-100 dark:border-zinc-800 rounded-xl p-4">
-                <p className="text-xs font-semibold text-zinc-400 mb-2">
-                  Q{idx + 1}: {response.question}
+              <div key={idx} className="border border-hairline p-5">
+                <p className="text-[14px] font-semibold text-ink mb-3">
+                  P{idx + 1}: {response.question}
                 </p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-3">
+                <p className="text-[14px] text-ink leading-[1.5] bg-surface-1 p-4 border border-hairline">
                   {response.answer}
                 </p>
               </div>
@@ -245,27 +295,27 @@ export default function CandidateDetail({ candidateId }: CandidateDetailProps) {
       )}
 
       {/* Decision Panel */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-1">
-          Decision
+      <div className="bg-canvas border border-hairline p-6">
+        <p className="text-[14px] font-semibold text-ink mb-2">
+          Keputusan Perekrutan
         </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-          Review the candidate and take action.
+        <p className="text-[14px] text-ink-muted mb-6">
+          Tinjau seluruh data kandidat dan ambil tindakan untuk tahap selanjutnya.
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex gap-4">
           <button
             onClick={() => handleDecision("invite")}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#198038] bg-[#defbe6] text-[#198038] hover:bg-[#198038] hover:text-white text-[14px] font-normal transition-none"
           >
-            <CheckCircle className="w-4 h-4 text-emerald-500" />
-            Invite to Interview
+            <CheckCircle className="w-4 h-4" />
+            Undang Wawancara
           </button>
           <button
             onClick={() => handleDecision("reject")}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 border border-[#da1e28] bg-[#fff1f1] text-[#da1e28] hover:bg-[#da1e28] hover:text-white text-[14px] font-normal transition-none"
           >
-            <XCircle className="w-4 h-4 text-zinc-400" />
-            Reject Application
+            <XCircle className="w-4 h-4" />
+            Tolak Lamaran
           </button>
         </div>
       </div>

@@ -16,7 +16,12 @@ export interface Job {
   description: string;
   department: string;
   requirements: string[];
+  detailedQualifications: string[];
+  salaryRange: string;
+  industry: string;
+  questions: string[];
   posted: string;
+  applicantCount: number;
 }
 
 export interface Application {
@@ -33,6 +38,7 @@ export interface Application {
   recommendationScore?: number;
   status: "submitted" | "under-review" | "interview" | "rejected";
   appliedDate: string;
+  cvViewed?: boolean;
   authenticityScore?: {
     authentic: number;
     generic: number;
