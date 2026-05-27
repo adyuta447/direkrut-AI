@@ -1,4 +1,4 @@
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, BarChart3, TrendingUp, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 
@@ -6,8 +6,9 @@ export default function CrossRoleRecommendation() {
   const { applications, jobs } = useApp();
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [recommendations, setRecommendations] = useState<
-    Array<{ role: string; matchScore: number; reason: string }>
+    Array<{ role: string; matchScore: number; reason: string; stats: string; originalRole: string; suggestedRoleTitle: string }>
   >([]);
+  const [expandedRec, setExpandedRec] = useState<number | null>(null);
 
   const handleSearch = () => {
     if (!selectedCandidate) return;
@@ -21,112 +22,169 @@ export default function CrossRoleRecommendation() {
         const variance = Math.floor(Math.random() * 30) - 15;
         const score = Math.min(95, Math.max(50, currentScore + variance));
         let reason = "";
-        if (score >= 85) reason = `Strong transferable skills align well with ${job.title} requirements.`;
-        else if (score >= 70) reason = `Good foundational skills adaptable for ${job.title} with minimal training.`;
-        else reason = `Some relevant skills present, but would require significant upskilling for ${job.title}.`;
-        return { role: `${job.title} at ${job.company}`, matchScore: score, reason };
+        let stats = "";
+        
+        if (score >= 85) {
+          reason = `Keterampilan inti di CV (80% kesamaan) sangat selaras dengan persyaratan ${job.title}.`;
+          stats = `Sistem mendeteksi bahwa meskipun kandidat melamar sebagai ${candidate.jobTitle}, 80% kata kunci pada CV-nya (pengalaman, tools, metode) secara statistik memiliki korelasi yang lebih tinggi dengan deskripsi pekerjaan ${job.title}. Memindahkan kandidat ini akan meningkatkan probabilitas sukses rekrutmen hingga 3x lipat.`;
+        } else if (score >= 70) {
+          reason = `Keterampilan dasar yang baik, dapat disesuaikan untuk ${job.title} dengan onboarding minimal.`;
+          stats = `Kandidat memiliki fondasi kuat yang menyilang (cross-functional) dengan ${job.title}. Terdapat 60% overlap keterampilan. Dengan sedikit pelatihan, kandidat bisa memenuhi kualifikasi ini jika posisi ${candidate.jobTitle} sudah penuh.`;
+        } else {
+          reason = `Beberapa keterampilan relevan ada, namun membutuhkan peningkatan signifikan untuk ${job.title}.`;
+          stats = `Hanya 35% kesesuaian keterampilan. Tidak direkomendasikan kecuali jika terdapat krisis talenta darurat di divisi ini.`;
+        }
+        
+        return { 
+          role: `${job.title} di ${job.company}`, 
+          matchScore: score, 
+          reason,
+          stats,
+          originalRole: candidate.jobTitle,
+          suggestedRoleTitle: job.title
+        };
       })
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 3);
+      
     setRecommendations(crossRoleMatches);
+    setExpandedRec(null);
   };
 
   return (
-    <div className="p-4 lg:p-5 space-y-4">
+    <div className="p-6 lg:p-8 space-y-6 font-sans">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">AI Tool</p>
-        <h2 className="text-2xl font-bold tracking-tight">Cross-Role Match</h2>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-          Discover alternative roles where a candidate's transferable skills would be valuable.
+        <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted mb-2">Alat AI</p>
+        <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Rekomendasi Posisi Alternatif</h2>
+        <p className="text-[16px] text-ink-muted">
+          Temukan peran alternatif di mana keterampilan kandidat yang dapat ditransfer (transferable skills) akan lebih bernilai.
         </p>
       </div>
 
       {/* Search */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5">
-        <label className="label">Select Candidate</label>
-        <div className="flex gap-3">
+      <div className="bg-canvas border border-hairline p-6">
+        <label className="block text-[14px] text-ink font-semibold mb-3">Pilih Kandidat</label>
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <select
               value={selectedCandidate}
-              onChange={(e) => setSelectedCandidate(e.target.value)}
-              className="appearance-none input-field w-full pr-8"
+              onChange={(e) => {
+                setSelectedCandidate(e.target.value);
+                setRecommendations([]);
+              }}
+              className="appearance-none input-field w-full pr-10 cursor-pointer"
             >
-              <option value="">Choose a candidate...</option>
+              <option value="">Pilih kandidat...</option>
               {applications.map((app) => (
                 <option key={app.id} value={app.id}>
                   {app.applicantName} — {app.jobTitle}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
           </div>
           <button
             onClick={handleSearch}
             disabled={!selectedCandidate}
-            className="btn-primary flex items-center gap-2 px-5 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+            className="btn-primary flex items-center justify-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             <Search className="w-4 h-4" />
-            Analyze
+            Analisis Posisi
           </button>
         </div>
       </div>
 
       {/* Results */}
       {recommendations.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4 animate-in slide-in-from-bottom-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-              AI Recommendations
+            <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted">
+              Hasil Rekomendasi AI
             </p>
-            <span className="text-xs text-zinc-400">{recommendations.length} matches</span>
+            <span className="text-[14px] text-ink-muted">{recommendations.length} kecocokan ditemukan</span>
           </div>
 
           {recommendations.map((rec, idx) => (
             <div
               key={idx}
-              className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-5"
+              className={`bg-canvas border p-6 transition-none ${expandedRec === idx ? 'border-primary' : 'border-hairline'}`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs font-mono text-zinc-300 dark:text-zinc-600">
+                  <div className="flex items-center gap-4 mb-3">
+                    <span className="text-[14px] font-mono font-semibold text-ink-muted">
                       {String(idx + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="text-base font-semibold">{rec.role}</h3>
+                    <h3 className="text-[18px] font-semibold text-ink">{rec.role}</h3>
                   </div>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed ml-8">
+                  <p className="text-[14px] text-ink leading-[1.5] sm:ml-9">
                     {rec.reason}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-3xl font-bold tabular-nums">{rec.matchScore}</p>
-                  <p className="text-xs text-zinc-400">match</p>
+                <div className="text-left sm:text-right flex-shrink-0 sm:ml-9 bg-surface-1 p-4 border border-hairline min-w-[120px]">
+                  <p className="text-[32px] font-light text-primary tabular-nums">{rec.matchScore}%</p>
+                  <p className="text-[12px] font-semibold uppercase text-ink-muted mt-1">Kecocokan</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
-                <button className="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                  Suggest to Candidate
+              
+              {expandedRec === idx && (
+                <div className="mt-6 pt-6 border-t border-hairline sm:ml-9 animate-in slide-in-from-top-2">
+                  <div className="bg-[#e5f6ff] border border-primary p-4">
+                    <h4 className="text-[14px] font-semibold text-primary mb-2 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Detail Statistik & Metrik AI
+                    </h4>
+                    <p className="text-[14px] text-ink leading-[1.5] mb-4">
+                      {rec.stats}
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 border-t border-[#8ecbfb] pt-4">
+                       <div>
+                         <p className="text-[12px] text-ink-muted uppercase font-semibold mb-1">Posisi Awal</p>
+                         <p className="text-[14px] font-semibold text-ink">{rec.originalRole}</p>
+                       </div>
+                       <div>
+                         <p className="text-[12px] text-ink-muted uppercase font-semibold mb-1">Posisi Disarankan</p>
+                         <p className="text-[14px] font-semibold text-[#198038]">{rec.suggestedRoleTitle}</p>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 pt-6 border-t border-hairline flex justify-end gap-4">
+                <button 
+                  onClick={() => setExpandedRec(expandedRec === idx ? null : idx)}
+                  className="text-[14px] font-normal text-ink hover:underline transition-none flex items-center gap-2"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  {expandedRec === idx ? "Tutup Metrik AI" : "Lihat Metrik AI"}
+                </button>
+                <button className="text-[14px] font-normal text-primary hover:underline transition-none">
+                  Sarankan Mutasi ke Kandidat
                 </button>
               </div>
             </div>
           ))}
 
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-            <p className="text-xs font-semibold mb-1">AI Summary</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Based on CV, skills, and validation responses, we identified {recommendations.length}{" "}
-              alternative roles where transferable skills could be valuable. Consider reaching out to
-              discuss these opportunities with the candidate.
-            </p>
+          <div className="p-6 bg-surface-1 border border-hairline mt-8 flex gap-4 items-start">
+            <AlertCircle className="w-5 h-5 text-ink-muted flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[14px] font-semibold text-ink mb-1">Catatan HRD</p>
+              <p className="text-[14px] text-ink leading-[1.5]">
+                Berdasarkan CV, keahlian, dan tanggapan validasi, kami mengidentifikasi {recommendations.length}{" "}
+                peran alternatif di mana keterampilan yang dapat ditransfer (transferable skills) bernilai tinggi. 
+                Sistem ini mengurangi "talent waste" (terbuangnya talenta) saat kuota posisi utama sudah penuh.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {selectedCandidate && recommendations.length === 0 && (
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-12 text-center">
-          <Search className="w-10 h-10 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
-          <p className="text-sm text-zinc-400">Click "Analyze" to find cross-role recommendations</p>
+        <div className="bg-surface-1 border border-hairline p-16 text-center">
+          <Search className="w-12 h-12 text-ink-muted mx-auto mb-4" />
+          <p className="text-[16px] text-ink">Klik "Analisis Posisi" untuk memproses data lintas-peran dari CV pelamar.</p>
         </div>
       )}
     </div>

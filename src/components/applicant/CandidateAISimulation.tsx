@@ -12,18 +12,15 @@ import {
   RotateCcw,
   ChevronRight,
   User,
-  Eye,
-  Shirt,
-  Monitor,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
 const QUESTIONS = [
-  "Hello! Welcome. Let's start — could you briefly introduce yourself and your professional background?",
-  "What is your greatest technical skill, and can you give a recent example where you applied it?",
-  "Tell me about a challenging project or situation. How did you handle it and what was the result?",
-  "How do you manage competing priorities and tight deadlines?",
-  "Last question — where do you see yourself in 2–3 years, and how does this role fit that vision?",
+  "Halo! Selamat datang. Mari kita mulai — bisakah Anda memperkenalkan diri Anda dan latar belakang profesional Anda?",
+  "Apa keahlian teknis terbesar Anda, dan bisakah Anda memberikan contoh terbaru kapan Anda menggunakannya?",
+  "Ceritakan tentang proyek atau situasi yang paling menantang. Bagaimana Anda menanganinya dan apa hasilnya?",
+  "Bagaimana cara Anda mengelola berbagai prioritas dengan tenggat waktu yang ketat?",
+  "Pertanyaan terakhir — di mana Anda melihat diri Anda dalam 2–3 tahun ke depan, dan bagaimana peran ini sesuai dengan visi tersebut?",
 ];
 
 function useTimer(running: boolean) {
@@ -38,7 +35,7 @@ function useTimer(running: boolean) {
 
 export default function CandidateAISimulation() {
   const { currentUser } = useApp();
-  const userName = currentUser?.name || "You";
+  const userName = currentUser?.name || "Anda";
   const userInitial = userName.charAt(0).toUpperCase();
 
   const [phase, setPhase] = useState<"lobby" | "call" | "done">("lobby");
@@ -92,9 +89,9 @@ export default function CandidateAISimulation() {
         setTimeout(() => setAiSpeaking(false), 3000);
       } else {
         const closing =
-          "Thank you for completing the interview. Your responses have been recorded and will be reviewed by the hiring team. You'll receive feedback within 2-3 business days. Good luck!";
+          "Terima kasih telah menyelesaikan wawancara. Tanggapan Anda telah direkam dan akan ditinjau oleh tim rekrutmen kami. Anda akan menerima kabar lanjutan dalam 2-3 hari kerja. Semoga sukses!";
         setMessages((prev) => [...prev, { role: "ai", text: closing }]);
-        setCurrentCaption("Practice complete.");
+        setCurrentCaption("Latihan selesai.");
         setCallRunning(false);
         setTimeout(() => setPhase("done"), 2000);
       }
@@ -124,91 +121,90 @@ export default function CandidateAISimulation() {
 
   // ── Lobby ─────────────────────────────────────────────
   if (phase === "lobby") {
-    // ... (Lobby code remains untouched)
     return (
-      <div className="h-full flex flex-col lg:flex-row bg-zinc-50 dark:bg-zinc-950">
+      <div className="h-full flex flex-col lg:flex-row bg-canvas font-sans max-w-[1584px] mx-auto w-full border border-hairline">
         <div className="flex-1 flex flex-col items-center justify-center px-8 py-10 text-center">
           <div className="relative mb-8">
-            <div className="w-28 h-28 rounded-2xl bg-zinc-200 dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-700 flex flex-col items-center justify-center">
+            <div className="w-32 h-32 bg-surface-1 border border-hairline flex flex-col items-center justify-center">
               {camOn ? (
                 <>
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-300 dark:bg-zinc-700 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-zinc-600 dark:text-zinc-300">
+                  <div className="w-12 h-12 bg-ink text-white flex items-center justify-center">
+                    <span className="text-xl font-normal">
                       {userInitial}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5">
+                  <p className="text-[12px] text-ink mt-2">
                     {userName}
                   </p>
                 </>
               ) : (
-                <VideoOff className="w-8 h-8 text-zinc-400" />
+                <VideoOff className="w-8 h-8 text-ink-muted" />
               )}
             </div>
-            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-semibold px-2 py-0.5 rounded-2xl whitespace-nowrap">
-              You (Preview)
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-ink text-white text-[12px] px-2 py-0.5 whitespace-nowrap">
+              Anda (Preview)
             </span>
           </div>
 
-          <h2 className="text-3xl font-bold tracking-tight mb-2">
-            AI Video Interview
+          <h2 className="text-[32px] font-light tracking-[-0.5px] mb-4 text-ink">
+            Wawancara Video AI
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-sm mb-8 leading-relaxed">
-            Video interview session with the DirekrutAI AI Interviewer. Answer
-            each question clearly and naturally —{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
-              your responses will be evaluated.
+          <p className="text-[16px] text-ink max-w-sm mb-8 leading-[1.5]">
+            Sesi wawancara video dengan Pewawancara AI Direkrut AI. Jawab 
+            setiap pertanyaan dengan jelas dan natural —{" "}
+            <span className="font-semibold">
+              tanggapan Anda akan dievaluasi oleh sistem kami.
             </span>
           </p>
 
-          <div className="flex gap-3 mb-8">
+          <div className="flex gap-4 mb-8">
             <button
               onClick={() => setMicOn((v) => !v)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 border text-[14px] transition-none ${
                 micOn
-                  ? "border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900"
-                  : "border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900 line-through"
+                  ? "border-primary text-primary bg-[#e5f6ff]"
+                  : "border-hairline text-ink-muted bg-surface-1"
               }`}
             >
               {micOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-              Microphone
+              Mikrofon
             </button>
             <button
               onClick={() => setCamOn((v) => !v)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 border text-[14px] transition-none ${
                 camOn
-                  ? "border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900"
-                  : "border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900 line-through"
+                  ? "border-primary text-primary bg-[#e5f6ff]"
+                  : "border-hairline text-ink-muted bg-surface-1"
               }`}
             >
               {camOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-              Camera
+              Kamera
             </button>
           </div>
 
           <button
             onClick={startCall}
-            className="inline-flex items-center gap-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3.5 rounded-2xl font-semibold text-sm hover:opacity-80 transition-opacity"
+            className="btn-primary inline-flex items-center gap-2"
           >
-            Join Interview Session
+            Gabung Sesi Wawancara
             <ChevronRight className="w-4 h-4" />
           </button>
-          <p className="text-xs text-zinc-400 mt-3">
-            {QUESTIONS.length} questions
+          <p className="text-[12px] text-ink-muted mt-4">
+            {QUESTIONS.length} pertanyaan
           </p>
         </div>
 
-        <div className="w-full lg:w-64 xl:w-72 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-            Interview Questions
+        <div className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l border-hairline bg-surface-1 p-6">
+          <p className="text-[14px] font-semibold text-ink mb-4">
+            Daftar Pertanyaan
           </p>
-          <div className="space-y-2.5">
+          <div className="space-y-4">
             {QUESTIONS.map((q, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-[10px] font-mono text-zinc-300 dark:text-zinc-600 mt-0.5 flex-shrink-0 w-4">
-                  {String(i + 1).padStart(2, "0")}
+              <div key={i} className="flex items-start gap-3">
+                <span className="text-[14px] text-ink-muted font-semibold mt-0.5 flex-shrink-0 w-4">
+                  {i + 1}
                 </span>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                <p className="text-[14px] text-ink leading-[1.5]">
                   {q}
                 </p>
               </div>
@@ -221,47 +217,46 @@ export default function CandidateAISimulation() {
 
   // ── Done ─────────────────────────────────────────────
   if (phase === "done") {
-    // ... (Done code remains untouched)
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-8 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-5">
-          <span className="font-bold text-sm text-zinc-500 dark:text-zinc-400">
+      <div className="h-full flex flex-col items-center justify-center bg-canvas font-sans px-8 text-center border border-hairline max-w-[1584px] mx-auto w-full">
+        <div className="w-16 h-16 bg-surface-1 border border-hairline flex items-center justify-center mb-6">
+          <span className="font-semibold text-ink">
             AI
           </span>
         </div>
-        <h2 className="text-2xl font-bold mb-2">Interview Complete</h2>
-        <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-md mb-6 leading-relaxed">
-          You answered all {QUESTIONS.length} questions. Your responses have
-          been recorded and submitted for review.
+        <h2 className="text-[32px] font-light text-ink mb-4">Wawancara Selesai</h2>
+        <p className="text-[16px] text-ink max-w-md mb-8 leading-[1.5]">
+          Anda telah menjawab semua {QUESTIONS.length} pertanyaan. Tanggapan Anda telah 
+          direkam dan dikirim untuk peninjauan lebih lanjut.
         </p>
-        <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-left mb-6 max-h-60 overflow-y-auto">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">
-            Transcript
+        <div className="w-full max-w-md bg-surface-1 border border-hairline p-6 text-left mb-8 max-h-64 overflow-y-auto">
+          <p className="text-[14px] font-semibold text-ink mb-4">
+            Transkrip Percakapan
           </p>
           {messages.map((m, i) => (
-            <div key={i} className="mb-3">
-              <p className="text-[10px] font-medium text-zinc-400 mb-0.5">
-                {m.role === "ai" ? "AI Interviewer" : userName}
+            <div key={i} className="mb-4">
+              <p className="text-[12px] font-semibold text-ink-muted mb-1">
+                {m.role === "ai" ? "Pewawancara AI" : userName}
               </p>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <p className="text-[14px] text-ink leading-[1.5]">
                 {m.text}
               </p>
             </div>
           ))}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={reset}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary hover:text-white transition-none text-[14px]"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Redo Interview
+            <RotateCcw className="w-4 h-4" />
+            Ulangi Wawancara
           </button>
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-5 py-2.5 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity"
+            className="btn-primary inline-flex items-center gap-2"
           >
-            Done
+            Selesai
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -271,36 +266,36 @@ export default function CandidateAISimulation() {
 
   // ── In-Call ─────────────────────────────────────────────
   return (
-    <div className="h-full flex flex-col bg-zinc-100 dark:bg-zinc-950 overflow-hidden">
+    <div className="h-full flex flex-col bg-surface-1 font-sans border border-hairline max-w-[1584px] mx-auto w-full overflow-hidden">
       {/* Top bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-5 py-2.5 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500 animate-pulse" />
-          <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-canvas border-b border-hairline">
+        <div className="flex items-center gap-4">
+          <div className="w-2 h-2 bg-[#0353e9] animate-pulse" />
+          <span className="text-[14px] font-semibold text-ink">
             {timer}
           </span>
-          <span className="text-zinc-300 dark:text-zinc-700">·</span>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Q {Math.min(currentQ + 1, QUESTIONS.length)}/{QUESTIONS.length}
+          <span className="text-ink-muted">·</span>
+          <span className="text-[14px] text-ink">
+            P {Math.min(currentQ + 1, QUESTIONS.length)}/{QUESTIONS.length}
           </span>
         </div>
         <div className="flex-1 mx-8">
-          <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-2xl h-0.5">
+          <div className="w-full bg-[#e0e0e0] h-1">
             <div
-              className="bg-zinc-400 dark:bg-zinc-500 h-0.5 rounded-2xl transition-all duration-700"
+              className="bg-primary h-1 transition-all duration-700"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
-        <p className="text-xs text-zinc-400">Interview Session</p>
+        <p className="text-[14px] text-ink-muted">Sesi Wawancara</p>
       </div>
 
       {/* Video area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Main video grid */}
-        <div className="flex-1 relative p-4 flex items-stretch gap-4 w-full">
+        <div className="flex-1 relative p-4 flex flex-col lg:flex-row items-stretch gap-4 w-full">
           {/* YOU — large, primary tile */}
-          <div className="flex-1 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center relative overflow-hidden min-h-0">
+          <div className="flex-1 bg-canvas border border-hairline flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
             {camOn ? (
               <>
                 <img
@@ -312,130 +307,88 @@ export default function CandidateAISimulation() {
               </>
             ) : (
               <div className="flex flex-col items-center">
-                <VideoOff className="w-10 h-10 text-zinc-300 dark:text-zinc-600 mb-2" />
-                <p className="text-sm text-zinc-400">Camera off</p>
+                <VideoOff className="w-12 h-12 text-ink-muted mb-4" />
+                <p className="text-[16px] text-ink">Kamera mati</p>
               </div>
             )}
 
             {/* Name tag */}
-            <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-1.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-white" />
-              <p className="text-xs text-white font-medium">{userName} (You)</p>
+            <div className="absolute bottom-4 left-4 bg-ink/80 backdrop-blur-md px-3 py-1.5 flex items-center gap-2">
+              <User className="w-4 h-4 text-white" />
+              <p className="text-[12px] text-white">{userName} (Anda)</p>
             </div>
 
             {/* Mic indicator */}
             {!micOn && (
-              <div className="absolute top-3 right-3 w-8 h-8 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center">
+              <div className="absolute top-4 right-4 w-8 h-8 bg-ink/80 backdrop-blur-md flex items-center justify-center">
                 <MicOff className="w-4 h-4 text-white" />
               </div>
             )}
           </div>
 
           {/* AI Panel — Column on the right */}
-          <div className="w-56 xl:w-64 flex flex-col gap-3 flex-shrink-0 justify-end">
+          <div className="w-full lg:w-72 flex flex-col gap-4 flex-shrink-0 justify-end">
             
-            {/* 3 Indicators (Vertical) */}
-            <div className="flex flex-col gap-2 w-full">
-              {[
-                { label: "Eye Tracking", icon: Eye },
-                { label: "Neat Clothing", icon: Shirt },
-                { label: "Tab Browser", icon: Monitor },
-              ].map(({ label, icon: Icon }) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                      {label}
-                    </span>
-                  </div>
-                  <div className="w-2 h-2 rounded-2xl bg-green-500" />
-                </div>
-              ))}
-            </div>
-
-            {/* 2 Stats Buttons (Horizontal) */}
-            <div className="flex gap-2 w-full">
-              <div className="flex-1 bg-[#F0FDF4] border border-[#bbf7d0] rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-green-700 mb-1">
-                  Score
-                </span>
-                <span className="text-xl font-black text-green-900 tracking-tighter">
-                  85%
-                </span>
-              </div>
-              <div className="flex-1 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-red-700 dark:text-red-500 mb-1">
-                  Violation
-                </span>
-                <span className="text-xl font-black text-red-900 dark:text-red-400 tracking-tighter">
-                  2
-                </span>
-              </div>
-            </div>
-
             {/* AI Video Interviewer (Pojok Bawah Kanan) */}
-            <div className="w-full h-48 rounded-2xl bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 flex flex-col items-center justify-center relative overflow-hidden flex-shrink-0">
+            <div className="w-full h-64 bg-canvas border border-hairline flex flex-col items-center justify-center relative overflow-hidden flex-shrink-0">
               <div
-                className={`w-14 h-14 rounded-2xl bg-zinc-300 dark:bg-zinc-700 border flex items-center justify-center mb-2 transition-all duration-300 ${
+                className={`w-16 h-16 bg-surface-1 border flex items-center justify-center mb-4 transition-none ${
                   aiSpeaking
-                    ? "border-zinc-500 dark:border-zinc-400 scale-110"
-                    : "border-zinc-300 dark:border-zinc-600"
+                    ? "border-primary"
+                    : "border-hairline"
                 }`}
               >
-                <span className="text-base font-bold text-zinc-500 dark:text-zinc-300">
+                <span className="text-[20px] font-semibold text-ink">
                   AI
                 </span>
               </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                AI Interviewer
+              <p className="text-[14px] font-semibold text-ink">
+                Pewawancara AI
               </p>
-              <p className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5">
+              <p className="text-[12px] text-ink-muted mt-1">
                 {aiSpeaking
-                  ? "SPEAKING..."
+                  ? "BERBICARA..."
                   : aiTyping
-                    ? "THINKING..."
-                    : "LISTENING"}
+                    ? "MEMPROSES..."
+                    : "MENDENGARKAN"}
               </p>
 
               {/* Caption overlay */}
               {currentCaption && (
-                <div className="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-zinc-950/95 p-3 border-t border-zinc-200 dark:border-zinc-800">
-                  <p className="text-[10px] font-medium text-zinc-900 dark:text-white text-center leading-tight line-clamp-3">
+                <div className="absolute bottom-0 left-0 right-0 bg-ink/90 p-3">
+                  <p className="text-[12px] text-white text-center leading-[1.5]">
                     {currentCaption}
                   </p>
                 </div>
               )}
 
               {/* Name tag */}
-              <div className="absolute top-3 left-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-2.5 py-1">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
-                  AI Video
+              <div className="absolute top-4 left-4 bg-surface-1 border border-hairline px-2 py-1">
+                <p className="text-[10px] font-semibold text-ink">
+                  Video AI
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── UPDATED CHAT PANEL (AWWWARDS / MODERN AGENCY STYLE) ── */}
+        {/* ── UPDATED CHAT PANEL ── */}
         {chatOpen && (
-          <div className="absolute top-4 right-4 bottom-4 w-[calc(100%-32px)] sm:w-[380px] z-50 flex flex-col bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border border-zinc-200/50 dark:border-zinc-800/50 rounded-[2rem] overflow-hidden">
+          <div className="absolute top-4 right-4 bottom-4 w-[calc(100%-32px)] sm:w-[400px] z-50 flex flex-col bg-canvas border border-hairline shadow-[0_4px_16px_rgba(0,0,0,0.1)]">
             
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-transparent">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-hairline bg-surface-1">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-100">
-                  Live Transcript
+                <div className="w-2 h-2 bg-[#0353e9] animate-pulse" />
+                <p className="text-[14px] font-semibold text-ink">
+                  Transkrip Langsung
                 </p>
               </div>
               <button
                 onClick={() => setChatOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                className="w-8 h-8 flex items-center justify-center hover:bg-[#e8e8e8] transition-none text-ink"
               >
-                <X className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -448,14 +401,14 @@ export default function CandidateAISimulation() {
                     m.role === "user" ? "items-end" : "items-start"
                   }`}
                 >
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 px-1">
-                    {m.role === "user" ? userName : "AI Interviewer"}
+                  <span className="text-[12px] text-ink-muted mb-1 px-1">
+                    {m.role === "user" ? userName : "Pewawancara AI"}
                   </span>
                   <div
-                    className={`max-w-[85%] px-5 py-3.5 text-[13px] leading-relaxed ${
+                    className={`max-w-[85%] px-5 py-4 text-[14px] leading-[1.5] ${
                       m.role === "ai"
-                        ? "bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-800 dark:text-zinc-200 rounded-3xl rounded-tl-sm border border-zinc-200/30 dark:border-zinc-800/30"
-                        : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-3xl rounded-tr-sm"
+                        ? "bg-surface-1 border border-hairline text-ink"
+                        : "bg-ink text-white"
                     }`}
                   >
                     {m.text}
@@ -464,15 +417,15 @@ export default function CandidateAISimulation() {
               ))}
               {aiTyping && (
                 <div className="flex flex-col items-start">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1.5 px-1">
-                    AI Interviewer
+                  <span className="text-[12px] text-ink-muted mb-1 px-1">
+                    Pewawancara AI
                   </span>
-                  <div className="bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/30 dark:border-zinc-800/30 px-5 py-4 rounded-3xl rounded-tl-sm">
+                  <div className="bg-surface-1 border border-hairline px-5 py-4">
                     <div className="flex gap-1.5">
                       {[0, 0.15, 0.3].map((d, i) => (
                         <div
                           key={i}
-                          className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-pulse"
+                          className="w-1.5 h-1.5 bg-ink-muted animate-pulse"
                           style={{ animationDelay: `${d}s` }}
                         />
                       ))}
@@ -484,27 +437,27 @@ export default function CandidateAISimulation() {
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-white/30 dark:bg-zinc-950/30 border-t border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-md">
-              <div className="flex items-end gap-2 bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-1.5 focus-within:border-zinc-400 dark:focus-within:border-zinc-600 transition-colors">
+            <div className="p-4 bg-surface-1 border-t border-hairline">
+              <div className="flex items-end gap-2 bg-canvas border border-hairline focus-within:border-primary transition-none">
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKey}
-                  placeholder="Type your response..."
+                  placeholder="Ketik balasan Anda..."
                   rows={1}
                   disabled={aiTyping}
-                  className="flex-1 bg-transparent px-4 py-2.5 text-[13px] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 resize-none focus:outline-none min-h-[44px] max-h-[120px]"
+                  className="flex-1 bg-transparent px-4 py-3 text-[14px] text-ink placeholder-ink-muted resize-none focus:outline-none min-h-[44px] max-h-[120px]"
                 />
                 <button
                   onClick={sendAnswer}
                   disabled={!input.trim() || aiTyping}
-                  className="w-10 h-10 flex items-center justify-center bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-full hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+                  className="w-10 h-10 m-1 flex items-center justify-center bg-primary text-white hover:bg-[#0353e9] transition-none disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
                 >
-                  <ArrowRight className="w-4 h-4" />
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-[9px] text-zinc-400 mt-3 font-medium uppercase tracking-widest text-center">
-                Press Enter to Submit
+              <p className="text-[12px] text-ink-muted mt-2 text-center">
+                Tekan Enter untuk Mengirim
               </p>
             </div>
           </div>
@@ -512,23 +465,23 @@ export default function CandidateAISimulation() {
       </div>
 
       {/* Bottom control bar */}
-      <div className="flex-shrink-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 px-6 py-3 flex items-center justify-center gap-3">
+      <div className="flex-shrink-0 bg-canvas border-t border-hairline px-6 py-4 flex items-center justify-center gap-4">
         <button
           onClick={() => setMicOn((v) => !v)}
-          className={`w-12 h-12 flex items-center justify-center rounded-2xl border text-sm transition-all ${
+          className={`w-12 h-12 flex items-center justify-center border transition-none ${
             micOn
-              ? "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-              : "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-500"
+              ? "border-hairline text-ink hover:bg-surface-1"
+              : "border-[#da1e28] bg-[#fff1f1] text-[#da1e28]"
           }`}
         >
           {micOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
         </button>
         <button
           onClick={() => setCamOn((v) => !v)}
-          className={`w-12 h-12 flex items-center justify-center rounded-2xl border text-sm transition-all ${
+          className={`w-12 h-12 flex items-center justify-center border transition-none ${
             camOn
-              ? "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-              : "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-500"
+              ? "border-hairline text-ink hover:bg-surface-1"
+              : "border-[#da1e28] bg-[#fff1f1] text-[#da1e28]"
           }`}
         >
           {camOn ? (
@@ -539,18 +492,18 @@ export default function CandidateAISimulation() {
         </button>
         <button
           onClick={() => setChatOpen((v) => !v)}
-          className={`w-12 h-12 flex items-center justify-center rounded-2xl border text-sm transition-all ${
+          className={`w-12 h-12 flex items-center justify-center border transition-none ${
             chatOpen
-              ? "border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-              : "border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              ? "border-primary bg-primary text-white"
+              : "border-hairline text-ink hover:bg-surface-1"
           }`}
         >
           <MessageSquare className="w-5 h-5" />
         </button>
-        <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700 mx-1" />
+        <div className="w-px h-6 bg-hairline mx-2" />
         <button
           onClick={() => setPhase("done")}
-          className="w-12 h-12 flex items-center justify-center rounded-2xl border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors"
+          className="w-12 h-12 flex items-center justify-center border border-[#da1e28] bg-[#da1e28] text-white hover:bg-[#ba1b23] transition-none"
         >
           <PhoneOff className="w-5 h-5" />
         </button>

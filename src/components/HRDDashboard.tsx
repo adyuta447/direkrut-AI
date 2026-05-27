@@ -9,8 +9,6 @@ import {
   Menu,
   X,
   Search,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import CandidateTable from "./hrd/CandidateTable";
@@ -31,8 +29,6 @@ export default function HRDDashboard() {
     currentUser,
     setCurrentUser,
     setCurrentPage,
-    darkMode,
-    toggleDarkMode,
   } = useApp();
   const [activeView, setActiveView] = useState<HRDView>("dashboard");
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
@@ -43,40 +39,40 @@ export default function HRDDashboard() {
 
   const pageMetadata = {
     dashboard: {
-      title: "Candidate Directory",
-      subtitle: "Review and manage candidate applications",
+      title: "Manajemen Pelamar",
+      subtitle: "Tinjau dan kelola lamaran kandidat",
     },
     detail: {
-      title: "Candidate Detail",
-      subtitle: "Detailed candidate information and analysis",
+      title: "Detail Kandidat",
+      subtitle: "Informasi dan analisis mendetail tentang kandidat",
     },
     "cross-role": {
-      title: "Cross-Role Match",
-      subtitle: "Find alternative role matches with AI",
+      title: "Rekomendasi Alternatif Posisi",
+      subtitle: "Temukan kecocokan peran alternatif dengan AI",
     },
     "gap-analysis": {
-      title: "Gap & Growth",
-      subtitle: "Analyze skill gaps and development plans",
+      title: "Validasi Kompetensi (AI)",
+      subtitle: "Validasi keahlian menggunakan bukti dari CV",
     },
     "job-management": {
-      title: "Job Management",
-      subtitle: "Control active job postings",
+      title: "Manajemen Lowongan",
+      subtitle: "Kelola lowongan pekerjaan yang aktif",
     },
   };
 
   const navItems = [
-    { id: "dashboard" as const, label: "Candidates", icon: Users },
+    { id: "dashboard" as const, label: "Manajemen Pelamar", icon: Users },
     {
       id: "detail" as const,
-      label: "Candidate Detail",
+      label: "Detail Kandidat",
       icon: FileText,
       disabled: !selectedCandidateId,
     },
-    { id: "cross-role" as const, label: "Cross-Role Match", icon: Target },
-    { id: "gap-analysis" as const, label: "Gap & Growth", icon: TrendingUp },
+    { id: "gap-analysis" as const, label: "Validasi Kompetensi (AI)", icon: TrendingUp },
+    { id: "cross-role" as const, label: "Rekomendasi Alternatif Posisi", icon: Target },
     {
       id: "job-management" as const,
-      label: "Job Management",
+      label: "Manajemen Lowongan",
       icon: ClipboardList,
     },
   ];
@@ -94,58 +90,48 @@ export default function HRDDashboard() {
   };
 
   return (
-    <div className="h-screen bg-white dark:bg-[#0a0a0a] font-sans flex relative overflow-hidden">
+    <div className="h-screen bg-canvas font-sans flex relative overflow-hidden">
       {/* Overlay for Mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-md z-30 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-[#393939]/50 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`w-72 bg-white dark:bg-[#0a0a0a] border-r border-zinc-200/60 dark:border-zinc-800/60 fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-transform duration-500 ease-out ${
+        className={`w-64 bg-surface-1 border-r border-hairline fixed lg:sticky top-0 h-screen z-40 flex flex-col transform transition-none ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Brand & User Area */}
-        <div className="p-6 lg:p-8 border-b border-zinc-200/60 dark:border-zinc-800/60">
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">
-              Direkrut<span className="text-zinc-400">AI</span>
+        <div className="p-6 border-b border-hairline bg-canvas">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-[16px] font-semibold tracking-tight text-ink uppercase">
+              Direkrut AI
             </span>
-            <button
-              onClick={toggleDarkMode}
-              className="w-10 h-10 flex items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              {darkMode ? (
-                <Sun className="w-4 h-4 text-zinc-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-zinc-600" />
-              )}
-            </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center text-white dark:text-zinc-900 font-black text-lg flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary text-white flex items-center justify-center font-semibold text-[16px]">
               {currentUser?.name?.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-zinc-900 dark:text-white truncate uppercase tracking-widest">
+              <p className="text-[14px] font-semibold text-ink truncate">
                 {currentUser?.name}
               </p>
-              <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 truncate uppercase tracking-widest mt-0.5">
-                System Admin
+              <p className="text-[12px] text-ink-muted truncate mt-0.5">
+                HR Manager
               </p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 lg:p-6 flex-1 overflow-y-auto space-y-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 px-4 mb-4">
-            Main Menu
+        <nav className="p-4 flex-1 overflow-y-auto space-y-1">
+          <p className="text-[12px] font-semibold text-ink-muted px-4 mb-2 mt-4 uppercase">
+            Menu
           </p>
           {navItems.map(({ id, label, icon: Icon, disabled }) => (
             <button
@@ -157,71 +143,71 @@ export default function HRDDashboard() {
                 }
               }}
               disabled={disabled}
-              className={`flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+              className={`flex items-center gap-3 px-4 py-3 w-full text-[14px] font-normal transition-none border-l-4 ${
                 activeView === id
-                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                  ? "bg-[#e5f6ff] text-primary border-primary font-semibold"
                   : disabled
-                    ? "text-zinc-300 dark:text-zinc-700 cursor-not-allowed"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
+                    ? "text-ink-muted cursor-not-allowed border-transparent"
+                    : "text-ink hover:bg-[#e8e8e8] border-transparent"
               }`}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-4 h-4" />
               <span>{label}</span>
             </button>
           ))}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 lg:p-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
+        <div className="p-4 border-t border-hairline bg-canvas">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-[14px] font-normal text-[#da1e28] hover:bg-[#fff1f1] transition-none border-l-4 border-transparent"
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span>End Session</span>
+            <LogOut className="w-4 h-4" />
+            <span>Keluar</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-white dark:bg-[#0a0a0a]">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-canvas">
         {/* Topbar */}
-        <header className="bg-transparent border-b border-zinc-200/60 dark:border-zinc-800/60 px-6 lg:px-12 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+        <header className="bg-surface-1 border-b border-hairline px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden w-12 h-12 flex items-center justify-center rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="lg:hidden w-10 h-10 flex items-center justify-center border border-hairline bg-canvas hover:bg-surface-1 transition-none"
             >
               {sidebarOpen ? (
-                <X className="w-5 h-5 text-zinc-900 dark:text-white" />
+                <X className="w-5 h-5 text-ink" />
               ) : (
-                <Menu className="w-5 h-5 text-zinc-900 dark:text-white" />
+                <Menu className="w-5 h-5 text-ink" />
               )}
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl lg:text-3xl font-black tracking-tighter text-zinc-900 dark:text-white truncate mb-1">
+              <h1 className="text-[24px] font-light text-ink truncate mb-1">
                 {currentPageMeta.title}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 truncate">
+              <p className="text-[14px] text-ink-muted truncate">
                 {currentPageMeta.subtitle}
               </p>
             </div>
           </div>
 
           <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
             <input
               type="text"
-              placeholder="SEARCH CANDIDATE..."
+              placeholder="Cari kandidat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-64 lg:w-80 h-12 pl-12 pr-6 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
+              className="input-field pl-11 w-full sm:w-64 bg-canvas border-b border-hairline hover:bg-[#e8e8e8]"
             />
           </div>
         </header>
 
         {/* Dynamic Main View */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-[#0a0a0a]">
+        <main className="flex-1 overflow-y-auto p-0">
           {activeView === "dashboard" && (
             <CandidateTable
               onViewCandidate={handleViewCandidate}
@@ -229,7 +215,10 @@ export default function HRDDashboard() {
             />
           )}
           {activeView === "detail" && selectedCandidateId && (
-            <CandidateDetail candidateId={selectedCandidateId} />
+            <CandidateDetail 
+              candidateId={selectedCandidateId} 
+              onBack={() => setActiveView("dashboard")} 
+            />
           )}
           {activeView === "cross-role" && <CrossRoleRecommendation />}
           {activeView === "gap-analysis" && <GapAnalysis />}

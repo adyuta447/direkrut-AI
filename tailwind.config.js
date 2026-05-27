@@ -5,18 +5,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['"IBM Plex Sans"', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
-        surface: {
-          DEFAULT: '#ffffff',
-          dark: '#0a0a0a',
-        },
-        accent: {
-          DEFAULT: '#111111',
-          dark: '#f5f5f5',
-        },
+        primary: '#0f62fe',
+        canvas: '#ffffff',
+        'surface-1': '#f4f4f4',
+        'surface-2': '#e0e0e0',
+        ink: '#161616',
+        'ink-muted': '#525252',
+        hairline: '#e0e0e0',
+        'inverse-canvas': '#161616',
       },
       animation: {
         'fade-up': 'fadeUp 0.6s ease forwards',

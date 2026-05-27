@@ -5,18 +5,18 @@
 @layer base {
   :root {
     --bg: #ffffff;
-    --fg: #0a0a0a;
-    --border: #e5e5e5;
-    --muted: #737373;
-    --accent: #0a0a0a;
+    --fg: #161616;
+    --border: #e0e0e0;
+    --muted: #525252;
+    --accent: #0f62fe;
   }
 
   .dark {
-    --bg: #0a0a0a;
-    --fg: #fafafa;
-    --border: #1a1a1a;
-    --muted: #737373;
-    --accent: #fafafa;
+    --bg: #ffffff; /* Override dark mode for Carbon Marketing which is mostly white */
+    --fg: #161616;
+    --border: #e0e0e0;
+    --muted: #525252;
+    --accent: #0f62fe;
   }
 
   * {
@@ -35,7 +35,8 @@
   body {
     background-color: var(--bg);
     color: var(--fg);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans', Helvetica, Arial, sans-serif;
+    letter-spacing: 0.16px;
   }
 
   ::-webkit-scrollbar {
@@ -59,34 +60,34 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-2.5 rounded-xl font-medium text-sm hover:opacity-80 transition-opacity;
+    @apply bg-primary text-white px-4 py-3 font-normal text-sm hover:bg-[#0353e9] transition-none rounded-none;
   }
 
   .btn-ghost {
-    @apply text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-medium text-sm transition-colors;
+    @apply text-primary hover:text-[#0353e9] font-normal text-sm transition-none rounded-none;
   }
 
   .card {
-    @apply bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl;
+    @apply bg-canvas border border-hairline rounded-none;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white focus:border-transparent text-sm transition-all;
+    @apply w-full px-4 py-3 bg-surface-1 border-b border-hairline rounded-none text-ink placeholder-ink-muted focus:outline-none focus:border-b-2 focus:border-primary text-sm transition-none;
   }
 
   .label {
-    @apply block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider;
+    @apply block text-sm font-normal text-ink mb-1.5;
   }
 
   .sidebar-item {
-    @apply w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all;
+    @apply w-full flex items-center space-x-3 px-4 py-3 rounded-none text-sm font-normal transition-none border-l-4 border-transparent;
   }
 
   .sidebar-item-active {
-    @apply bg-zinc-900 dark:bg-white text-white dark:text-zinc-900;
+    @apply bg-surface-1 text-ink border-primary font-medium;
   }
 
   .sidebar-item-inactive {
-    @apply text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white;
+    @apply text-ink-muted hover:bg-surface-1 hover:text-ink;
   }
 }
