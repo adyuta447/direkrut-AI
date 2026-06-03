@@ -9,20 +9,21 @@ import {
   Menu,
   X,
   Search,
+  Sparkles,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import CandidateTable from "./hrd/CandidateTable";
 import CandidateDetail from "./hrd/CandidateDetail";
 import CrossRoleRecommendation from "./hrd/CrossRoleRecommendation";
-import GapAnalysis from "./hrd/GapAnalysis";
 import JobManagement from "./hrd/JobManagement";
+import AIChatAssistant from "./hrd/AIChatAssistant";
 
 type HRDView =
   | "dashboard"
   | "detail"
   | "cross-role"
-  | "gap-analysis"
-  | "job-management";
+  | "job-management"
+  | "ai-assistant";
 
 export default function HRDDashboard() {
   const {
@@ -50,13 +51,13 @@ export default function HRDDashboard() {
       title: "Rekomendasi Alternatif Posisi",
       subtitle: "Temukan kecocokan peran alternatif dengan AI",
     },
-    "gap-analysis": {
-      title: "Validasi Kompetensi (AI)",
-      subtitle: "Validasi keahlian menggunakan bukti dari CV",
-    },
     "job-management": {
       title: "Manajemen Lowongan",
       subtitle: "Kelola lowongan pekerjaan yang aktif",
+    },
+    "ai-assistant": {
+      title: "Asisten AI",
+      subtitle: "Asisten chat pintar untuk analisis rekrutmen",
     },
   };
 
@@ -68,13 +69,13 @@ export default function HRDDashboard() {
       icon: FileText,
       disabled: !selectedCandidateId,
     },
-    { id: "gap-analysis" as const, label: "Validasi Kompetensi (AI)", icon: TrendingUp },
     { id: "cross-role" as const, label: "Rekomendasi Alternatif Posisi", icon: Target },
     {
       id: "job-management" as const,
       label: "Manajemen Lowongan",
       icon: ClipboardList,
     },
+    { id: "ai-assistant" as const, label: "Asisten AI", icon: Sparkles },
   ];
 
   const currentPageMeta = pageMetadata[activeView];
@@ -221,8 +222,8 @@ export default function HRDDashboard() {
             />
           )}
           {activeView === "cross-role" && <CrossRoleRecommendation />}
-          {activeView === "gap-analysis" && <GapAnalysis />}
           {activeView === "job-management" && <JobManagement />}
+          {activeView === "ai-assistant" && <AIChatAssistant onNavigateToCandidate={handleViewCandidate} />}
         </main>
       </div>
     </div>

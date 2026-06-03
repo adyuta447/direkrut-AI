@@ -1,192 +1,223 @@
-import { Search, ChevronDown, BarChart3, TrendingUp, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { Search, ChevronDown, BarChart3, ChevronUp, AlertCircle } from "lucide-react";
+import { useState, useMemo, Fragment } from "react";
 import { useApp } from "../../context/AppContext";
 
 export default function CrossRoleRecommendation() {
   const { applications, jobs } = useApp();
-  const [selectedCandidate, setSelectedCandidate] = useState("");
-  const [recommendations, setRecommendations] = useState<
-    Array<{ role: string; matchScore: number; reason: string; stats: string; originalRole: string; suggestedRoleTitle: string }>
-  >([]);
-  const [expandedRec, setExpandedRec] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedRecId, setExpandedRecId] = useState<string | null>(null);
+  
+  const itemsPerPage = 5;
 
-  const handleSearch = () => {
-    if (!selectedCandidate) return;
-    const candidate = applications.find((app) => app.id === selectedCandidate);
-    if (!candidate) return;
+  // Generate a deterministic list of candidates with cross-role potential
+  const crossRoleList = useMemo(() => {
+    return applications
+      .map((app, index) => {
+        // Skip every third to simulate not all candidates having cross-role potential
+        if (index % 3 === 0) return null;
 
-    const currentScore = candidate.recommendationScore || 75;
-    const crossRoleMatches = jobs
-      .filter((job) => job.id !== candidate.jobId)
-      .map((job) => {
-        const variance = Math.floor(Math.random() * 30) - 15;
-        const score = Math.min(95, Math.max(50, currentScore + variance));
-        let reason = "";
-        let stats = "";
+        const alternateJob = jobs[(index + 1) % jobs.length];
         
-        if (score >= 85) {
-          reason = `Keterampilan inti di CV (80% kesamaan) sangat selaras dengan persyaratan ${job.title}.`;
-          stats = `Sistem mendeteksi bahwa meskipun kandidat melamar sebagai ${candidate.jobTitle}, 80% kata kunci pada CV-nya (pengalaman, tools, metode) secara statistik memiliki korelasi yang lebih tinggi dengan deskripsi pekerjaan ${job.title}. Memindahkan kandidat ini akan meningkatkan probabilitas sukses rekrutmen hingga 3x lipat.`;
-        } else if (score >= 70) {
-          reason = `Keterampilan dasar yang baik, dapat disesuaikan untuk ${job.title} dengan onboarding minimal.`;
-          stats = `Kandidat memiliki fondasi kuat yang menyilang (cross-functional) dengan ${job.title}. Terdapat 60% overlap keterampilan. Dengan sedikit pelatihan, kandidat bisa memenuhi kualifikasi ini jika posisi ${candidate.jobTitle} sudah penuh.`;
-        } else {
-          reason = `Beberapa keterampilan relevan ada, namun membutuhkan peningkatan signifikan untuk ${job.title}.`;
-          stats = `Hanya 35% kesesuaian keterampilan. Tidak direkomendasikan kecuali jika terdapat krisis talenta darurat di divisi ini.`;
-        }
-        
-        return { 
-          role: `${job.title} di ${job.company}`, 
-          matchScore: score, 
+        const isHighlyRelevant = index % 2 === 0;
+        const label = isHighlyRelevant ? "Sangat Relevan" : "Potensi Adaptasi Cepat";
+        const labelClass = isHighlyRelevant 
+          ? "text-[#198038] bg-[#defbe6] border-[#198038]"
+          : "text-[#f1c21b] bg-[#fcf0d3] border-[#f1c21b]";
+          
+        const reason = isHighlyRelevant
+          ? `Keterampilan inti (transferable skills) selaras dengan kebutuhan ${alternateJob.title}.`
+          : `Fondasi kuat yang dapat disesuaikan untuk ${alternateJob.title} dengan masa onboarding minimal.`;
+          
+        const evidence = isHighlyRelevant
+          ? `Kutipan CV (Hal 1): "Memimpin kolaborasi lintas divisi yang mengharuskan penggunaan prinsip kerja dari ${alternateJob.title} untuk mencapai target perusahaan."`
+          : `Log Wawancara (08:21): "Meskipun posisi ini di luar keahlian utama saya, saya telah mengikuti sertifikasi dasar terkait metrik dan operasional departemen tersebut secara otodidak."`;
+
+        return {
+          id: app.id,
+          candidateName: app.applicantName,
+          originalRole: app.jobTitle,
+          suggestedRole: alternateJob.title,
+          label,
+          labelClass,
           reason,
-          stats,
-          originalRole: candidate.jobTitle,
-          suggestedRoleTitle: job.title
+          evidence
         };
       })
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 3);
-      
-    setRecommendations(crossRoleMatches);
-    setExpandedRec(null);
-  };
+      .filter(Boolean) as any[];
+  }, [applications, jobs]);
+
+  // Filter based on search term
+  const filteredList = crossRoleList.filter(item => 
+    item.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.suggestedRole.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+  const paginatedList = filteredList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 font-sans">
+    <div className="p-6 lg:p-8 space-y-6 font-sans bg-canvas min-h-full">
       {/* Header */}
       <div>
         <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted mb-2">Alat AI</p>
-        <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Rekomendasi Posisi Alternatif</h2>
-        <p className="text-[16px] text-ink-muted">
-          Temukan peran alternatif di mana keterampilan kandidat yang dapat ditransfer (transferable skills) akan lebih bernilai.
+        <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Rekomendasi Posisi Lain</h2>
+        <p className="text-[16px] text-ink-muted mb-2">
+          Daftar kandidat yang memiliki <span className="italic">transferable skills</span> untuk dipindahkan ke posisi alternatif.
         </p>
+        {/* Penjelasan kontekstual */}
+        <div className="p-3 bg-surface-1 border border-hairline mt-4">
+          <p className="text-[13px] text-ink leading-[1.5]">
+            <span className="font-semibold">Cara kerja fitur ini:</span> Sistem AI memindai seluruh kandidat dan mencari kecocokan kata kunci profil mereka dengan lowongan lain yang sedang dibuka. Hal ini mencegah "talent waste" jika posisi yang dilamar sudah terpenuhi.
+          </p>
+        </div>
       </div>
 
       {/* Search */}
-      <div className="bg-canvas border border-hairline p-6">
-        <label className="block text-[14px] text-ink font-semibold mb-3">Pilih Kandidat</label>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <select
-              value={selectedCandidate}
-              onChange={(e) => {
-                setSelectedCandidate(e.target.value);
-                setRecommendations([]);
-              }}
-              className="appearance-none input-field w-full pr-10 cursor-pointer"
-            >
-              <option value="">Pilih kandidat...</option>
-              {applications.map((app) => (
-                <option key={app.id} value={app.id}>
-                  {app.applicantName} — {app.jobTitle}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
-          </div>
-          <button
-            onClick={handleSearch}
-            disabled={!selectedCandidate}
-            className="btn-primary flex items-center justify-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-          >
-            <Search className="w-4 h-4" />
-            Analisis Posisi
-          </button>
+      <div className="bg-canvas border border-hairline p-4">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
+          <input
+            type="text"
+            placeholder="Cari nama atau posisi rekomendasi..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="input-field pl-11 bg-surface-1 border-b border-hairline w-full"
+          />
         </div>
       </div>
 
-      {/* Results */}
-      {recommendations.length > 0 && (
-        <div className="space-y-4 animate-in slide-in-from-bottom-4">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted">
-              Hasil Rekomendasi AI
-            </p>
-            <span className="text-[14px] text-ink-muted">{recommendations.length} kecocokan ditemukan</span>
-          </div>
-
-          {recommendations.map((rec, idx) => (
-            <div
-              key={idx}
-              className={`bg-canvas border p-6 transition-none ${expandedRec === idx ? 'border-primary' : 'border-hairline'}`}
-            >
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-4 mb-3">
-                    <span className="text-[14px] font-mono font-semibold text-ink-muted">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                    <h3 className="text-[18px] font-semibold text-ink">{rec.role}</h3>
-                  </div>
-                  <p className="text-[14px] text-ink leading-[1.5] sm:ml-9">
-                    {rec.reason}
-                  </p>
-                </div>
-                <div className="text-left sm:text-right flex-shrink-0 sm:ml-9 bg-surface-1 p-4 border border-hairline min-w-[120px]">
-                  <p className="text-[32px] font-light text-primary tabular-nums">{rec.matchScore}%</p>
-                  <p className="text-[12px] font-semibold uppercase text-ink-muted mt-1">Kecocokan</p>
-                </div>
-              </div>
-              
-              {expandedRec === idx && (
-                <div className="mt-6 pt-6 border-t border-hairline sm:ml-9 animate-in slide-in-from-top-2">
-                  <div className="bg-[#e5f6ff] border border-primary p-4">
-                    <h4 className="text-[14px] font-semibold text-primary mb-2 flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4" />
-                      Detail Statistik & Metrik AI
-                    </h4>
-                    <p className="text-[14px] text-ink leading-[1.5] mb-4">
-                      {rec.stats}
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 border-t border-[#8ecbfb] pt-4">
-                       <div>
-                         <p className="text-[12px] text-ink-muted uppercase font-semibold mb-1">Posisi Awal</p>
-                         <p className="text-[14px] font-semibold text-ink">{rec.originalRole}</p>
-                       </div>
-                       <div>
-                         <p className="text-[12px] text-ink-muted uppercase font-semibold mb-1">Posisi Disarankan</p>
-                         <p className="text-[14px] font-semibold text-[#198038]">{rec.suggestedRoleTitle}</p>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 pt-6 border-t border-hairline flex justify-end gap-4">
-                <button 
-                  onClick={() => setExpandedRec(expandedRec === idx ? null : idx)}
-                  className="text-[14px] font-normal text-ink hover:underline transition-none flex items-center gap-2"
+      {/* Results Table */}
+      <div className="bg-canvas border border-hairline">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-1 border-b border-hairline">
+                <th className="px-6 py-4 text-[12px] font-semibold text-ink-muted uppercase">Kandidat</th>
+                <th className="px-6 py-4 text-[12px] font-semibold text-ink-muted uppercase">Posisi Dilamar</th>
+                <th className="px-6 py-4 text-[12px] font-semibold text-ink-muted uppercase">Rekomendasi Posisi AI</th>
+                <th className="px-6 py-4 text-[12px] font-semibold text-ink-muted uppercase">Tingkat Potensi</th>
+                <th className="px-6 py-4 text-[12px] font-semibold text-ink-muted uppercase">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-hairline">
+              {paginatedList.map((item) => (
+                <Fragment key={item.id}>
+                  <tr className="hover:bg-surface-1 transition-none">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-ink text-white flex items-center justify-center font-semibold text-[12px]">
+                          {item.candidateName.charAt(0)}
+                        </div>
+                        <span className="text-[14px] font-semibold text-ink">
+                          {item.candidateName}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[14px] text-ink">{item.originalRole}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[14px] font-semibold text-primary">{item.suggestedRole}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-[11px] font-semibold px-2 py-1 border uppercase tracking-wide inline-block ${item.labelClass}`}>
+                        {item.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => setExpandedRecId(expandedRecId === item.id ? null : item.id)}
+                        className="text-[12px] font-normal text-primary hover:underline transition-none flex items-center gap-1"
+                      >
+                        {expandedRecId === item.id ? "Tutup Detail" : "Lihat Detail"}
+                        {expandedRecId === item.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                    </td>
+                  </tr>
+                  
+                  {/* Expanded Slug / View Detail */}
+                  {expandedRecId === item.id && (
+                    <tr className="bg-[#e5f6ff] border-b border-primary">
+                      <td colSpan={5} className="px-6 py-6">
+                        <div className="animate-in slide-in-from-top-2 flex flex-col md:flex-row gap-6">
+                          <div className="flex-1 bg-white border border-[#0f62fe] p-5">
+                            <h4 className="text-[14px] font-semibold text-primary mb-3 flex items-center gap-2 uppercase tracking-wide">
+                              <BarChart3 className="w-4 h-4" />
+                              Alasan Rekomendasi
+                            </h4>
+                            <p className="text-[14px] text-ink leading-[1.5] mb-4">
+                              {item.reason}
+                            </p>
+                            
+                            <div className="bg-surface-1 border border-hairline p-4">
+                              <p className="text-[12px] font-semibold uppercase text-ink-muted mb-2 flex items-center gap-1.5">
+                                Bukti Transparansi AI
+                              </p>
+                              <p className="text-[13px] text-ink leading-[1.5] italic border-l-4 border-primary pl-3">
+                                {item.evidence}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="w-full md:w-64 flex flex-col justify-between border border-hairline bg-white p-5">
+                             <div>
+                               <p className="text-[12px] font-semibold text-ink-muted uppercase mb-1">Aksi Lanjutan</p>
+                               <p className="text-[13px] text-ink leading-[1.5] mb-4">
+                                 Anda dapat mengirimkan undangan penawaran role alternatif ini ke kandidat.
+                               </p>
+                             </div>
+                             <button className="btn-primary w-full text-center py-2 px-4 text-[13px]">
+                               Tawarkan Posisi Ini
+                             </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-4 border-t border-hairline bg-surface-1">
+            <span className="text-[14px] text-ink-muted">
+              Menampilkan {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredList.length)} dari {filteredList.length} kandidat
+            </span>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 flex items-center justify-center text-[14px] transition-none border ${
+                    currentPage === i + 1 
+                      ? "bg-primary text-white border-primary" 
+                      : "bg-canvas text-ink border-hairline hover:bg-[#e8e8e8]"
+                  }`}
                 >
-                  <TrendingUp className="w-4 h-4" />
-                  {expandedRec === idx ? "Tutup Metrik AI" : "Lihat Metrik AI"}
+                  {i + 1}
                 </button>
-                <button className="text-[14px] font-normal text-primary hover:underline transition-none">
-                  Sarankan Mutasi ke Kandidat
-                </button>
-              </div>
-            </div>
-          ))}
-
-          <div className="p-6 bg-surface-1 border border-hairline mt-8 flex gap-4 items-start">
-            <AlertCircle className="w-5 h-5 text-ink-muted flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[14px] font-semibold text-ink mb-1">Catatan HRD</p>
-              <p className="text-[14px] text-ink leading-[1.5]">
-                Berdasarkan CV, keahlian, dan tanggapan validasi, kami mengidentifikasi {recommendations.length}{" "}
-                peran alternatif di mana keterampilan yang dapat ditransfer (transferable skills) bernilai tinggi. 
-                Sistem ini mengurangi "talent waste" (terbuangnya talenta) saat kuota posisi utama sudah penuh.
-              </p>
+              ))}
             </div>
           </div>
-        </div>
-      )}
-
-      {selectedCandidate && recommendations.length === 0 && (
-        <div className="bg-surface-1 border border-hairline p-16 text-center">
-          <Search className="w-12 h-12 text-ink-muted mx-auto mb-4" />
-          <p className="text-[16px] text-ink">Klik "Analisis Posisi" untuk memproses data lintas-peran dari CV pelamar.</p>
-        </div>
-      )}
+        )}
+        
+        {filteredList.length === 0 && (
+          <div className="text-center py-16 bg-surface-1 border-t border-hairline">
+            <p className="text-[14px] text-ink-muted">Tidak ada kandidat dengan potensi lintas posisi yang ditemukan.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

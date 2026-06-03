@@ -39,22 +39,22 @@ export default function GapAnalysis() {
         { 
           skill: "Digital Marketing & SEO", 
           matchLevel: "Tinggi", 
-          evidence: `Ditemukan di CV: 'Menjalankan kampanye SEO yang meningkatkan trafik organik sebesar 45%.'`,
+          evidence: `Kutipan CV (Hal 1): "Berhasil menjalankan kampanye SEO yang meningkatkan trafik organik sebesar 45% dalam 6 bulan pertama."`,
         },
         { 
           skill: "Content Strategy", 
           matchLevel: "Tinggi", 
-          evidence: "Ditemukan di CV: 'Memimpin tim konten untuk kampanye peluncuran produk kuartal 3.'",
+          evidence: `Log Wawancara (12:45): "Saya memimpin tim konten lintas divisi untuk merencanakan kampanye peluncuran produk kuartal 3 secara komprehensif."`,
         },
         { 
           skill: "Data Analytics (Google Analytics)", 
           matchLevel: "Menengah", 
-          evidence: "Ditemukan di CV: 'Terbiasa membaca metrik dasar analitik.' (Perlu sertifikasi lanjutan)",
+          evidence: `Kutipan CV (Hal 2): "Terbiasa membaca metrik dasar analitik menggunakan Google Analytics untuk pelaporan mingguan." (Catatan: Belum ada sertifikasi tingkat lanjut)`,
         },
         { 
           skill: "B2B Sales", 
           matchLevel: "Rendah", 
-          evidence: "Tidak ada bukti langsung mengenai negosiasi atau penjualan B2B pada riwayat sebelumnya.",
+          evidence: "Log Wawancara: Tidak ada indikasi atau penyebutan mengenai strategi penjualan B2B atau pengalaman negosiasi korporat ketika ditanya mengenai siklus penjualan.",
         },
       ];
       overallAssessment = `Kandidat sangat kuat di bidang pemasaran digital dan pembuatan konten. Mereka cocok untuk peran pemasaran inti, namun akan membutuhkan pelatihan terkait analitik data lanjutan dan proses penjualan B2B.`;
@@ -67,22 +67,22 @@ export default function GapAnalysis() {
         { 
           skill: "UI/UX Prototyping (Figma)", 
           matchLevel: "Tinggi", 
-          evidence: "Ditemukan di CV: 'Mendesain ulang sistem desain dan prototipe aplikasi seluler menggunakan Figma.'",
+          evidence: `Kutipan CV (Hal 1): "Mendesain ulang sistem desain internal dan membuat lebih dari 50 prototipe aplikasi seluler interaktif menggunakan Figma."`,
         },
         { 
           skill: "User Research & Testing", 
           matchLevel: "Tinggi", 
-          evidence: "Ditemukan di CV: 'Melakukan wawancara pengguna dan A/B testing untuk memvalidasi alur checkout.'",
+          evidence: `Log Wawancara (05:22): "Dalam proyek terakhir, saya memfasilitasi wawancara pengguna mendalam dan A/B testing selama 2 minggu untuk memvalidasi ulang alur checkout."`,
         },
         { 
           skill: "HTML/CSS Dasar", 
           matchLevel: "Menengah", 
-          evidence: "Ditemukan di CV: 'Bekerja sama dengan developer dalam implementasi desain UI.'",
+          evidence: `Kutipan CV (Hal 2): "Bekerja sama erat dengan developer frontend dalam implementasi desain UI dan dapat membaca kode HTML/CSS untuk panduan gaya."`,
         },
         { 
           skill: "3D Animation", 
           matchLevel: "Rendah", 
-          evidence: "Tidak ditemukan referensi mengenai animasi 3D atau motion design lanjutan.",
+          evidence: "Kutipan Portofolio/Log Wawancara: Seluruh portofolio berfokus pada desain antarmuka 2D; tidak ditemukan bukti pengalaman animasi 3D atau motion design.",
         },
       ];
       overallAssessment = `Kandidat memiliki fondasi UI/UX yang sangat kuat serta terbiasa dengan riset pengguna. Keterampilan pengkodean front-end dasar mereka adalah nilai tambah, namun tidak dapat diandalkan untuk animasi 3D.`;
@@ -95,22 +95,22 @@ export default function GapAnalysis() {
         { 
           skill: "Keahlian Inti Sesuai Peran", 
           matchLevel: "Tinggi", 
-          evidence: `Ditemukan di CV: 'Berpengalaman 3 tahun di bidang yang relevan dengan ${candidate.jobTitle}.'`,
+          evidence: `Kutipan CV (Hal 1): "Memiliki rekam jejak konsisten selama 3 tahun menjabat posisi setingkat spesialis di departemen yang berhubungan langsung dengan operasional ${candidate.jobTitle}."`,
         },
         { 
           skill: "Manajemen Proyek", 
           matchLevel: "Tinggi", 
-          evidence: "Ditemukan di CV: 'Telah memimpin 2 proyek berskala menengah dengan keberhasilan 100% on-time.'",
+          evidence: `Log Wawancara (09:15): "Saya mengambil inisiatif untuk memimpin 2 proyek transformasi berskala menengah yang keduanya selesai 100% tepat waktu sesuai anggaran."`,
         },
         { 
           skill: "Analisis Sistem Lanjutan", 
           matchLevel: "Menengah", 
-          evidence: "Ditemukan di CV: 'Turut serta membantu perancangan sistem internal.' (Butuh validasi tingkat kemandirian)",
+          evidence: `Kutipan CV (Hal 2): "Turut serta dalam tim inti (sebagai anggota) untuk membantu perancangan pembaruan sistem internal pada kuartal 4." (Catatan: Belum berperan sebagai inisiator utama)`,
         },
         { 
           skill: "Keterampilan Lintas-Fungsi (Cross-functional)", 
           matchLevel: "Rendah", 
-          evidence: "Tidak ada bukti spesifik mengenai kolaborasi lintas divisi yang kompleks dalam skala besar.",
+          evidence: "Analisis CV & Log Wawancara: Semua pencapaian berfokus pada pekerjaan individual atau dalam divisi internal yang sama. Tidak ada bukti kepemimpinan lintas departemen.",
         },
       ];
       overallAssessment = `Kandidat menunjukkan profil yang solid untuk peran ${candidate.jobTitle}. Pengalaman inti mereka valid dan didukung oleh pengalaman manajemen proyek skala menengah. Membutuhkan peningkatan dalam memimpin inisiatif lintas-divisi.`;
