@@ -12,6 +12,8 @@ import {
   BarChart3,
   CheckCircle2,
   X,
+  Briefcase,
+  Bell,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import DecisionPanel from "./DecisionPanel";
@@ -122,13 +124,30 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[12px] text-ink-muted mb-1 uppercase font-semibold">Skor Kecocokan AI</p>
-            <p className="text-[42px] font-light text-ink">
-              {candidate.recommendationScore ? `${candidate.recommendationScore}%` : "--"}
-            </p>
+            <p className="text-[12px] text-ink-muted mb-1 uppercase font-semibold">Profil Keahlian Kandidat</p>
+            {/* REVISI 2: Label teks, bukan angka persen */}
+            {candidate.recommendationScore ? (
+              <>
+                <span className={`inline-block text-[13px] font-semibold px-3 py-1.5 border uppercase tracking-wide mt-1 ${
+                  candidate.recommendationScore >= 75
+                    ? "text-[#198038] bg-[#defbe6] border-[#198038]"
+                    : candidate.recommendationScore >= 55
+                      ? "text-[#f1c21b] bg-[#fcf0d3] border-[#f1c21b]"
+                      : "text-[#da1e28] bg-[#fff1f1] border-[#da1e28]"
+                }`}>
+                  {candidate.recommendationScore >= 75
+                    ? "Memenuhi Syarat"
+                    : candidate.recommendationScore >= 55
+                      ? "Perlu Dikembangkan"
+                      : "Tidak Sesuai"}
+                </span>
+              </>
+            ) : (
+              <p className="text-[42px] font-light text-ink-muted">—</p>
+            )}
             <button
               onClick={() => setShowMatchDetails(!showMatchDetails)}
-              className="text-[12px] text-primary mt-1 hover:underline flex items-center justify-end gap-1 w-full"
+              className="text-[12px] text-primary mt-3 hover:underline flex items-center justify-end gap-1 w-full"
             >
               <BarChart3 className="w-3.5 h-3.5" />
               Lihat Detail Metrik AI
@@ -219,6 +238,15 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
             <p className="text-[16px] font-normal text-ink">{candidate.appliedDate}</p>
           </div>
         </div>
+        {/* REVISI 9: CV Dilihat Notification */}
+        {["under-review", "interview", "rejected"].includes(candidate.status) && (
+          <div className="mt-4 p-3 bg-[#e5f6ff] border border-[#0f62fe] flex items-center gap-3">
+            <Bell className="w-4 h-4 text-primary flex-shrink-0" />
+            <p className="text-[12px] text-ink">
+              <span className="font-semibold">Pemberitahuan:</span> CV kandidat ini telah dilihat oleh tim HRD pada {candidate.appliedDate}.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* AI Interview + Manual Schedule Actions */}
@@ -263,6 +291,31 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
         </div>
       </div>
 
+      {/* REVISI 3: Ringkasan Pengalaman Kerja */}
+      <div className="bg-canvas border border-hairline p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Briefcase className="w-5 h-5 text-ink" />
+          <p className="text-[14px] font-semibold text-ink">Ringkasan Pengalaman Kerja</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-surface-1 p-4 border border-hairline">
+            <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Total Pengalaman</p>
+            <p className="text-[20px] font-light text-ink">2–3 Tahun</p>
+          </div>
+          <div className="bg-surface-1 p-4 border border-hairline">
+            <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Perusahaan Sebelumnya</p>
+            <p className="text-[20px] font-light text-ink">2 Perusahaan</p>
+          </div>
+          <div className="bg-surface-1 p-4 border border-hairline">
+            <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Relevansi Bidang</p>
+            <p className="text-[20px] font-light text-[#198038]">Sesuai</p>
+          </div>
+        </div>
+        <p className="text-[14px] text-ink-muted leading-[1.5]">
+          Kandidat memiliki riwayat kerja yang linier dan relevan di bidang {candidate.jobTitle}. Pengalaman sebelumnya mendukung kesiapan untuk mengambil tanggung jawab di posisi ini.
+        </p>
+      </div>
+
       {/* CV Summary */}
       <div className="bg-canvas border border-hairline p-6">
         <p className="text-[14px] font-semibold text-ink mb-4">
@@ -277,19 +330,38 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
       {candidate.validationResponses && candidate.validationResponses.length > 0 && (
         <div className="bg-canvas border border-hairline p-6">
           <p className="text-[14px] font-semibold text-ink mb-6">
-            Log Validasi Wawancara AI
+            Log Validasi Wawancara AI & Bukti Visual
           </p>
-          <div className="space-y-4">
-            {candidate.validationResponses.map((response, idx) => (
-              <div key={idx} className="border border-hairline p-5">
-                <p className="text-[14px] font-semibold text-ink mb-3">
-                  P{idx + 1}: {response.question}
-                </p>
-                <p className="text-[14px] text-ink leading-[1.5] bg-surface-1 p-4 border border-hairline">
-                  {response.answer}
-                </p>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div className="md:col-span-1">
+              <p className="text-[12px] font-semibold uppercase text-ink-muted mb-3">Tangkapan Layar Wawancara</p>
+              <div className="relative aspect-video bg-surface-1 border border-hairline overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop" 
+                  alt="Kandidat saat wawancara AI"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 bg-[#da1e28] text-white text-[10px] px-2 py-0.5 font-semibold animate-pulse">
+                  REC
+                </div>
               </div>
-            ))}
+              <p className="text-[11px] text-ink-muted mt-2">Bukti kehadiran kandidat pada saat evaluasi asinkron berlangsung.</p>
+            </div>
+            
+            <div className="md:col-span-2 space-y-4">
+              <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Transkrip Tanya Jawab</p>
+              {candidate.validationResponses.map((response, idx) => (
+                <div key={idx} className="border border-hairline p-4">
+                  <p className="text-[14px] font-semibold text-ink mb-2">
+                    P{idx + 1}: {response.question}
+                  </p>
+                  <p className="text-[13px] text-ink leading-[1.5] bg-surface-1 p-3 border border-hairline">
+                    {response.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

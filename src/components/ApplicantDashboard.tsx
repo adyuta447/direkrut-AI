@@ -7,14 +7,16 @@ import {
   Menu,
   X,
   Video,
+  Calendar,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import ApplyPage from "./applicant/ApplyPage";
 import ValidationChat from "./applicant/ValidationChat";
+import SchedulingPage from "./applicant/SchedulingPage";
 import SubmissionComplete from "./applicant/SubmissionComplete";
 import CandidateAISimulation from "./applicant/CandidateAISimulation";
 
-type ApplicantView = "apply" | "validation" | "ai-practice" | "complete";
+type ApplicantView = "apply" | "validation" | "scheduling" | "ai-practice" | "complete";
 
 export default function ApplicantDashboard() {
   const {
@@ -37,6 +39,10 @@ export default function ApplicantDashboard() {
       title: "Validasi AI",
       subtitle: "Urutan validasi sistem berdasarkan profil Anda",
     },
+    scheduling: {
+      title: "Jadwal Interview",
+      subtitle: "Pilih jadwal wawancara AI Anda",
+    },
     "ai-practice": {
       title: "Wawancara Video AI",
       subtitle: "Sesi wawancara otonom interaktif",
@@ -54,6 +60,7 @@ export default function ApplicantDashboard() {
       label: "Validasi Sistem",
       icon: MessageSquare,
     },
+    { id: "scheduling" as const, label: "Jadwal Interview", icon: Calendar },
     { id: "ai-practice" as const, label: "Wawancara AI", icon: Video },
     { id: "complete" as const, label: "Status Lamaran", icon: CheckCircle },
   ];
@@ -174,7 +181,10 @@ export default function ApplicantDashboard() {
             <ApplyPage onNext={() => setActiveView("validation")} />
           )}
           {activeView === "validation" && (
-            <ValidationChat onComplete={() => setActiveView("complete")} />
+            <ValidationChat onComplete={() => setActiveView("scheduling")} />
+          )}
+          {activeView === "scheduling" && (
+            <SchedulingPage onNext={(view) => setActiveView(view)} />
           )}
           {activeView === "ai-practice" && <CandidateAISimulation />}
           {activeView === "complete" && <SubmissionComplete />}

@@ -5,6 +5,9 @@ import {
   CheckCircle,
   ChevronDown,
   ArrowRight,
+  X,
+  Plus,
+  AlertCircle,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -17,6 +20,10 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
   const [selectedJob, setSelectedJob] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // REVISI 11: Skill input & validasi minimal 3 keahlian
+  const [skillInput, setSkillInput] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillError, setSkillError] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -35,6 +42,12 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJob || !cvFile) return;
+    // REVISI 11: Validasi minimal 3 keahlian
+    if (skills.length < 3) {
+      setSkillError("Isi minimal 3 keahlian untuk meningkatkan akurasi pencocokan.");
+      return;
+    }
+    setSkillError("");
 
     const job = jobs.find((j) => j.id === selectedJob);
     if (!job) return;
@@ -145,17 +158,84 @@ export default function ApplyPage({ onNext }: ApplyPageProps) {
             )}
           </div>
 
-          {/* RIGHT COLUMN: Upload CV & Submit */}
+          {/* RIGHT COLUMN: Skills + Upload CV + Submit */}
           <div className="lg:col-span-5 flex flex-col gap-8">
-            <div className="bg-canvas border border-hairline p-8 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <label className="block text-[14px] text-ink">
-                  2. Unggah Dokumen CV
-                </label>
-                <span className="text-[12px] text-ink-muted">
-                  Maksimal 5MB
-                </span>
+            {/* REVISI 11: Skills Input dengan validasi 3 minimum */}
+              <div className="bg-canvas border border-hairline p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[14px] text-ink font-semibold">
+                    2. Keahlian Utama Anda
+                  </label>
+                  <span className={`text-[12px] font-semibold ${skills.length >= 3 ? 'text-[#198038]' : 'text-ink-muted'}`}>
+                    {skills.length}/3 minimum
+                  </span>
+                </div>
+                <p className="text-[12px] text-ink-muted mb-3">
+                  Isi minimal 3 keahlian untuk meningkatkan akurasi pencocokan dan peluang rekomendasi ke posisi yang sesuai.
+                </p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        const val = skillInput.trim();
+                        if (val && !skills.includes(val)) {
+                          setSkills([...skills, val]);
+                          setSkillError("");
+                        }
+                        setSkillInput("");
+                      }
+                    }}
+                    placeholder="Contoh: React.js, Python, Analisis Data..."
+                    className="input-field flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = skillInput.trim();
+                      if (val && !skills.includes(val)) {
+                        setSkills([...skills, val]);
+                        setSkillError("");
+                      }
+                      setSkillInput("");
+                    }}
+                    className="btn-primary px-4 flex-shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                {skills.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((skill) => (
+                      <span key={skill} className="flex items-center gap-1.5 text-[12px] bg-surface-1 border border-hairline px-2 py-1 text-ink">
+                        {skill}
+                        <button type="button" onClick={() => setSkills(skills.filter(s => s !== skill))}>
+                          <X className="w-3 h-3 text-ink-muted hover:text-ink" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {skillError && (
+                  <div className="mt-2 flex items-center gap-2 text-[12px] text-[#da1e28]">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {skillError}
+                  </div>
+                )}
               </div>
+
+              <div className="bg-canvas border border-hairline p-8 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-[14px] text-ink">
+                    3. Unggah Dokumen CV
+                  </label>
+                  <span className="text-[12px] text-ink-muted">
+                    Maksimal 5MB
+                  </span>
+                </div>
 
               <div
                 onDragOver={(e) => {
