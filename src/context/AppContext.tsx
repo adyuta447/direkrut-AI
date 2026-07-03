@@ -1,6 +1,8 @@
+"use client";
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, Application, Job } from "../types";
-import { mockApplications, mockJobs } from "../mockData";
+import { mockApplications, mockJobs } from "../mock";
 
 interface AppContextType {
   currentUser: User | null;
@@ -11,8 +13,6 @@ interface AppContextType {
   jobs: Job[];
   addJob: (job: Job) => void;
   updateJob: (id: string, updates: Partial<Job>) => void;
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
   darkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -24,11 +24,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [applications, setApplications] =
     useState<Application[]>(mockApplications);
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
-  const [currentPage, setCurrentPage] = useState("landing");
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
     const stored = localStorage.getItem("DirekrutAI-dark");
-    return stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
+    setDarkMode(
+      stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  }, []);
 
   useEffect(() => {
     if (darkMode) {
@@ -72,8 +75,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         jobs,
         addJob,
         updateJob,
-        currentPage,
-        setCurrentPage,
         darkMode,
         toggleDarkMode,
       }}

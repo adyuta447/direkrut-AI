@@ -1,12 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"IBM Plex Sans"', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        display: ['"IBM Plex Sans"', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        sans: ['var(--font-ibm-plex-sans)', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['var(--font-ibm-plex-sans)', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
         primary: '#0f62fe',

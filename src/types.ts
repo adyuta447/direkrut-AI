@@ -33,6 +33,8 @@ export interface Application {
   cvFile?: File | null;
   resumeLink?: string;
   cvSummary?: string;
+  email?: string;
+  phone?: string;
   validationStatus: "pending" | "in-progress" | "completed";
   validationResponses?: ValidationResponse[];
   recommendationScore?: number;

@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --fg: #161616;
+    --border: #e0e0e0;
+    --muted: #525252;
+    --accent: #0f62fe;
+  }
+
+  .dark {
+    --bg: #ffffff; /* Override dark mode for Carbon Marketing which is mostly white */
+    --fg: #161616;
+    --border: #e0e0e0;
+    --muted: #525252;
+    --accent: #0f62fe;
+  }
+
+  * {
+    border-color: var(--border);
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-ibm-plex-sans), Helvetica, Arial, sans-serif;
+    letter-spacing: 0.16px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-3 font-normal text-sm hover:bg-[#0353e9] transition-none rounded-none;
+  }
+
+  .btn-ghost {
+    @apply text-primary hover:text-[#0353e9] font-normal text-sm transition-none rounded-none;
+  }
+
+  .card {
+    @apply bg-canvas border border-hairline rounded-none;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-surface-1 border-b border-hairline rounded-none text-ink placeholder-ink-muted focus:outline-none focus:border-b-2 focus:border-primary text-sm transition-none;
+  }
+
+  .label {
+    @apply block text-sm font-normal text-ink mb-1.5;
+  }
+
+  .sidebar-item {
+    @apply w-full flex items-center space-x-3 px-4 py-3 rounded-none text-sm font-normal transition-none border-l-4 border-transparent;
+  }
+
+  .sidebar-item-active {
+    @apply bg-surface-1 text-ink border-primary font-medium;
+  }
+
+  .sidebar-item-inactive {
+    @apply text-ink-muted hover:bg-surface-1 hover:text-ink;
+  }
+}
