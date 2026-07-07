@@ -3,6 +3,7 @@ import { SiteHeader } from "../../components/organisms/shared/SiteHeader";
 import { SiteFooter } from "../../components/organisms/shared/SiteFooter";
 import { CtaBanner } from "../../components/organisms/landing/CtaBanner";
 import { FooterRevealBody } from "../../components/atoms/shared/FooterRevealBody";
+import Image from "next/image";
 
 const values = [
   {
@@ -182,8 +183,9 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="lg:col-span-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
+                height={52}
+                width={100}
                 src="/team.svg"
                 alt="Ilustrasi tim Direkrut AI"
                 className="w-full h-52 lg:h-64 object-contain"
@@ -199,10 +201,12 @@ export default function AboutPage() {
                 className="rounded-3xl border border-hairline p-8 flex flex-col"
               >
                 <div className="flex items-center gap-5 mb-6">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={member.photo}
                     alt={`Foto ${member.name}`}
+                    width={150}
+                    height={150}
+                    quality={80}
                     className="w-20 h-20 rounded-full object-cover flex-shrink-0"
                     loading="lazy"
                   />
