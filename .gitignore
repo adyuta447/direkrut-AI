@@ -10,6 +10,7 @@ node_modules
 dist
 dist-ssr
 .next
+.claude
 next-env.d.ts
 *.local
 
