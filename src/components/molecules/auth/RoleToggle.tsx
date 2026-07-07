@@ -7,16 +7,16 @@ interface RoleToggleProps {
 
 export function RoleToggle({ role, onChange }: RoleToggleProps) {
   return (
-    <div className="flex border border-hairline mb-8 bg-surface-1">
+    <div className="flex bg-surface-1 rounded-full p-1 mb-8">
       {(["applicant", "hrd"] as const).map((r) => (
         <button
           key={r}
           type="button"
           onClick={() => onChange(r)}
-          className={`flex-1 py-3 text-[14px] font-semibold transition-none ${
+          className={`flex-1 py-2.5 text-[14px] font-medium rounded-full transition-none ${
             role === r
-              ? "bg-canvas text-primary border-b-2 border-primary"
-              : "text-ink-muted hover:text-ink hover:bg-canvas border-b-2 border-transparent"
+              ? "bg-primary text-white"
+              : "text-ink-muted hover:text-ink"
           }`}
         >
           {r === "applicant" ? "Kandidat" : "HRD"}

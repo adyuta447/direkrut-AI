@@ -57,8 +57,8 @@ export function AuthCredentialsForm({ isLogin, role, formData, onFieldChange, on
         onChange={(v) => onFieldChange("password", v)}
         placeholder="••••••••"
       />
-      <button type="submit" className="w-full flex items-center justify-between gap-2 btn-primary mt-6">
-        {isLogin ? "Masuk" : "Buat Akun"}
+      <button type="submit" className="w-full flex items-center justify-center gap-2 btn-primary !py-3.5 mt-6">
+        {isLogin ? "Masuk" : "Buat Akun Gratis"}
         <ArrowRight className="w-4 h-4" />
       </button>
     </form>

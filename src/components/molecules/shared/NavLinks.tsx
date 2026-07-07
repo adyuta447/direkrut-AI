@@ -4,29 +4,18 @@ import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
+import { NAV_ITEMS } from "../../../lib/shared/navItems";
 
-interface NavLinksProps {
-  jobsLabel: string;
-  otherLabels: [string, string, string, string];
-  jobsActive?: boolean;
-}
-
-interface NavItem {
-  label: string;
-  href?: string;
-}
-
-export function NavLinks({ jobsLabel, otherLabels, jobsActive }: NavLinksProps) {
+export function NavLinks() {
   const pathname = usePathname();
-  const isJobsActive = jobsActive ?? pathname?.startsWith("/jobs") ?? false;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLSpanElement>(null);
 
-  const items: NavItem[] = [
-    { label: jobsLabel, href: "/jobs" },
-    ...otherLabels.map((label) => ({ label })),
-  ];
+  const isActive = useCallback(
+    (href?: string) => Boolean(href && pathname?.startsWith(href)),
+    [pathname]
+  );
 
   const getActiveEl = useCallback(
     () => containerRef.current?.querySelector<HTMLElement>("[data-active='true']") ?? null,
@@ -65,7 +54,7 @@ export function NavLinks({ jobsLabel, otherLabels, jobsActive }: NavLinksProps) 
     const onResize = () => moveIndicator(getActiveEl(), false);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [getActiveEl, moveIndicator, isJobsActive]);
+  }, [getActiveEl, moveIndicator, pathname]);
 
   return (
     <div
@@ -73,8 +62,8 @@ export function NavLinks({ jobsLabel, otherLabels, jobsActive }: NavLinksProps) 
       className="relative hidden lg:flex items-stretch h-full -ml-3 group/nav"
       onMouseLeave={() => moveIndicator(getActiveEl())}
     >
-      {items.map((item, i) => {
-        const active = i === 0 && isJobsActive;
+      {NAV_ITEMS.map((item) => {
+        const active = isActive(item.href);
         const itemClass =
           "relative flex items-center px-3 text-[14px] text-ink outline-none " +
           "transition-opacity duration-300 group-hover/nav:opacity-40 hover:!opacity-100 focus-visible:!opacity-100";

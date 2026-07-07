@@ -2,37 +2,30 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { X, ArrowRight, Briefcase, Building2, BookOpen, Users, Sparkles, LucideIcon } from "lucide-react";
 import gsap from "gsap";
+import { NAV_ITEMS } from "../../../lib/shared/navItems";
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  logoHref?: string;
-  jobsLabel: string;
-  otherLabels: [string, string, string, string];
-  jobsActive?: boolean;
   registerLabel: string;
   contactLabel: string;
 }
 
-export function MobileMenu({
-  isOpen,
-  onClose,
-  logoHref,
-  jobsLabel,
-  otherLabels,
-  jobsActive,
-  registerLabel,
-  contactLabel,
-}: MobileMenuProps) {
+const NAV_META: Record<string, { icon: LucideIcon; sub: string }> = {
+  "Cari Kerja": { icon: Briefcase, sub: "Jelajahi semua lowongan aktif" },
+  "Intip Perusahaan": { icon: Building2, sub: "Kenalan sama mitra kami" },
+  "Tips Karier": { icon: BookOpen, sub: "Panduan biar makin siap" },
+  "Tentang Kami": { icon: Sparkles, sub: "Kenalan sama tim kami" },
+  Tongkrongan: { icon: Users, sub: "Segera hadir" },
+};
+
+export function MobileMenu({ isOpen, onClose, registerLabel, contactLabel }: MobileMenuProps) {
+  const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
-
-  const items: { label: string; href?: string; active?: boolean }[] = [
-    { label: jobsLabel, href: "/jobs", active: jobsActive },
-    ...otherLabels.map((label) => ({ label })),
-  ];
 
   useEffect(() => {
     if (!panelRef.current || !itemsRef.current) return;
@@ -82,67 +75,66 @@ export function MobileMenu({
       <div className="flex flex-col h-full">
         <div className="h-8 shrink-0 bg-surface-1" />
 
-        <div className="h-16 shrink-0 border-b border-hairline px-6 flex items-center justify-between">
-          {logoHref ? (
-            <Link
-              href={logoHref}
-              onClick={onClose}
-              className="text-[20px] font-semibold tracking-tight text-ink uppercase"
-            >
-              Direkrut AI
-            </Link>
-          ) : (
-            <span className="text-[20px] font-semibold tracking-tight uppercase">
-              Direkrut AI
-            </span>
-          )}
+        <div className="h-16 shrink-0 border-b border-hairline px-5 flex items-center justify-between">
+          <Link
+            href="/"
+            onClick={onClose}
+            className="text-[20px] font-semibold tracking-tight text-ink uppercase"
+          >
+            Direkrut AI
+          </Link>
           <button
             type="button"
             onClick={onClose}
             aria-label="Tutup menu"
-            className="p-2 -mr-2 text-ink"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-1 text-ink"
           >
-            <X size={26} strokeWidth={1.5} />
+            <X size={20} strokeWidth={1.5} />
           </button>
         </div>
 
-        <div ref={itemsRef} className="flex-1 overflow-y-auto px-6 pt-8 pb-6 flex flex-col">
-          <nav className="flex flex-col gap-1">
-            {items.map((item, i) => {
+        <div ref={itemsRef} className="flex-1 overflow-y-auto px-5 pt-6 pb-6 flex flex-col">
+          <nav className="flex flex-col gap-2">
+            {NAV_ITEMS.map((item) => {
+              const active = Boolean(item.href && pathname?.startsWith(item.href));
+              const meta = NAV_META[item.label];
+              const Icon = meta?.icon ?? Briefcase;
+
               const content = (
-                <span className="flex items-baseline gap-4">
-                  <span className="text-[13px] text-ink-muted font-normal tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                <>
                   <span
-                    className={
-                      item.active
-                        ? "text-primary"
-                        : "text-ink group-hover:text-primary transition-none"
-                    }
+                    className={`flex items-center justify-center w-11 h-11 rounded-2xl flex-shrink-0 ${
+                      active ? "bg-primary text-white" : "bg-canvas text-primary"
+                    }`}
                   >
-                    {item.label}
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
                   </span>
-                </span>
+                  <span className="flex-1 min-w-0 text-left">
+                    <span className={`block text-[16px] font-medium ${active ? "text-primary" : "text-ink"}`}>
+                      {item.label}
+                    </span>
+                    <span className="block text-[12px] text-ink-muted mt-0.5">{meta?.sub}</span>
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-ink-muted flex-shrink-0" strokeWidth={1.5} />
+                </>
               );
 
               return (
-                <div
-                  key={item.label}
-                  className="mobile-nav-item border-b border-hairline py-4 opacity-0"
-                >
+                <div key={item.label} className="mobile-nav-item opacity-0">
                   {item.href ? (
                     <Link
                       href={item.href}
                       onClick={onClose}
-                      className="group flex items-center justify-between text-[9vw] leading-none font-semibold uppercase tracking-tight"
+                      className={`flex items-center gap-4 rounded-3xl p-4 transition-none ${
+                        active ? "bg-canvas border border-primary" : "bg-surface-1"
+                      }`}
                     >
                       {content}
                     </Link>
                   ) : (
                     <button
                       type="button"
-                      className="group flex items-center justify-between w-full text-left text-[9vw] leading-none font-semibold uppercase tracking-tight"
+                      className="flex items-center gap-4 rounded-3xl p-4 bg-surface-1 w-full transition-none"
                     >
                       {content}
                     </button>
@@ -152,24 +144,32 @@ export function MobileMenu({
             })}
           </nav>
 
-          <div className="mobile-nav-item opacity-0 mt-auto pt-8 flex flex-col gap-4">
-            <div className="flex items-center gap-3">
+          <div className="mobile-nav-item opacity-0 mt-auto pt-6">
+            <div className="rounded-3xl bg-surface-1 p-5">
+              <p className="text-[15px] font-medium text-ink mb-1">Baru di Direkrut AI?</p>
+              <p className="text-[13px] text-ink-muted leading-[1.5] mb-4">
+                Bikin akun gratis, upload CV, dan biarkan AI nyariin lowongan yang pas buat kamu.
+              </p>
               <Link
-                href="/auth"
+                href="/auth/register"
                 onClick={onClose}
-                className="btn-primary flex-1 text-center"
+                className="btn-primary block w-full text-center mb-2"
               >
                 {registerLabel}
               </Link>
               <Link
-                href="/auth"
+                href="/auth/login"
                 onClick={onClose}
-                className="flex-1 text-center text-[14px] font-normal text-ink border border-hairline py-3"
+                className="block w-full text-center text-[14px] font-normal text-ink bg-canvas rounded-full py-3"
               >
                 Masuk
               </Link>
             </div>
-            <span className="text-[13px] text-ink-muted">{contactLabel}</span>
+
+            <div className="flex items-center justify-between mt-5 px-1 text-[13px] text-ink-muted">
+              <span>Butuh Bantuan?</span>
+              <span>{contactLabel}</span>
+            </div>
           </div>
         </div>
       </div>

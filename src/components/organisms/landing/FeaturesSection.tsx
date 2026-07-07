@@ -1,47 +1,78 @@
-const features = [
+import {
+  ShieldCheck,
+  Target,
+  ScanEye,
+  Video,
+  CalendarCheck,
+  Eye,
+  LucideIcon,
+} from "lucide-react";
+import { TiltCard } from "../../atoms/shared/TiltCard";
+
+const features: { icon: LucideIcon; title: string; desc: string }[] = [
   {
-    title: "Validasi Kompetensi Otomatis",
-    desc: "Sistem analisis otomatis yang memverifikasi keterampilan teknis kandidat secara mendalam, memastikan kesesuaian di luar klaim tertulis pada CV.",
+    icon: ShieldCheck,
+    title: "Validasi Skill Otomatis",
+    desc: "Sistem AI mengecek skill teknis kamu lebih dalam, bukan cuma percaya pada yang tertulis di CV. Kemampuan asli pasti kelihatan.",
   },
   {
-    title: "Rekomendasi Posisi Presisi",
-    desc: "Pemetaan kompetensi menyeluruh untuk memberikan saran mutasi atau alternatif lowongan yang lebih ideal bagi setiap profil kandidat.",
+    icon: Target,
+    title: "Rekomendasi Posisi yang Relevan",
+    desc: "Kalau ada posisi lain yang lebih cocok dengan profil kamu, sistem akan kasih tau. Peluang kariermu jadi lebih luas.",
   },
   {
-    title: "Sistem Deteksi Integritas",
-    desc: "Deteksi anomali mutakhir untuk menyaring respons yang tidak otentik atau dihasilkan sepenuhnya oleh perangkat generatif eksternal.",
+    icon: ScanEye,
+    title: "Deteksi Integritas Jawaban",
+    desc: "Jawaban yang nggak otentik atau sepenuhnya dibuat AI akan terdeteksi. Kandidat yang jawab jujur nggak akan dirugikan.",
   },
   {
-    title: "Wawancara Video AI",
-    desc: "Proses wawancara tahap pertama yang dipandu sepenuhnya oleh AI, memberikan wawasan analitis terstruktur dan menghemat puluhan jam kerja rekruter.",
+    icon: Video,
+    title: "Interview Video Berbasis AI",
+    desc: "Interview tahap pertama dipandu penuh oleh AI. Hasilnya terstruktur, prosesnya cepat, dan hemat waktu untuk kamu maupun rekruter.",
   },
   {
-    title: "Integrasi Penjadwalan",
-    desc: "Fasilitas penjadwalan mandiri bagi kandidat untuk merencanakan sesi wawancara manual dengan tim HRD atau manajer teknis.",
+    icon: CalendarCheck,
+    title: "Penjadwalan Mandiri",
+    desc: "Atur sesi interview dengan tim HRD langsung dari platform. Tinggal pilih slot yang paling pas dengan waktumu.",
   },
   {
-    title: "Transparansi Metrik AI",
-    desc: "Skor kecocokan yang tidak bersifat kotak hitam (black-box). Seluruh penilaian disertai dengan kutipan bukti yang jelas dari dokumen lamaran.",
+    icon: Eye,
+    title: "Skor yang Transparan",
+    desc: "Skor kecocokan kamu bukan kotak hitam. Setiap penilaian disertai bukti kutipan langsung dari dokumen lamaranmu.",
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 px-6 lg:px-10 max-w-[1584px] mx-auto">
-      <div className="mb-12">
-        <h2 className="text-[42px] font-light leading-[1.2] text-ink">
-          Dibangun untuk keandalan tingkat enterprise
+    <section className="pb-24 px-6 lg:px-10 max-w-[1584px] mx-auto">
+      <div className="mb-14 max-w-3xl" data-reveal>
+        <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
+          Fitur Utama
+        </p>
+        <h2 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.1] tracking-[-0.02em] text-ink">
+          Fitur kelas enterprise, pakainya tetap gampang
         </h2>
       </div>
 
-      <div className="grid md:grid-cols-3 border-t border-l border-hairline">
+      <div
+        className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+        data-reveal-group
+      >
         {features.map((feature) => (
-          <div
-            key={feature.title}
-            className="p-6 border-r border-b border-hairline hover:bg-surface-1 transition-none"
-          >
-            <h3 className="text-[24px] font-normal leading-[1.33] mb-4 text-ink">{feature.title}</h3>
-            <p className="text-[14px] text-ink leading-[1.5]">{feature.desc}</p>
+          <div key={feature.title} data-reveal-item>
+            <TiltCard className="h-full">
+              <div className="rounded-3xl bg-surface-1 p-8 lg:p-10 transition-none h-full">
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-canvas text-primary mb-6">
+                  <feature.icon className="w-5 h-5" strokeWidth={1.5} />
+                </span>
+                <h3 className="text-[22px] font-normal leading-[1.33] mb-3 text-ink">
+                  {feature.title}
+                </h3>
+                <p className="text-[14px] text-ink-muted leading-[1.6]">
+                  {feature.desc}
+                </p>
+              </div>
+            </TiltCard>
           </div>
         ))}
       </div>

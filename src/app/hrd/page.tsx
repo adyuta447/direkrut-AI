@@ -52,7 +52,6 @@ export default function HrdDashboardPage() {
 
       <PotentialCandidatesPanel candidates={t.potentialCandidates} onViewCandidate={onViewCandidate} />
 
-      {/* Visual Statistics Charts */}
       <div className="grid xl:grid-cols-3 gap-6">
         <CandidateTrendChart data={t.trendData} />
         <CandidateScoreChart data={t.scoreDistributionData} />

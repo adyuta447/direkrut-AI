@@ -10,14 +10,14 @@ interface AuthFormFieldProps {
 export function AuthFormField({ label, type, value, onChange, placeholder, required }: AuthFormFieldProps) {
   return (
     <div>
-      <label className="text-[14px] font-semibold text-ink block mb-2">{label}</label>
+      <label className="text-[13px] font-medium text-ink block mb-2">{label}</label>
       <input
         type={type}
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="input-field"
+        className="w-full px-5 py-3.5 bg-surface-1 border border-transparent rounded-2xl text-[15px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary focus:bg-canvas transition-none"
       />
     </div>
   );

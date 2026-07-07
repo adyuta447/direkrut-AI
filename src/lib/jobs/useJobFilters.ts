@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Job } from "../../types";
 
-export function useJobFilters(jobs: Job[]) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+interface UseJobFiltersInitial {
+  search?: string;
+  location?: string;
+}
+
+const PAGE_SIZE = 8;
+
+export function useJobFilters(jobs: Job[], initial?: UseJobFiltersInitial) {
+  const [searchTerm, setSearchTerm] = useState(initial?.search ?? "");
+  const [locationFilter, setLocationFilter] = useState(initial?.location ?? "");
   const [typeFilter, setTypeFilter] = useState("");
   const [salaryFilter, setSalaryFilter] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, locationFilter, typeFilter, salaryFilter, industryFilter]);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -24,7 +36,20 @@ export function useJobFilters(jobs: Job[]) {
     return matchesSearch && matchesLocation && matchesType && matchesIndustry && matchesSalary;
   });
 
-  const activeJob = jobs.find((j) => j.id === selectedJob) ?? filteredJobs[0] ?? null;
+  const pageCount = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const paginatedJobs = filteredJobs.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), pageCount));
+    setSelectedJob(null);
+  };
+
+  const activeJob =
+    jobs.find((j) => j.id === selectedJob) ?? paginatedJobs[0] ?? null;
 
   const uniqueTypes = [...new Set(jobs.map((j) => j.type))];
   const uniqueIndustries = [...new Set(jobs.map((j) => j.industry))];
@@ -50,6 +75,7 @@ export function useJobFilters(jobs: Job[]) {
     industryFilter, setIndustryFilter,
     selectedJob, setSelectedJob,
     filteredJobs, activeJob,
+    paginatedJobs, page: currentPage, pageCount, goToPage,
     uniqueTypes, uniqueIndustries, uniqueSalaries,
     clearFilters, hasFilters,
   };

@@ -16,19 +16,33 @@ export function SelectFilterField({
   options,
 }: SelectFilterFieldProps) {
   return (
-    <div className="relative min-w-[160px]">
-      <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
+    <div className="relative">
+      <Icon
+        className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+          value ? "text-white" : "text-ink-muted"
+        }`}
+        strokeWidth={1.5}
+      />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="input-field appearance-none pl-11 pr-10 bg-surface-1 border-b border-hairline hover:bg-[#e8e8e8] cursor-pointer"
+        className={`appearance-none rounded-full pl-10 pr-9 h-11 text-[13px] font-normal cursor-pointer focus:outline-none transition-none max-w-[240px] ${
+          value
+            ? "bg-primary text-white"
+            : "bg-surface-1 text-ink hover:bg-surface-2"
+        }`}
       >
         <option value="">{placeholderOption}</option>
         {options.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
       </select>
-      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
+      <ChevronDown
+        className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${
+          value ? "text-white" : "text-ink-muted"
+        }`}
+        strokeWidth={1.5}
+      />
     </div>
   );
 }

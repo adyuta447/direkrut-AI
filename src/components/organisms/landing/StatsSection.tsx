@@ -1,21 +1,22 @@
 const stats = [
-  { value: "10rb+", label: "Kandidat Berhasil Ditempatkan" },
-  { value: "98%", label: "Tingkat Kepuasan Klien" },
-  { value: "3×", label: "Akselerasi Proses Rekrutmen" },
-  { value: "500+", label: "Mitra Perusahaan Terdaftar" },
+  { count: 10, suffix: "rb+", display: "10rb+", label: "Kandidat berhasil dapat kerja di sini" },
+  { count: 98, suffix: "%", display: "98%", label: "Klien puas dengan hasilnya" },
+  { count: 3, suffix: "×", display: "3×", label: "Lebih cepat dari proses rekrutmen biasa" },
+  { count: 500, suffix: "+", display: "500+", label: "Perusahaan sudah jadi mitra kami" },
 ];
 
 export function StatsSection() {
   return (
-    <section className="border-b border-hairline bg-surface-1">
-      <div className="max-w-[1584px] mx-auto px-6 lg:px-10 grid grid-cols-2 md:grid-cols-4">
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={`py-8 px-6 ${i < 3 ? "border-r border-hairline" : ""}`}
-          >
-            <p className="text-[42px] font-light tracking-normal mb-1">{stat.value}</p>
-            <p className="text-[14px] text-ink font-normal">{stat.label}</p>
+    <section className="px-6 lg:px-10 max-w-[1584px] mx-auto py-24">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-reveal-group>
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-surface-1 rounded-3xl p-8 lg:p-10" data-reveal-item>
+            <p className="text-[clamp(40px,4.5vw,64px)] font-light tracking-[-0.02em] leading-none mb-4 text-ink">
+              <span data-count={stat.count} data-suffix={stat.suffix}>
+                {stat.display}
+              </span>
+            </p>
+            <p className="text-[14px] text-ink-muted font-normal">{stat.label}</p>
           </div>
         ))}
       </div>
