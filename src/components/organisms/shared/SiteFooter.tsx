@@ -8,6 +8,7 @@ const columns = [
       { label: "Perusahaan", href: "/companies" },
       { label: "Sumber Daya Karir", href: "/resources" },
       { label: "Tentang Kami", href: "/about" },
+      { label: "Harga", href: "/pricing" },
     ],
   },
   {
