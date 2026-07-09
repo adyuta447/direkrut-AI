@@ -10,7 +10,7 @@ interface JobDetailPanelProps {
 
 export function JobDetailPanel({ job }: JobDetailPanelProps) {
   return (
-    <div className="flex-1 w-full border border-hairline rounded-3xl overflow-hidden bg-canvas sticky top-24 max-h-[calc(100vh-8rem)] flex flex-col">
+    <div className="hidden lg:flex flex-1 w-full border border-hairline rounded-3xl overflow-hidden bg-canvas sticky top-24 max-h-[calc(100vh-8rem)] flex-col">
       <JobDetailHeader job={job} />
 
       <div className="flex-1 overflow-y-auto p-8">

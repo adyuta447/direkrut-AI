@@ -6,7 +6,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Cari Kerja", href: "/jobs" },
   { label: "Intip Perusahaan", href: "/companies" },
+  { label: "Harga", href: "/pricing" },
   { label: "Tips Karier", href: "/resources" },
   { label: "Tentang Kami", href: "/about" },
-  { label: "Tongkrongan" },
 ];

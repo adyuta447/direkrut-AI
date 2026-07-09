@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const steps = [
   {
     number: "01",
@@ -12,7 +14,7 @@ const steps = [
     tab: "Validasi Skill",
     title: "Skill kamu divalidasi otomatis",
     desc: "Jawab beberapa pertanyaan singkat, sisanya dinilai AI. Objektif, konsisten, dan adil untuk semua kandidat.",
-    img: "/skill.svg",
+    img: "/ai.svg",
     alt: "Ilustrasi validasi skill",
   },
   {
@@ -46,10 +48,6 @@ export function HowItWorksSection() {
           Prosesnya jelas, kamu selalu tau ada di tahap mana
         </h2>
       </div>
-
-      {/* Tumpukan folder: tiap folder di alur normal, naik 1:1 mengikuti
-          scroll lalu tertahan (sticky) di slot kaskadenya, disusul folder
-          berikutnya sampai habis */}
       <div className="space-y-8">
         {steps.map((step, i) => {
           const tone = i % 2 === 0 ? "bg-primary" : "bg-accent";
@@ -60,16 +58,20 @@ export function HowItWorksSection() {
               style={{ top: `${120 + i * STACK_OFFSET}px` }}
             >
               <div className="folder-inner">
-                {/* Tab folder: trapesium dengan sisi kanan miring */}
                 <div
                   className={`${tone} h-12 w-fit min-w-[200px] sm:min-w-[240px] rounded-tl-2xl flex items-center gap-3 pl-6 pr-14 text-white`}
-                  style={{ clipPath: "polygon(0 0, calc(100% - 32px) 0, 100% 100%, 0 100%)" }}
+                  style={{
+                    clipPath:
+                      "polygon(0 0, calc(100% - 32px) 0, 100% 100%, 0 100%)",
+                  }}
                 >
-                  <span className="text-[13px] text-white/70 tabular-nums">{step.number}</span>
-                  <span className="text-[14px] font-medium whitespace-nowrap">{step.tab}</span>
+                  <span className="text-[13px] text-white/70 tabular-nums">
+                    {step.number}
+                  </span>
+                  <span className="text-[14px] font-medium whitespace-nowrap">
+                    {step.tab}
+                  </span>
                 </div>
-
-                {/* Badan folder */}
                 <div
                   className={`${tone} text-white rounded-b-[28px] rounded-tr-[28px] px-6 sm:px-10 lg:px-14 pt-10 lg:pt-12 pb-10 lg:pb-14 min-h-[340px] grid lg:grid-cols-12 gap-8 lg:gap-12 items-center`}
                 >
@@ -84,14 +86,13 @@ export function HowItWorksSection() {
                       {step.desc}
                     </p>
                   </div>
-
-                  {/* Kertas dokumen di dalam map */}
                   <div className="lg:col-span-5 flex justify-center lg:justify-end">
-                    <div className="bg-canvas rounded-2xl p-6 sm:p-8 rotate-[1.5deg] w-full max-w-[340px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                    <div className="rounded-2xl p-6 sm:p-8 rotate-[1.5deg] w-full max-w-[340px]">
+                      <Image
                         src={step.img}
                         alt={step.alt}
+                        height={36}
+                        width={44}
                         className="w-full h-36 sm:h-44 object-contain"
                         loading="lazy"
                       />

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, ArrowRight, Briefcase, Building2, BookOpen, Users, Sparkles, LucideIcon } from "lucide-react";
+import { X, ArrowRight, Briefcase, Building2, BookOpen, Tag, Sparkles, LucideIcon } from "lucide-react";
 import gsap from "gsap";
 import { NAV_ITEMS } from "../../../lib/shared/navItems";
 
@@ -19,7 +19,7 @@ const NAV_META: Record<string, { icon: LucideIcon; sub: string }> = {
   "Intip Perusahaan": { icon: Building2, sub: "Kenalan sama mitra kami" },
   "Tips Karier": { icon: BookOpen, sub: "Panduan biar makin siap" },
   "Tentang Kami": { icon: Sparkles, sub: "Kenalan sama tim kami" },
-  Tongkrongan: { icon: Users, sub: "Segera hadir" },
+  Harga: { icon: Tag, sub: "Mulai gratis, upgrade kapan aja" },
 };
 
 export function MobileMenu({ isOpen, onClose, registerLabel, contactLabel }: MobileMenuProps) {
