@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Job } from "../../../types";
 import { JobDetailHeader } from "../../molecules/jobs/JobDetailHeader";
@@ -19,7 +19,20 @@ interface JobDetailSheetProps {
  * sudah ada di panel samping.
  */
 export function JobDetailSheet({ job, onClose }: JobDetailSheetProps) {
-  const isOpen = job !== null;
+  // Sheet hanya berlaku di bawah breakpoint lg; di desktop, klik lowongan
+  // mengisi selectedJob untuk panel samping dan sheet tidak boleh aktif
+  // (termasuk kunci scroll body-nya).
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const isOpen = job !== null && isMobile;
 
   useEffect(() => {
     if (isOpen) {
@@ -40,7 +53,7 @@ export function JobDetailSheet({ job, onClose }: JobDetailSheetProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  if (!job) return null;
+  if (!isOpen || !job) return null;
 
   return (
     <div className="fixed inset-0 z-[70] lg:hidden">

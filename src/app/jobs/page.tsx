@@ -6,13 +6,12 @@ import { useApp } from "../../context/AppContext";
 import { useJobFilters } from "../../lib/jobs/useJobFilters";
 import { SiteHeader } from "../../components/organisms/shared/SiteHeader";
 import { SiteFooter } from "../../components/organisms/shared/SiteFooter";
-import { FooterRevealBody } from "../../components/atoms/shared/FooterRevealBody";
 import { JobSearchHeader } from "../../components/organisms/jobs/JobSearchHeader";
 import { JobList } from "../../components/organisms/jobs/JobList";
 import { JobDetailPanel } from "../../components/organisms/jobs/JobDetailPanel";
 import { JobDetailSheet } from "../../components/organisms/jobs/JobDetailSheet";
 import { JobsEmptyState } from "../../components/molecules/jobs/JobsEmptyState";
-import { CtaBanner } from "@/components/organisms/landing/CtaBanner";
+
 
 export default function JobsPage() {
   return (
@@ -32,7 +31,7 @@ function JobsPageContent() {
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans overflow-x-clip">
-      <FooterRevealBody className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <SiteHeader />
 
         <JobSearchHeader
@@ -61,8 +60,8 @@ function JobsPageContent() {
             </div>
           )}
         </div>
-        <CtaBanner />
-      </FooterRevealBody>
+
+      </div>
 
       <JobDetailSheet
         job={filters.selectedJob ? filters.activeJob : null}

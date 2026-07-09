@@ -30,7 +30,7 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative z-10 bg-inverse-canvas pt-16 px-6 lg:px-10 rounded-t-2xl sm:rounded-t-[60px] overflow-hidden">
+    <footer className="relative z-10 bg-inverse-canvas pt-16 px-6 lg:px-10 rounded-t-[30px] sm:rounded-t-[60px] overflow-hidden">
       <div className="max-w-[1584px] mx-auto flex flex-col md:flex-row justify-between items-start gap-10 border-b border-[#393939] pb-10 mb-10">
         <div className="max-w-sm">
           <span className="text-[20px] font-semibold text-white tracking-tight uppercase">
