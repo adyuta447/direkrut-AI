@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Job } from "../../types";
 
 interface UseJobFiltersInitial {
@@ -17,9 +17,15 @@ export function useJobFilters(jobs: Job[], initial?: UseJobFiltersInitial) {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
+  // Reset ke halaman 1 begitu salah satu filter berubah. Dihitung selama
+  // render (bukan di useEffect) biar reset-nya kejadian di commit yang
+  // sama, tanpa sempat nge-flash halaman lama dengan filter baru.
+  const filterKey = `${searchTerm}|${locationFilter}|${typeFilter}|${salaryFilter}|${industryFilter}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setPage(1);
-  }, [searchTerm, locationFilter, typeFilter, salaryFilter, industryFilter]);
+  }
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =

@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "20"
           cache: "yarn"
-          cache-dependency-path: apps/web/yarn.lock
+          cache-dependency-path: yarn.lock
 
       - run: yarn install --frozen-lockfile
       - run: yarn typecheck

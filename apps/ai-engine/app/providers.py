@@ -67,7 +67,7 @@ _PROVIDERS: dict[str, type[AIProvider]] = {
 def get_provider(name: str | None = None) -> AIProvider:
     """Ambil instance provider aktif. Default dibaca dari env AI_PROVIDER
     biar bisa diganti per environment tanpa redeploy kode."""
-    provider_name = name or os.getenv("AI_PROVIDER", "openai")
+    provider_name: str = name or os.getenv("AI_PROVIDER") or "openai"
     provider_cls = _PROVIDERS.get(provider_name)
     if provider_cls is None:
         raise ValueError(f"Provider AI '{provider_name}' belum didukung.")

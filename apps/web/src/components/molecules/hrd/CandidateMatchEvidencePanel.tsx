@@ -27,7 +27,7 @@ export function CandidateMatchEvidencePanel({ onClose }: CandidateMatchEvidenceP
                 <span className="font-semibold text-[#198038]">Tinggi (90%)</span>
               </div>
               <p className="text-[12px] text-ink-muted leading-[1.5]">
-                "Disebutkan 3x di CV terkait pengalaman langsung pada proyek serupa."
+                “Disebutkan 3x di CV terkait pengalaman langsung pada proyek serupa.”
               </p>
             </div>
             <div>
@@ -36,7 +36,7 @@ export function CandidateMatchEvidencePanel({ onClose }: CandidateMatchEvidenceP
                 <span className="font-semibold text-[#f1c21b]">Menengah (70%)</span>
               </div>
               <p className="text-[12px] text-ink-muted leading-[1.5]">
-                "Memiliki gelar relevan, namun sertifikasi spesifik tidak ditemukan."
+                “Memiliki gelar relevan, namun sertifikasi spesifik tidak ditemukan.”
               </p>
             </div>
           </div>
@@ -51,7 +51,7 @@ export function CandidateMatchEvidencePanel({ onClose }: CandidateMatchEvidenceP
                 <span className="font-semibold text-[#198038]">Sangat Baik (88%)</span>
               </div>
               <p className="text-[12px] text-ink-muted leading-[1.5]">
-                "Menyinggung studi kasus relevan 2x saat menjawab pertanyaan."
+                “Menyinggung studi kasus relevan 2x saat menjawab pertanyaan.”
               </p>
             </div>
             <div>
@@ -59,7 +59,7 @@ export function CandidateMatchEvidencePanel({ onClose }: CandidateMatchEvidenceP
                 <span className="text-ink">Kecocokan Budaya (Culture Fit)</span>
                 <span className="font-semibold text-ink">Baik (82%)</span>
               </div>
-              <p className="text-[12px] text-ink-muted leading-[1.5]">"Gaya komunikasi profesional dan kolaboratif."</p>
+              <p className="text-[12px] text-ink-muted leading-[1.5]">“Gaya komunikasi profesional dan kolaboratif.”</p>
             </div>
           </div>
         </div>

@@ -34,9 +34,13 @@ export function useHrdChatAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize messages on mount or when job changes
+  // Initialize messages on mount or when job changes. Resetnya nyentuh 5
+  // state sekaligus (messages, suggestions, panel, input, typing) tanpa
+  // titik remount alami buat pola "key" ala React docs, jadi tetap di
+  // effect dengan disable bertarget.
   useEffect(() => {
     if (selectedJob) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([{ id: `welcome-${Date.now()}`, sender: "ai", text: getInitialMessageText(currentUser?.name, selectedJob.title) }]);
       setAvailableSuggestions(DEFAULT_SUGGESTIONS);
       setShowSuggestionsPanel(true);

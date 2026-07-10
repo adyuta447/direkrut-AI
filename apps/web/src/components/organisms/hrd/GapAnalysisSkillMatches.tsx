@@ -23,7 +23,7 @@ export function GapAnalysisSkillMatches({ matches }: GapAnalysisSkillMatchesProp
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Bukti AI Diekstrak dari CV
               </p>
-              <p className="text-[14px] text-ink leading-[1.5]">"{match.evidence}"</p>
+              <p className="text-[14px] text-ink leading-[1.5]">“{match.evidence}”</p>
             </div>
           </div>
         ))}

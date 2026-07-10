@@ -9,7 +9,7 @@ export function CrossRoleIntro() {
       {/* Penjelasan kontekstual */}
       <div className="p-3 bg-surface-1 border border-hairline mt-4">
         <p className="text-[13px] text-ink leading-[1.5]">
-          <span className="font-semibold">Cara kerja fitur ini:</span> Sistem AI memindai seluruh kandidat dan mencari kecocokan kata kunci profil mereka dengan lowongan lain yang sedang dibuka. Hal ini mencegah "talent waste" jika posisi yang dilamar sudah terpenuhi.
+          <span className="font-semibold">Cara kerja fitur ini:</span> Sistem AI memindai seluruh kandidat dan mencari kecocokan kata kunci profil mereka dengan lowongan lain yang sedang dibuka. Hal ini mencegah “talent waste” jika posisi yang dilamar sudah terpenuhi.
         </p>
       </div>
     </div>

@@ -27,7 +27,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
+    // localStorage/matchMedia nggak ada di SSR, jadi nggak bisa dihitung
+    // saat render (bakal beda dari hasil render server -> hydration
+    // mismatch). Wajib dibaca setelah mount.
     const stored = localStorage.getItem("DirekrutAI-dark");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDarkMode(
       stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches
     );
