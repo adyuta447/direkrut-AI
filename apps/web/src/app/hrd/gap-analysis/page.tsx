@@ -14,7 +14,7 @@ export default function GapAnalysisPage() {
     <div className="p-6 lg:p-8 space-y-6 font-sans">
       <div>
         <p className="text-[12px] font-semibold text-ink-muted mb-2 uppercase tracking-widest">Alat AI</p>
-        <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Validasi Kompetensi (AI)</h2>
+        <h2 className="text-[32px] font-bold tracking-[-0.5px] text-ink mb-2">Validasi Kompetensi (AI)</h2>
         <p className="text-[16px] text-ink-muted">
           Validasi keterampilan kandidat secara langsung terhadap bukti yang ditemukan di CV mereka.
         </p>

@@ -30,7 +30,7 @@ function DecisionPanelView({ candidate, decision }: { candidate: Application; de
 
       <div>
         <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted mb-2">Tindakan HRD</p>
-        <h1 className="text-[32px] font-light text-ink mb-1">{decision === "invite" ? "Undang ke Wawancara" : "Tolak Lamaran"}</h1>
+        <h1 className="text-[32px] font-bold text-ink mb-1">{decision === "invite" ? "Undang ke Wawancara" : "Tolak Lamaran"}</h1>
         <p className="text-[14px] text-ink-muted">
           {decision === "invite"
             ? "Siapkan dan kirimkan undangan wawancara kepada kandidat."

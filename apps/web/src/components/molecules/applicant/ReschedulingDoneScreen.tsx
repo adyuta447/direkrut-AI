@@ -14,7 +14,7 @@ export function ReschedulingDoneScreen({ typeLabel, formatted, selectedTime, onC
         <div className="w-14 h-14 bg-[#defbe6] flex items-center justify-center mx-auto mb-5 border border-hairline">
           <Check className="w-7 h-7 text-[#198038]" />
         </div>
-        <h3 className="text-[24px] font-normal mb-2 text-ink">Wawancara Terjadwal!</h3>
+        <h3 className="text-[24px] font-semibold mb-2 text-ink">Wawancara Terjadwal!</h3>
         <p className="text-[14px] text-ink-muted mb-2">{typeLabel}</p>
         <p className="text-[14px] font-semibold text-ink">{formatted}</p>
         <p className="text-[14px] text-ink-muted">{selectedTime}</p>

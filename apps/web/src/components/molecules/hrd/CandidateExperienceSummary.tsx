@@ -15,15 +15,15 @@ export function CandidateExperienceSummary({ jobTitle }: CandidateExperienceSumm
       <div className="grid md:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-1 p-4 border border-hairline">
           <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Total Pengalaman</p>
-          <p className="text-[20px] font-light text-ink">2–3 Tahun</p>
+          <p className="text-[20px] font-bold text-ink">2–3 Tahun</p>
         </div>
         <div className="bg-surface-1 p-4 border border-hairline">
           <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Perusahaan Sebelumnya</p>
-          <p className="text-[20px] font-light text-ink">2 Perusahaan</p>
+          <p className="text-[20px] font-bold text-ink">2 Perusahaan</p>
         </div>
         <div className="bg-surface-1 p-4 border border-hairline">
           <p className="text-[12px] font-semibold uppercase text-ink-muted mb-1">Relevansi Bidang</p>
-          <p className="text-[20px] font-light text-[#198038]">Sesuai</p>
+          <p className="text-[20px] font-bold text-[#198038]">Sesuai</p>
         </div>
       </div>
       <p className="text-[14px] text-ink-muted leading-[1.5]">

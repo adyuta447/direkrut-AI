@@ -23,7 +23,7 @@ export function HrdTopbar({ title, subtitle, sidebarOpen, onToggleSidebar }: Hrd
           {sidebarOpen ? <X className="w-5 h-5 text-ink" /> : <Menu className="w-5 h-5 text-ink" />}
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[24px] font-light text-ink truncate mb-1">{title}</h1>
+          <h1 className="text-[24px] font-bold text-ink truncate mb-1">{title}</h1>
           <p className="text-[14px] text-ink-muted truncate">{subtitle}</p>
         </div>
       </div>

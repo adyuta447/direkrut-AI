@@ -79,7 +79,7 @@ export default function PricingPage() {
           <p className="text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
             Harga
           </p>
-          <h1 className="text-[clamp(40px,5vw,68px)] font-light leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
+          <h1 className="text-[clamp(40px,5vw,68px)] font-bold leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
             Mulai gratis, upgrade pas udah butuh.
           </h1>
           <p className="text-[17px] text-ink-muted leading-[1.7] max-w-2xl">
@@ -102,7 +102,7 @@ export default function PricingPage() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-[20px] font-normal text-ink">{tier.name}</h2>
+                  <h2 className="text-[20px] font-semibold text-ink">{tier.name}</h2>
                   {tier.popular && (
                     <span className="text-[11px] font-medium rounded-full bg-primary text-white px-3 py-1.5">
                       Paling Laris
@@ -110,7 +110,7 @@ export default function PricingPage() {
                   )}
                 </div>
 
-                <p className="text-[clamp(26px,2vw,32px)] font-light tracking-[-0.01em] text-ink leading-none">
+                <p className="text-[clamp(26px,2vw,32px)] font-bold tracking-[-0.01em] text-ink leading-none">
                   {tier.price}
                 </p>
                 <p className="text-[13px] text-ink-muted mt-2 mb-6">{tier.period}</p>
@@ -135,7 +135,7 @@ export default function PricingPage() {
         {/* Tabel perbandingan */}
         <section className="pb-24 px-6 lg:px-10 max-w-[1584px] mx-auto">
           <div className="mb-10 max-w-3xl">
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-light leading-[1.15] tracking-[-0.01em] text-ink mb-4">
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-bold leading-[1.15] tracking-[-0.01em] text-ink mb-4">
               Bandingin dulu, baru pilih
             </h2>
             <p className="text-[15px] text-ink-muted leading-[1.6]">

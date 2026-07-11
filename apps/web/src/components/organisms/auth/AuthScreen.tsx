@@ -75,7 +75,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
               <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-ink-muted mb-4">
                 {copy.kicker}
               </p>
-              <h1 className="text-[clamp(30px,3vw,40px)] font-light leading-[1.15] tracking-[-0.01em] text-ink">
+              <h1 className="text-[clamp(30px,3vw,40px)] font-bold leading-[1.15] tracking-[-0.01em] text-ink">
                 {copy.title}
               </h1>
             </div>

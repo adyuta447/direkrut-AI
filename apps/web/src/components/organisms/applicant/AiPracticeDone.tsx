@@ -14,7 +14,7 @@ export function AiPracticeDone({ userName, messages, onReset }: AiPracticeDonePr
       <div className="w-16 h-16 bg-surface-1 border border-hairline flex items-center justify-center mb-6">
         <span className="font-semibold text-ink">AI</span>
       </div>
-      <h2 className="text-[32px] font-light text-ink mb-4">Wawancara Selesai</h2>
+      <h2 className="text-[32px] font-bold text-ink mb-4">Wawancara Selesai</h2>
       <p className="text-[16px] text-ink max-w-md mb-8 leading-[1.5]">
         Anda telah menjawab semua {AI_PRACTICE_QUESTIONS.length} pertanyaan. Tanggapan Anda telah
         direkam dan dikirim untuk peninjauan lebih lanjut.

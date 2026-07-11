@@ -5,8 +5,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-ibm-plex-sans)', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        display: ['var(--font-ibm-plex-sans)', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        sans: ['var(--font-jakarta)', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['var(--font-jakarta)', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
         primary: '#0a66c2',

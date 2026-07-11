@@ -14,7 +14,7 @@ export function FeaturedJobCard({ job }: FeaturedJobCardProps) {
     >
       <div className="flex justify-between items-start mb-10">
         <div>
-          <h3 className="text-[22px] font-normal text-ink leading-[1.33]">{job.title}</h3>
+          <h3 className="text-[22px] font-semibold text-ink leading-[1.33]">{job.title}</h3>
           <p className="text-[14px] text-ink-muted mt-1">{job.company} · {job.location}</p>
         </div>
         <ArrowUpRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-none flex-shrink-0" />

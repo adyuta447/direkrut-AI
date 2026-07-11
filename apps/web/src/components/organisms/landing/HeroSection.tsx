@@ -23,7 +23,7 @@ export function HeroSection() {
           Ketemu Kerja Lebih Cepat Bareng AI
         </p>
 
-        <h1 className="text-[clamp(52px,8.5vw,112px)] leading-[0.98] font-light tracking-[-0.03em] mb-10 text-white">
+        <h1 className="text-[clamp(52px,8.5vw,112px)] leading-[0.98] font-bold tracking-[-0.03em] mb-10 text-white">
           <span className="block overflow-hidden pb-[0.14em] -mb-[0.14em]">
             <span className="hero-line-inner block">Kamu tinggal upload CV,</span>
           </span>

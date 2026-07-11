@@ -13,7 +13,7 @@ export function ApplicationCard({ app }: ApplicationCardProps) {
       <div className="flex-1">
         <div className="flex items-start justify-between mb-8">
           <div>
-            <h3 className="text-[24px] font-normal text-ink mb-2">{app.jobTitle}</h3>
+            <h3 className="text-[24px] font-semibold text-ink mb-2">{app.jobTitle}</h3>
             <p className="text-[14px] text-ink-muted">Dikirim pada: {app.appliedDate}</p>
           </div>
           <span className="text-[12px] font-semibold px-3 py-1 border border-hairline bg-canvas text-ink uppercase">

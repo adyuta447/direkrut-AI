@@ -35,7 +35,7 @@ export function AiPracticeLobby({
           </span>
         </div>
 
-        <h2 className="text-[32px] font-light tracking-[-0.5px] mb-4 text-ink">Wawancara Video AI</h2>
+        <h2 className="text-[32px] font-bold tracking-[-0.5px] mb-4 text-ink">Wawancara Video AI</h2>
         <p className="text-[16px] text-ink max-w-sm mb-8 leading-[1.5]">
           Sesi wawancara video dengan Pewawancara AI Direkrut AI. Jawab
           setiap pertanyaan dengan jelas dan natural —{" "}

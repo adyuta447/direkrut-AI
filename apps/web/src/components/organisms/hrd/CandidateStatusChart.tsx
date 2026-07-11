@@ -17,7 +17,7 @@ export function CandidateStatusChart({ distribution, total }: CandidateStatusCha
       <div>
         <div className="flex items-center gap-3 mb-6">
           <PieChart className="w-5 h-5 text-ink" />
-          <h3 className="text-[16px] font-normal text-ink">Rincian Status</h3>
+          <h3 className="text-[16px] font-semibold text-ink">Rincian Status</h3>
         </div>
         <div className="space-y-6">
           {distribution.map((status) => (
@@ -27,7 +27,7 @@ export function CandidateStatusChart({ distribution, total }: CandidateStatusCha
                   <div className="w-3 h-3" style={{ backgroundColor: status.color }} />
                   <span className="text-[14px] font-semibold text-ink">{status.label}</span>
                 </div>
-                <span className="text-[16px] font-light text-ink">{status.count}</span>
+                <span className="text-[16px] font-bold text-ink">{status.count}</span>
               </div>
               <div className="w-full bg-[#e0e0e0] h-1.5">
                 <div

@@ -20,7 +20,7 @@ export default function HrdDashboardPage() {
   return (
     <div className="p-6 lg:p-8 space-y-6 bg-canvas min-h-full">
       <div>
-        <h2 className="text-[32px] font-light text-ink tracking-[-0.5px]">Manajemen Pelamar</h2>
+        <h2 className="text-[32px] font-bold text-ink tracking-[-0.5px]">Manajemen Pelamar</h2>
         <p className="text-[14px] text-ink-muted mt-2">
           {applications.length} total · {t.filteredApplications.length} ditampilkan
         </p>

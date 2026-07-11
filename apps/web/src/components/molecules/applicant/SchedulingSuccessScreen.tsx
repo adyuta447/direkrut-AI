@@ -10,7 +10,7 @@ export function SchedulingSuccessScreen({ onStartNow }: SchedulingSuccessScreenP
       <div className="w-20 h-20 bg-[#defbe6] text-[#198038] flex items-center justify-center mb-6 border border-[#198038]">
         <CheckCircle2 className="w-10 h-10" />
       </div>
-      <h2 className="text-[32px] font-light text-ink tracking-[-0.5px] mb-4 text-center">
+      <h2 className="text-[32px] font-bold text-ink tracking-[-0.5px] mb-4 text-center">
         Wawancara AI Berhasil Dijadwalkan
       </h2>
       <p className="text-[16px] text-ink-muted text-center max-w-xl mb-8 leading-[1.5]">

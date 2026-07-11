@@ -15,7 +15,7 @@ export function JobDetailPanel({ job }: JobDetailPanelProps) {
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="mb-8">
-          <h3 className="text-[20px] font-normal mb-4 text-ink">Deskripsi Pekerjaan</h3>
+          <h3 className="text-[20px] font-semibold mb-4 text-ink">Deskripsi Pekerjaan</h3>
           <p className="text-[16px] leading-[1.5] text-ink whitespace-pre-wrap">{job.description}</p>
         </div>
 

@@ -11,7 +11,7 @@ export function DecisionConfirmationScreen({ candidateName }: DecisionConfirmati
         <div className="w-14 h-14 bg-[#defbe6] border border-[#198038] flex items-center justify-center mx-auto mb-5">
           <Check className="w-7 h-7 text-[#198038]" />
         </div>
-        <h2 className="text-[24px] font-light text-ink mb-2">Notifikasi Terkirim</h2>
+        <h2 className="text-[24px] font-bold text-ink mb-2">Notifikasi Terkirim</h2>
         <p className="text-[14px] text-ink-muted">{candidateName} telah menerima pemberitahuan melalui email.</p>
       </div>
     </div>

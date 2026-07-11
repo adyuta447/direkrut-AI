@@ -17,7 +17,7 @@ export function CandidateHeroHeader({ candidate, onToggleMatchDetails }: Candida
           {candidate.applicantName.charAt(0)}
         </div>
         <div>
-          <h1 className="text-[28px] font-light text-ink mb-1">{candidate.applicantName}</h1>
+          <h1 className="text-[28px] font-bold text-ink mb-1">{candidate.applicantName}</h1>
           <p className="text-[16px] text-ink-muted mb-4">{candidate.jobTitle}</p>
           <div className="flex flex-wrap gap-4 text-[14px] text-ink-muted">
             <span className="flex items-center gap-1.5">
@@ -51,7 +51,7 @@ export function CandidateHeroHeader({ candidate, onToggleMatchDetails }: Candida
             {scoreInfo.label}
           </span>
         ) : (
-          <p className="text-[42px] font-light text-ink-muted">—</p>
+          <p className="text-[42px] font-bold text-ink-muted">—</p>
         )}
         <button
           onClick={onToggleMatchDetails}

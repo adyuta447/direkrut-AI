@@ -17,7 +17,7 @@ export function AuthMarketingPanel() {
         <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-white/60 mb-6">
           Buat Kandidat & Perekrut
         </p>
-        <h2 className="text-[clamp(40px,4vw,64px)] font-light text-white tracking-[-0.02em] leading-[1.05] mb-10 max-w-lg">
+        <h2 className="text-[clamp(40px,4vw,64px)] font-bold text-white tracking-[-0.02em] leading-[1.05] mb-10 max-w-lg">
           Masa depan cari kerja udah di sini.
         </h2>
 
@@ -41,7 +41,7 @@ export function AuthMarketingPanel() {
       <div className="grid grid-cols-3 gap-6 border-t border-white/15 pt-8">
         {stats.map((stat) => (
           <div key={stat.label}>
-            <p className="text-white text-[32px] font-light leading-none mb-2">{stat.value}</p>
+            <p className="text-white text-[32px] font-bold leading-none mb-2">{stat.value}</p>
             <p className="text-white/60 text-[12px]">{stat.label}</p>
           </div>
         ))}

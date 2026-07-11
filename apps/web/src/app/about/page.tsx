@@ -112,7 +112,7 @@ export default function AboutPage() {
             <p className="text-[12px] font-medium text-white/60 uppercase tracking-[0.2em] mb-6">
               Tentang Kami
             </p>
-            <h1 className="text-[clamp(40px,5.5vw,76px)] font-light leading-[1.02] tracking-[-0.02em] mb-8 text-white max-w-3xl">
+            <h1 className="text-[clamp(40px,5.5vw,76px)] font-bold leading-[1.02] tracking-[-0.02em] mb-8 text-white max-w-3xl">
               Tim kecil, misinya gede:{" "}
               <span className="text-[#93c5fd]">
                 bikin cari kerja nggak ribet lagi.
@@ -133,7 +133,7 @@ export default function AboutPage() {
             <p className="lg:col-span-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em]">
               Misi Kami
             </p>
-            <h2 className="lg:col-span-9 text-[clamp(28px,3.5vw,52px)] font-light leading-[1.15] tracking-[-0.01em] text-ink max-w-4xl">
+            <h2 className="lg:col-span-9 text-[clamp(28px,3.5vw,52px)] font-bold leading-[1.15] tracking-[-0.01em] text-ink max-w-4xl">
               Kami percaya skill nyata lebih penting daripada koneksi.
               <span className="text-primary">
                 {" "}
@@ -155,7 +155,7 @@ export default function AboutPage() {
                 <p className="text-[15px] font-normal text-primary tabular-nums mb-6">
                   {value.number}
                 </p>
-                <h3 className="text-[22px] font-normal leading-[1.3] mb-3 text-ink">
+                <h3 className="text-[22px] font-semibold leading-[1.3] mb-3 text-ink">
                   {value.title}
                 </h3>
                 <p className="text-[14px] text-ink-muted leading-[1.6]">
@@ -173,7 +173,7 @@ export default function AboutPage() {
               <p className="text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
                 Tim Kami
               </p>
-              <h2 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.1] tracking-[-0.02em] text-ink mb-5">
+              <h2 className="text-[clamp(36px,4.5vw,60px)] font-bold leading-[1.1] tracking-[-0.02em] text-ink mb-5">
                 Orang-orang di balik semuanya
               </h2>
               <p className="text-[16px] text-ink-muted leading-[1.6] max-w-xl">
@@ -211,7 +211,7 @@ export default function AboutPage() {
                     loading="lazy"
                   />
                   <div className="min-w-0">
-                    <h3 className="text-[20px] font-normal text-ink leading-[1.3]">
+                    <h3 className="text-[20px] font-semibold text-ink leading-[1.3]">
                       {member.name}
                     </h3>
                     <p className="text-[13px] font-medium text-primary mt-1">

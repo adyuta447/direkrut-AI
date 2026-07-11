@@ -20,7 +20,7 @@ export default function SchedulingPage() {
   return (
     <div className="h-full overflow-y-auto p-6 lg:p-12 font-sans flex flex-col max-w-5xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-[32px] font-light text-ink tracking-[-0.5px] mb-2">Jadwal Wawancara AI</h2>
+        <h2 className="text-[32px] font-bold text-ink tracking-[-0.5px] mb-2">Jadwal Wawancara AI</h2>
         <p className="text-[16px] text-ink-muted leading-[1.5]">
           Pilih waktu luang Anda untuk melakukan sesi wawancara asinkron. Harap pastikan jadwal yang Anda pilih berada dalam rentang waktu seleksi yang kami sediakan.
         </p>

@@ -49,7 +49,7 @@ export function FeaturesSection() {
         <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
           Fitur Utama
         </p>
-        <h2 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.1] tracking-[-0.02em] text-ink">
+        <h2 className="text-[clamp(36px,4.5vw,60px)] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
           Fitur kelas enterprise, pakainya tetap gampang
         </h2>
       </div>
@@ -65,7 +65,7 @@ export function FeaturesSection() {
                 <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-canvas text-primary mb-6">
                   <feature.icon className="w-5 h-5" strokeWidth={1.5} />
                 </span>
-                <h3 className="text-[22px] font-normal leading-[1.33] mb-3 text-ink">
+                <h3 className="text-[22px] font-semibold leading-[1.33] mb-3 text-ink">
                   {feature.title}
                 </h3>
                 <p className="text-[14px] text-ink-muted leading-[1.6]">

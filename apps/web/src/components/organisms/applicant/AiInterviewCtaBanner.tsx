@@ -13,7 +13,7 @@ export function AiInterviewCtaBanner({ onStartSession, onSchedule }: AiInterview
           <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
           <span className="text-[12px] font-semibold uppercase tracking-widest text-white">Tindakan Diperlukan</span>
         </div>
-        <h2 className="text-[32px] font-light text-white mb-4">Wawancara AI Siap Dimulai</h2>
+        <h2 className="text-[32px] font-bold text-white mb-4">Wawancara AI Siap Dimulai</h2>
         <p className="text-[16px] text-[#e0e0e0] leading-relaxed max-w-xl">
           Anda telah lolos seleksi awal. Selesaikan sesi wawancara AI di bawah
           ini sebelum wawancara dengan tim HRD. Wawancara ini mencakup pertanyaan teknis dan perilaku.

@@ -13,7 +13,7 @@ export function JobStatsRow({ stats }: JobStatsRowProps) {
       {stats.map((stat) => (
         <div key={stat.label} className="bg-surface-1 border border-hairline p-6">
           <p className="text-[12px] font-semibold text-ink-muted mb-2 uppercase">{stat.label}</p>
-          <p className="text-[32px] font-light text-ink">{stat.value}</p>
+          <p className="text-[32px] font-bold text-ink">{stat.value}</p>
         </div>
       ))}
     </div>

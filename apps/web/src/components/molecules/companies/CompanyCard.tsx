@@ -35,7 +35,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <ArrowUpRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-none" />
       </div>
 
-      <h3 className="text-[22px] font-normal text-ink leading-[1.3] mb-1">{company.name}</h3>
+      <h3 className="text-[22px] font-semibold text-ink leading-[1.3] mb-1">{company.name}</h3>
       <p className="flex items-center gap-1.5 text-[13px] text-ink-muted mb-6">
         <MapPin className="w-3.5 h-3.5" strokeWidth={1.5} />
         {company.locations.slice(0, 3).join(", ")}

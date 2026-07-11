@@ -7,7 +7,7 @@ interface JobRequirementsProps {
 export function JobRequirements({ requirements }: JobRequirementsProps) {
   return (
     <div className="mb-8">
-      <h3 className="text-[20px] font-normal mb-4 text-ink">Keahlian yang Dibutuhkan</h3>
+      <h3 className="text-[20px] font-semibold mb-4 text-ink">Keahlian yang Dibutuhkan</h3>
       <div className="flex flex-wrap gap-2">
         {requirements.map((req, idx) => (
           <span key={idx} className="text-[14px] rounded-full bg-surface-1 px-4 py-1.5 text-ink">

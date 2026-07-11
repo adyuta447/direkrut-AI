@@ -19,7 +19,7 @@ export function CandidateTrendChart({ data }: CandidateTrendChartProps) {
     <div className="bg-canvas border border-hairline p-6">
       <div className="flex items-center gap-3 mb-6">
         <TrendingUp className="w-5 h-5 text-ink" />
-        <h3 className="text-[16px] font-normal text-ink">Tren Lamaran</h3>
+        <h3 className="text-[16px] font-semibold text-ink">Tren Lamaran</h3>
       </div>
       <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>

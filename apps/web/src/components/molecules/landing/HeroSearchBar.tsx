@@ -22,7 +22,7 @@ export function HeroSearchBar() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row sm:items-center gap-1 bg-canvas border border-hairline rounded-2xl sm:rounded-full p-2 focus-within:border-primary"
+      className="flex flex-col sm:flex-row sm:items-center gap-1 bg-canvas border border-hairline rounded-3xl sm:rounded-full p-2 focus-within:border-primary"
     >
       <TextFilterField
         icon={Search}
@@ -44,7 +44,7 @@ export function HeroSearchBar() {
       />
       <button
         type="submit"
-        className="flex items-center justify-center gap-2 bg-primary text-white rounded-xl sm:rounded-full h-11 sm:h-14 px-9 text-[14px] font-medium hover:bg-primary-strong transition-none flex-shrink-0 mt-1 sm:mt-0"
+        className="flex items-center justify-center gap-2 bg-primary text-white rounded-3xl sm:rounded-full h-11 sm:h-14 px-9 text-[14px] font-medium hover:bg-primary-strong transition-none flex-shrink-0 mt-1 sm:mt-0"
       >
         <Search className="w-4 h-4" strokeWidth={1.5} />
         Cari

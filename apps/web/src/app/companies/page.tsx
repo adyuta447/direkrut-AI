@@ -44,7 +44,7 @@ export default function CompaniesPage() {
         <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
           Direktori Perusahaan
         </p>
-        <h1 className="text-[clamp(40px,5vw,68px)] font-light leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
+        <h1 className="text-[clamp(40px,5vw,68px)] font-bold leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
           Kenalan dulu sama calon tempat kerjamu
         </h1>
         <p className="text-[17px] text-ink-muted leading-[1.6] max-w-2xl mb-10">
@@ -83,7 +83,7 @@ export default function CompaniesPage() {
               unoptimized
               className="w-full h-auto max-w-[300px] sm:max-w-[360px] mx-auto mb-8"
             />
-            <p className="text-[24px] font-light text-ink mb-2">
+            <p className="text-[24px] font-bold text-ink mb-2">
               Perusahaan yang kamu cari belum ada di sini
             </p>
             <p className="text-[14px] text-ink-muted mb-8 max-w-md mx-auto">

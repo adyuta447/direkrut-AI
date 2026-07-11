@@ -44,7 +44,7 @@ export function HowItWorksSection() {
         <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
           Cara Kerja
         </p>
-        <h2 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.1] tracking-[-0.02em] text-ink">
+        <h2 className="text-[clamp(36px,4.5vw,60px)] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
           Prosesnya jelas, kamu selalu tau ada di tahap mana
         </h2>
       </div>
@@ -79,7 +79,7 @@ export function HowItWorksSection() {
                     <p className="text-[13px] font-medium uppercase tracking-[0.22em] text-white/60 mb-5">
                       Tahap {step.number} dari 04
                     </p>
-                    <h3 className="text-[clamp(32px,4vw,58px)] font-light leading-[1.05] tracking-[-0.02em] max-w-2xl mb-6">
+                    <h3 className="text-[clamp(32px,4vw,58px)] font-bold leading-[1.05] tracking-[-0.02em] max-w-2xl mb-6">
                       {step.title}
                     </h3>
                     <p className="text-[16px] lg:text-[18px] text-white/80 leading-[1.7] max-w-xl">

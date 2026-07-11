@@ -15,7 +15,7 @@ export function JobsEmptyState({ onClearFilters }: JobsEmptyStateProps) {
         unoptimized
         className="w-full h-auto max-w-[300px] sm:max-w-[360px] mx-auto mb-8"
       />
-      <p className="text-[24px] font-light text-ink mb-2">
+      <p className="text-[24px] font-bold text-ink mb-2">
         Belum ada lowongan yang cocok sama filter kamu
       </p>
       <p className="text-[14px] text-ink-muted mb-8 max-w-md mx-auto">

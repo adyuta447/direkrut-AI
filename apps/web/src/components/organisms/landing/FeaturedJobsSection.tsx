@@ -30,7 +30,7 @@ export function FeaturedJobsSection({ jobs }: FeaturedJobsSectionProps) {
             <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
               Lowongan Pilihan
             </p>
-            <h2 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.1] tracking-[-0.02em] text-ink">
+            <h2 className="text-[clamp(36px,4.5vw,60px)] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
               Lowongan yang lagi buka
             </h2>
           </div>

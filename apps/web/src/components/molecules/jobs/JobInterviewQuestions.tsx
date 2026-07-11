@@ -5,7 +5,7 @@ interface JobInterviewQuestionsProps {
 export function JobInterviewQuestions({ questions }: JobInterviewQuestionsProps) {
   return (
     <div>
-      <h3 className="text-[20px] font-normal mb-4 text-ink">Pertanyaan Wawancara</h3>
+      <h3 className="text-[20px] font-semibold mb-4 text-ink">Pertanyaan Wawancara</h3>
       <p className="text-[14px] text-ink-muted mb-4">
         Pertanyaan ini bakal muncul di interview AI, jadi kamu bisa siapin jawabannya dari sekarang:
       </p>

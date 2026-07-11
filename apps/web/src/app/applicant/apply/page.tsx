@@ -15,7 +15,7 @@ export default function ApplyPage() {
     <div className="min-h-full px-6 py-10 md:px-12 lg:px-16 xl:px-24 font-sans bg-surface-1">
       <div className="max-w-[1584px] mx-auto w-full">
         <div className="mb-10 lg:mb-16">
-          <h1 className="text-[42px] font-light tracking-[-0.5px] text-ink mb-4">Kirim Lamaran</h1>
+          <h1 className="text-[42px] font-bold tracking-[-0.5px] text-ink mb-4">Kirim Lamaran</h1>
           <p className="text-[16px] text-ink max-w-2xl leading-[1.5]">
             Silakan isi formulir di bawah ini untuk melamar pada posisi yang Anda inginkan.
             Pastikan dokumen Anda telah diformat dengan benar sebelum mengirimkan.

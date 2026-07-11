@@ -18,7 +18,7 @@ export default function JobManagementPage() {
     <div className="p-6 lg:p-8 space-y-6">
       <div>
         <p className="text-[12px] font-semibold text-ink-muted mb-2 uppercase tracking-widest">Manajemen</p>
-        <h2 className="text-[32px] font-light text-ink tracking-[-0.5px]">Manajemen Lowongan</h2>
+        <h2 className="text-[32px] font-bold text-ink tracking-[-0.5px]">Manajemen Lowongan</h2>
         <p className="text-[14px] text-ink-muted mt-2">
           Tambah atau perbarui lowongan pekerjaan yang tampil di portal karir dan beranda.
         </p>

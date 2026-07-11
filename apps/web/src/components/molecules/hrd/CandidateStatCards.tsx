@@ -13,7 +13,7 @@ export function CandidateStatCards({ statCards }: CandidateStatCardsProps) {
       {statCards.map((card) => (
         <div key={card.label} className="bg-surface-1 border border-hairline p-6">
           <p className="text-[12px] font-semibold text-ink-muted mb-2 uppercase">{card.label}</p>
-          <p className="text-[24px] font-light text-ink">{card.value}</p>
+          <p className="text-[24px] font-bold text-ink">{card.value}</p>
         </div>
       ))}
     </div>

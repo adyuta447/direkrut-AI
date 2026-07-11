@@ -35,8 +35,7 @@
   body {
     background-color: var(--bg);
     color: var(--fg);
-    font-family: var(--font-ibm-plex-sans), Helvetica, Arial, sans-serif;
-    letter-spacing: 0.16px;
+    font-family: var(--font-jakarta), Helvetica, Arial, sans-serif;
   }
 
   ::-webkit-scrollbar {
@@ -73,11 +72,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white px-6 py-3 font-normal text-sm hover:bg-primary-strong transition-none rounded-full;
+    @apply bg-primary text-white px-6 py-3 font-semibold text-sm hover:bg-primary-strong transition-none rounded-full;
   }
 
   .btn-ghost {
-    @apply text-primary hover:text-primary-strong font-normal text-sm transition-none rounded-full;
+    @apply text-primary hover:text-primary-strong font-semibold text-sm transition-none rounded-full;
   }
 
   .card {

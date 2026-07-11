@@ -35,7 +35,7 @@ export function DatePicker({ dates, selectedDate, onSelect }: DatePickerProps) {
             <span className={`text-[11px] font-semibold uppercase ${d.isWeekend ? "text-ink-muted" : selectedDate === d.id ? "text-primary" : "text-ink-muted"}`}>
               {d.dayName}
             </span>
-            <span className={`text-[20px] font-light ${d.isWeekend ? "text-ink-muted" : selectedDate === d.id ? "text-primary" : "text-ink"}`}>
+            <span className={`text-[20px] font-bold ${d.isWeekend ? "text-ink-muted" : selectedDate === d.id ? "text-primary" : "text-ink"}`}>
               {d.dateNum}
             </span>
             <span className={`text-[11px] font-semibold uppercase ${d.isWeekend ? "text-ink-muted" : selectedDate === d.id ? "text-primary" : "text-ink-muted"}`}>

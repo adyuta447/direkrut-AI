@@ -24,7 +24,7 @@ export default function NotFound() {
           <p className="text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-5">
             Error 404
           </p>
-          <h1 className="text-[clamp(36px,4.5vw,60px)] font-light leading-[1.05] tracking-[-0.02em] mb-5 text-ink">
+          <h1 className="text-[clamp(36px,4.5vw,60px)] font-bold leading-[1.05] tracking-[-0.02em] mb-5 text-ink">
             Waduh, halamannya <span className="text-primary">nggak ketemu.</span>
           </h1>
           <p className="text-[16px] lg:text-[17px] text-ink-muted leading-[1.7] max-w-lg mx-auto mb-10">

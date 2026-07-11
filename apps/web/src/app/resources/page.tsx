@@ -28,7 +28,7 @@ export default function ResourcesPage() {
         <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
           Sumber Daya Karir
         </p>
-        <h1 className="text-[clamp(40px,5vw,68px)] font-light leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
+        <h1 className="text-[clamp(40px,5vw,68px)] font-bold leading-[1.05] tracking-[-0.02em] mb-6 text-ink max-w-3xl">
           Biar kamu makin siap di tiap tahap karier
         </h1>
         <p className="text-[17px] text-ink-muted leading-[1.6] max-w-2xl mb-10">
@@ -68,7 +68,7 @@ export default function ResourcesPage() {
             </div>
             <div className="flex items-end justify-between gap-8">
               <div className="max-w-3xl">
-                <h2 className="text-[clamp(28px,3.5vw,48px)] font-light leading-[1.15] tracking-[-0.01em] text-ink mb-5">
+                <h2 className="text-[clamp(28px,3.5vw,48px)] font-bold leading-[1.15] tracking-[-0.01em] text-ink mb-5">
                   {featured.title}
                 </h2>
                 <p className="text-[16px] text-ink-muted leading-[1.6] max-w-2xl">
@@ -93,7 +93,7 @@ export default function ResourcesPage() {
                   </span>
                   <ArrowUpRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-none" />
                 </div>
-                <h3 className="text-[22px] font-normal leading-[1.3] text-ink mb-3">
+                <h3 className="text-[22px] font-semibold leading-[1.3] text-ink mb-3">
                   {article.title}
                 </h3>
                 <p className="text-[14px] text-ink-muted leading-[1.6] mb-8">{article.excerpt}</p>

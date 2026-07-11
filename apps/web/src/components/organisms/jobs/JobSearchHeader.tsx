@@ -18,7 +18,7 @@ export function JobSearchHeader({
         <p className="flex items-center gap-3 text-[12px] font-medium text-ink-muted uppercase tracking-[0.2em] mb-6">
           Portal Lowongan
         </p>
-        <h1 className="text-[clamp(40px,5vw,68px)] font-light leading-[1.05] tracking-[-0.02em] mb-10 text-ink max-w-3xl">
+        <h1 className="text-[clamp(40px,5vw,68px)] font-bold leading-[1.05] tracking-[-0.02em] mb-10 text-ink max-w-3xl">
           Peluang karier selanjutnya buat kamu
         </h1>
 

@@ -2,7 +2,7 @@ export function CrossRoleIntro() {
   return (
     <div>
       <p className="text-[12px] font-semibold uppercase tracking-widest text-ink-muted mb-2">Alat AI</p>
-      <h2 className="text-[32px] font-light tracking-[-0.5px] text-ink mb-2">Rekomendasi Posisi Lain</h2>
+      <h2 className="text-[32px] font-bold tracking-[-0.5px] text-ink mb-2">Rekomendasi Posisi Lain</h2>
       <p className="text-[16px] text-ink-muted mb-2">
         Daftar kandidat yang memiliki <span className="italic">transferable skills</span> untuk dipindahkan ke posisi alternatif.
       </p>

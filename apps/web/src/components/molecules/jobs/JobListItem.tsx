@@ -17,7 +17,7 @@ export function JobListItem({ job, isActive, onSelect }: JobListItemProps) {
       }`}
     >
       <div className="flex justify-between items-start">
-        <h3 className="text-[18px] font-normal leading-[1.33] text-ink">{job.title}</h3>
+        <h3 className="text-[18px] font-semibold leading-[1.33] text-ink">{job.title}</h3>
         <span className="text-[12px] text-ink-muted whitespace-nowrap ml-4">{job.posted}</span>
       </div>
       <p className="text-[14px] text-ink">{job.company}</p>

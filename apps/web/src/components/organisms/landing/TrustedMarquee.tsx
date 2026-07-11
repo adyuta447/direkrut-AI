@@ -19,7 +19,7 @@ export function TrustedMarquee() {
           {[...companies, ...companies].map((name, i) => (
             <span
               key={`${name}-${i}`}
-              className="text-[22px] font-light text-ink-muted whitespace-nowrap"
+              className="text-[22px] font-bold text-ink-muted whitespace-nowrap"
             >
               {name}
             </span>
@@ -32,7 +32,7 @@ export function TrustedMarquee() {
           {[...companies, ...companies].map((name, i) => (
             <span
               key={`${name}-dup-${i}`}
-              className="text-[22px] font-light text-ink-muted whitespace-nowrap"
+              className="text-[22px] font-bold text-ink-muted whitespace-nowrap"
             >
               {name}
             </span>

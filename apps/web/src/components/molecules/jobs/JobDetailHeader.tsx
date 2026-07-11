@@ -9,7 +9,7 @@ interface JobDetailHeaderProps {
 export function JobDetailHeader({ job }: JobDetailHeaderProps) {
   return (
     <div className="p-8 border-b border-hairline bg-surface-1">
-      <h2 className="text-[clamp(28px,3vw,40px)] font-light leading-[1.15] tracking-[-0.01em] mb-2 text-ink">
+      <h2 className="text-[clamp(28px,3vw,40px)] font-bold leading-[1.15] tracking-[-0.01em] mb-2 text-ink">
         {job.title}
       </h2>
       <p className="text-[17px] font-normal mb-1 text-ink">{job.company}</p>

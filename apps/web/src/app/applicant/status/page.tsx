@@ -22,7 +22,7 @@ export default function StatusPage() {
 
       <div className="max-w-[1600px] mx-auto w-full">
         <div className="mb-10 lg:mb-16">
-          <h1 className="text-[42px] font-light tracking-[-0.5px] text-ink mb-4">Status Lamaran</h1>
+          <h1 className="text-[42px] font-bold tracking-[-0.5px] text-ink mb-4">Status Lamaran</h1>
           <p className="text-[16px] text-ink-muted max-w-xl leading-relaxed">
             Lacak dan kelola progres lamaran Anda. Tindakan yang perlu dilakukan
             akan muncul di sini apabila dibutuhkan.

@@ -38,7 +38,7 @@ export function JobSelectPanel({ jobs, selectedJob, onSelectJob, selectedJobData
             ))}
           </div>
 
-          <h3 className="text-[32px] font-light text-ink mb-2">{selectedJobData.title}</h3>
+          <h3 className="text-[32px] font-bold text-ink mb-2">{selectedJobData.title}</h3>
           <p className="text-[16px] text-ink-muted mb-8">{selectedJobData.company}</p>
           <p className="text-[16px] text-ink leading-[1.5] mb-8 max-w-3xl whitespace-pre-wrap">
             {selectedJobData.description}

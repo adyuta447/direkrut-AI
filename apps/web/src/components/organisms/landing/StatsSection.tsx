@@ -11,7 +11,7 @@ export function StatsSection() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-reveal-group>
         {stats.map((stat) => (
           <div key={stat.label} className="bg-surface-1 rounded-3xl p-8 lg:p-10" data-reveal-item>
-            <p className="text-[clamp(40px,4.5vw,64px)] font-light tracking-[-0.02em] leading-none mb-4 text-ink">
+            <p className="text-[clamp(40px,4.5vw,64px)] font-bold tracking-[-0.02em] leading-none mb-4 text-ink">
               <span data-count={stat.count} data-suffix={stat.suffix}>
                 {stat.display}
               </span>

@@ -9,7 +9,7 @@ export function CtaBanner() {
           <p className="inline-flex rounded-full bg-white/10 px-4 py-2 text-[13px] font-medium text-white mb-6">
             Buat kamu yang lagi cari kerja
           </p>
-          <h2 className="text-[28px] sm:text-[32px] font-light leading-[1.2] mb-8 max-w-md">
+          <h2 className="text-[28px] sm:text-[32px] font-bold leading-[1.2] mb-8 max-w-md">
             Mulai lamaran pertamamu hari ini. Gratis, tanpa biaya apa pun.
           </h2>
           <Link
@@ -25,7 +25,7 @@ export function CtaBanner() {
           <p className="inline-flex rounded-full bg-white/10 px-4 py-2 text-[13px] font-medium text-white mb-6">
             Untuk perusahaan
           </p>
-          <h2 className="text-[28px] sm:text-[32px] font-light leading-[1.2] mb-8 max-w-md">
+          <h2 className="text-[28px] sm:text-[32px] font-bold leading-[1.2] mb-8 max-w-md">
             Menemukan kandidat berkualitas nggak perlu selama itu.
           </h2>
           <Link
