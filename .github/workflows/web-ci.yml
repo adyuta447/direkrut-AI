@@ -30,6 +30,3 @@ jobs:
       - run: yarn typecheck
       - run: yarn lint
       - run: yarn build
-
-      # Deploy tetap lewat Vercel (terhubung ke root dir apps/web),
-      # workflow ini cuma gate lint/typecheck/build sebelum merge.

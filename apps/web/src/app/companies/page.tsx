@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { Search } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { SiteHeader } from "../../components/organisms/shared/SiteHeader";
@@ -65,7 +66,6 @@ export default function CompaniesPage() {
           <span className="text-ink font-medium">{filteredCompanies.length}</span> perusahaan siap kamu eksplor
         </p>
       </section>
-
       <section className="py-16 px-6 lg:px-10 max-w-[1584px] mx-auto">
         {filteredCompanies.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -74,9 +74,20 @@ export default function CompaniesPage() {
             ))}
           </div>
         ) : (
-          <div className="py-24 text-center rounded-[32px] bg-surface-1">
-            <p className="text-[24px] font-light text-ink mb-4">
+          <div className="py-16 sm:py-20 px-6 text-center rounded-[32px] bg-surface-1">
+            <Image
+              src="/notfound.svg"
+              alt="Ilustrasi perusahaan tidak ditemukan"
+              width={748}
+              height={457}
+              unoptimized
+              className="w-full h-auto max-w-[300px] sm:max-w-[360px] mx-auto mb-8"
+            />
+            <p className="text-[24px] font-light text-ink mb-2">
               Perusahaan yang kamu cari belum ada di sini
+            </p>
+            <p className="text-[14px] text-ink-muted mb-8 max-w-md mx-auto">
+              Coba cek lagi ejaannya, atau jelajahi mitra lain yang lowongannya lagi buka.
             </p>
             <button onClick={() => setSearchTerm("")} className="btn-primary">
               Hapus Pencarian

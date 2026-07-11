@@ -1,10 +1,3 @@
-// Command server menjalankan Direkrut AI REST API.
-//
-// Layanan ini menangani seluruh logika bisnis platform: autentikasi JWT
-// dengan role-based access control, manajemen lowongan, alur subscription
-// empat tier, integrasi payment gateway Xendit, dan notifikasi real-time.
-// Proses AI (parsing CV, vector search, assessment, chat) didelegasikan ke
-// apps/ai-engine lewat internal REST API.
 package main
 
 import (
