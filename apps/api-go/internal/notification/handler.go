@@ -5,9 +5,7 @@ package notification
 
 import (
 	"net/http"
-
 	"github.com/go-chi/chi/v5"
-
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 )
 

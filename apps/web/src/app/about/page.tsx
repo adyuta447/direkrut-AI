@@ -98,10 +98,14 @@ export default function AboutPage() {
 
         {/* Hero */}
         <section className="relative overflow-hidden bg-black">
-          <div
+          <Image
+            src="/map.png"
+            alt=""
             aria-hidden="true"
-            className="absolute inset-0 bg-cover bg-center opacity-70"
-            style={{ backgroundImage: "url('/map.png')" }}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-70"
           />
           <div
             aria-hidden="true"

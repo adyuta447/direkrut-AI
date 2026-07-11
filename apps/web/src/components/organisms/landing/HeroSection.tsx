@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HeroSearchBar } from "../../molecules/landing/HeroSearchBar";
@@ -7,11 +8,18 @@ const popularSearches = ["Backend Engineer", "Product Designer", "Data Analyst",
 export function HeroSection() {
   return (
     <section className="sticky top-0 z-0 overflow-hidden">
-      <div
+      {/* Elemen LCP: lewat next/image (bukan CSS background) supaya
+          dioptimasi ke AVIF/WebP + responsive sizes oleh Vercel, ter-
+          discover dini di HTML, dan dapat fetchpriority=high dari
+          prop priority. */}
+      <Image
+        src="/hero-section.jpg"
+        alt=""
         aria-hidden="true"
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/hero-section.jpg')",
-         }}
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
       />
       <div
         aria-hidden="true"
