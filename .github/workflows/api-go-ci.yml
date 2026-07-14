@@ -1,0 +1,30 @@
+name: api-go-ci
+
+on:
+  pull_request:
+    paths:
+      - "apps/api-go/**"
+      - ".github/workflows/api-go-ci.yml"
+  push:
+    branches: [main, prod]
+    paths:
+      - "apps/api-go/**"
+
+defaults:
+  run:
+    working-directory: apps/api-go
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: apps/api-go/go.sum
+
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./... -v

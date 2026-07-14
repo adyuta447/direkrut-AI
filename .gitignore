@@ -1,26 +1,52 @@
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-.next
-.claude
-next-env.d.ts
+# --- Umum ---
+.DS_Store
+.env
+.env.local
 *.local
-
+*.log
+logs
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# --- Node / apps/web ---
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist
+dist-ssr
+apps/web/.next
+apps/web/next-env.d.ts
+apps/web/tsconfig.tsbuildinfo
+*storybook.log
+storybook-static
+
+# Turborepo
+.turbo
+
+# --- Go / apps/api-go ---
+apps/api-go/bin
+apps/api-go/tmp
+*.exe
+*.test
+
+# --- Python / apps/ai-engine ---
+apps/ai-engine/__pycache__/
+apps/ai-engine/**/__pycache__/
+apps/ai-engine/.venv
+apps/ai-engine/venv
+apps/ai-engine/*.egg-info
+apps/ai-engine/.pytest_cache
+apps/ai-engine/.mypy_cache
+apps/ai-engine/.ruff_cache
+
+# --- Claude Code local settings ---
+.claude
