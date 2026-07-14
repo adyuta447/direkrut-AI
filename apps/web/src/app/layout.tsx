@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -22,7 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={jakarta.variable} data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className={cn("font-sans", inter.variable, jakarta.variable)}
+      data-scroll-behavior="smooth"
+    >
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
