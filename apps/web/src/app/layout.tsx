@@ -25,7 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)} data-scroll-behavior="smooth">
+    <html
+      lang="en"
+      className={cn("font-sans", inter.variable, jakarta.variable)}
+      data-scroll-behavior="smooth"
+    >
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
