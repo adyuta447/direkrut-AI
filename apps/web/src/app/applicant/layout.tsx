@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect } from "react";
+import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
-import { ApplicantSidebar } from "../../components/organisms/applicant/ApplicantSidebar";
-import { ApplicantTopbar } from "../../components/organisms/applicant/ApplicantTopbar";
-import { applicantNavItems } from "../../lib/applicant/navigation";
+import { DashboardProvider } from "../../components/dashboard-provider";
+import { ThemeProvider } from "../../components/theme-provider";
+import { CandidateSidebar } from "../../components/candidate-sidebar";
+import { SiteHeader } from "../../components/site-header";
+import { SearchDialog } from "../../components/search-dialog";
+import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 
 export default function ApplicantLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
   const router = useRouter();
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser) router.replace("/auth");
@@ -19,29 +21,25 @@ export default function ApplicantLayout({ children }: { children: ReactNode }) {
 
   if (!currentUser) return null;
 
-  const activeItem =
-    applicantNavItems.find((item) => pathname.startsWith(item.href)) ?? applicantNavItems[0];
-
   return (
-    <div className="h-screen bg-canvas font-sans flex relative overflow-hidden">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-[#393939]/60 backdrop-blur-sm z-30 lg:hidden transition-opacity"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <ApplicantSidebar sidebarOpen={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
-
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-canvas">
-        <ApplicantTopbar
-          title={activeItem.title}
-          subtitle={activeItem.subtitle}
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        />
-        <main className="flex-1 overflow-y-auto bg-canvas">{children}</main>
-      </div>
-    </div>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <DashboardProvider>
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as CSSProperties
+          }
+        >
+          <CandidateSidebar />
+          <SidebarInset className="bg-background text-foreground">
+            <SiteHeader />
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </SidebarInset>
+          <SearchDialog />
+        </SidebarProvider>
+      </DashboardProvider>
+    </ThemeProvider>
   );
 }
