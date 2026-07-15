@@ -129,7 +129,7 @@ export default function ApplicationDetailPage() {
       <BackButton href="/candidate/applications" label="Kembali ke Riwayat Lamaran" />
 
       {/* Hero */}
-      <section className="rounded-3xl border bg-card p-6 md:p-8">
+      <section className="rounded-4xl border bg-card p-6 md:p-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
           <div>
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-brand-accent-strong">
@@ -268,7 +268,7 @@ export default function ApplicationDetailPage() {
                     Umpan Balik Wawancara AI
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[28px] bg-primary p-6 text-white md:p-8">
+                    <div className="rounded-4xl bg-primary p-6 text-white md:p-8">
                       <p className="mb-3 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.22em] text-white/60">
                         <CheckCircleIcon className="size-4" />
                         Hasil Analisis AI
@@ -281,7 +281,7 @@ export default function ApplicationDetailPage() {
                         wawancara jelas dan terstruktur — penjelasan pengalamanmu meyakinkan.
                       </p>
                     </div>
-                    <div className="rounded-[28px] bg-brand-accent p-6 text-white md:p-8">
+                    <div className="rounded-4xl bg-brand-accent p-6 text-white md:p-8">
                       <p className="mb-3 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.22em] text-white/70">
                         <ClockIcon className="size-4" />
                         Ruang Bertumbuh

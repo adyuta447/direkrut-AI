@@ -126,7 +126,7 @@ export default function CandidateProfilePage() {
       />
 
       {!hasAutoFilled && (
-        <Card className="border-primary/50 bg-primary/5 shadow-sm overflow-hidden relative">
+        <Card className="overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <BotIcon className="size-24 text-primary" />
           </div>
@@ -457,7 +457,7 @@ export default function CandidateProfilePage() {
                 <div className="space-y-6">
                   {profile.experience.map((exp, index) => (
                     <div key={exp.id} className={`flex gap-4 group ${index !== profile.experience.length - 1 ? "border-b pb-6" : ""}`}>
-                      <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
+                      <Avatar className="size-14 rounded-md border shrink-0">
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><BriefcaseIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -530,7 +530,7 @@ export default function CandidateProfilePage() {
                 <div className="space-y-6">
                   {profile.education.map((edu, index) => (
                     <div key={edu.id} className={`flex gap-4 group ${index !== profile.education.length - 1 ? "border-b pb-6" : ""}`}>
-                      <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
+                      <Avatar className="size-14 rounded-md border shrink-0">
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><GraduationCapIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -591,7 +591,7 @@ export default function CandidateProfilePage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[120px] bg-muted/10 content-start shadow-inner">
+                    <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[120px] bg-muted/10 content-start ">
                       {profile.skills.map((skill, i) => (
                         <Badge key={i} variant="secondary" className="px-3 py-1.5 text-sm bg-primary text-primary-foreground flex items-center gap-2">
                           {skill}

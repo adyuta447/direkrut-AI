@@ -242,7 +242,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
               Tahap awalnya wawancara video sama AI. Cari tempat yang terang dan tenang ya -- nanti kamu diminta nyalain kamera dan mikrofon.
             </p>
             <Button 
-              className="w-full gap-2 font-semibold text-base py-6 shadow-md"
+              className="w-full gap-2 font-semibold text-base py-6"
               onClick={() => router.push(`/interview/${job.id}`)}
             >
               Mulai Wawancara AI Sekarang <ArrowRightIcon className="size-5" />
@@ -294,7 +294,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
       </div>
 
       <div className="pt-8">
-        <Card className="shadow-none border-muted">
+        <Card>
           <CardHeader>
             <CardTitle>{step === 1 ? 'Informasi Pribadi' : step === 2 ? 'Dokumen Resume / CV' : 'Tinjauan Akhir'}</CardTitle>
             <CardDescription>
