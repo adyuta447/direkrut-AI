@@ -1,28 +1,30 @@
 "use client"
-import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
 import * as React from "react"
 import Link from "next/link"
 import { useDashboard } from "@/context/DashboardContext"
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
+import { SearchInput } from "@/components/molecules/dashboard/SearchInput"
+import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
+import { EmptyState } from "@/components/molecules/dashboard/EmptyState"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  IconSearch,
-} from "@tabler/icons-react"
+import { ArrowRightIcon, ChevronDownIcon, SearchIcon, InfoIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { Application, Job } from "@/lib/types"
 
+const STAGE_FILTERS = [
+  { label: "Semua Tahapan", match: () => true },
+  { label: "Administrasi", match: (a: Application) => a.status === "under-review" },
+  { label: "Wawancara AI", match: (a: Application) => a.status === "interview" },
+  { label: "Selesai / Ditolak", match: (a: Application) => a.status === "rejected" },
+]
+
+const STAGE_HELPER: Record<string, string> = {
+  submitted: "Lamaranmu udah masuk dan bakal segera dicek tim rekrutmen. Pantau terus progresnya di sini ya.",
+  "under-review": "Profil kamu lagi dicek tim HRD di tahap administrasi. Kalau lolos, kamu bakal diundang ke Wawancara AI.",
+  interview: "Selamat, kamu lolos ke tahap Wawancara AI! 🎉 Cek email atau buka detail lamaran buat mulai sesinya.",
+  rejected: "Kali ini belum jodoh — prosesnya nggak bisa kami lanjutkan. Masih banyak posisi lain yang nunggu kamu!",
+}
 
 function getStageIndex(status: string) {
   if (status === "submitted") return 0
@@ -32,172 +34,129 @@ function getStageIndex(status: string) {
   return 0
 }
 
-function getStageName(status: string) {
-  if (status === "submitted") return "Terkirim"
-  if (status === "under-review") return "Administrasi"
-  if (status === "interview") return "Wawancara AI"
-  if (status === "rejected") return "Keputusan Akhir"
-  return "Terkirim"
-}
-
-function getStatusText(status: string) {
-  if (status === "submitted") return "Lamaran Diterima"
-  if (status === "under-review") return "Administrasi"
-  if (status === "interview") return "Menunggu Wawancara"
-  if (status === "rejected") return "Lowongan Telah Ditutup / Ditolak"
-  return "Menunggu"
-}
+const STEPS = ["Terkirim", "Administrasi", "Wawancara AI", "Keputusan Akhir"]
 
 function ApplicationCard({ app, job }: { app: Application; job: Job }) {
   const [isExpanded, setIsExpanded] = React.useState(false)
   const currentStageIndex = getStageIndex(app.status)
-  
-  const steps = [
-    { title: "Terkirim", index: 0 },
-    { title: "Administrasi", index: 1 },
-    { title: "Wawancara AI", index: 2 },
-    { title: "Keputusan Akhir", index: 3 },
-  ]
 
   return (
-    <Card className="overflow-hidden bg-background">
-      <CardContent className="p-0">
-        <div className="p-4 sm:p-6 pb-4">
-          <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+    <div className="rounded-4xl border bg-card transition-colors hover:border-ink-muted">
+      <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start md:p-7">
+        <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted text-lg font-bold text-muted-foreground">
+          {job.company?.charAt(0) ?? "?"}
+        </div>
 
-            <div className="shrink-0 rounded-lg border bg-muted flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 text-lg font-bold text-muted-foreground">
-              {job.company?.charAt(0) ?? "?"}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-lg sm:text-xl text-foreground truncate">
-                {job.title}
-              </h3>
-              <p className="text-primary font-medium text-sm sm:text-base">
-                {job.company} - {job.location}
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1">Tanggal Lamar</p>
-                  <p className="font-medium">{app.appliedDate}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1">Kegiatan</p>
-                  <p className="font-medium uppercase tracking-wider text-xs mt-1.5">DIREKRUT AI</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1">Tahap Rekrutmen</p>
-                  <p className="font-medium">{getStageName(app.status)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs mb-1">Status</p>
-                  <p className="font-medium">{getStatusText(app.status)}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex sm:flex-col justify-between items-end gap-3 mt-4 sm:mt-0">
-              <Button
-                variant="ghost"
-                className="text-primary hover:text-primary/80 font-semibold"
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? "Sembunyikan" : "Tampilkan"}
-              </Button>
-              <Button
-                size="sm"
-                className="w-full sm:w-auto"
-                render={<Link href={`/candidate/applications/${app.id}`} />}
-              >
-                Detail
-              </Button>
-            </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <h3 className="text-lg font-bold leading-[1.2] tracking-[-0.01em] md:text-xl">
+              {job.title}
+            </h3>
+            <StatusBadge status={app.status} />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{job.company}</span>
+            {" · "}
+            {job.location}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full bg-muted px-3 py-1.5 text-[12px]">{job.type}</span>
+            <span className="rounded-full bg-muted px-3 py-1.5 text-[12px] text-muted-foreground">
+              Melamar {app.appliedDate}
+            </span>
           </div>
         </div>
 
-        {isExpanded && (
-          <div className="border-t bg-muted/10 p-4 sm:p-6 animate-in slide-in-from-top-2 fade-in duration-200">
-            
-            <div className="relative max-w-4xl mx-auto py-8">
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 z-0"></div>
+        <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
+          <Button
+            size="sm"
+            render={<Link href={`/candidate/applications/${app.id}`} />}
+          >
+            Detail
+            <ArrowRightIcon className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            Progres
+            <ChevronDownIcon
+              className={cn("size-4 transition-transform", isExpanded && "rotate-180")}
+            />
+          </Button>
+        </div>
+      </div>
 
-              <div 
-                className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0 transition-all duration-500 ease-in-out"
-                style={{ width: `${(currentStageIndex / (steps.length - 1)) * 100}%` }}
-              ></div>
-
-              <div className="relative z-10 flex justify-between items-center w-full">
-                {steps.map((step, idx) => {
-                  const isCompleted = idx <= currentStageIndex
-                  const isCurrent = idx === currentStageIndex
-                  
-                  return (
-                    <div key={idx} className="flex flex-col items-center justify-center relative w-1/4">
-                      
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border-4 border-background transition-colors ${
-                        isCompleted ? "bg-primary" : "bg-muted-foreground/30"
-                      } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}>
-                        {isCompleted && <div className="w-2 h-2 rounded-full bg-background" />}
-                      </div>
-
-                      <div className="absolute top-8 w-max text-center flex flex-col items-center">
-                        <span className={`text-xs font-medium ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
-                          {step.title}
-                        </span>
-                        {isCurrent && app.status === "rejected" && (
-                          <Badge variant="destructive" className="mt-1 text-[10px] h-5 px-1.5 py-0">Ditolak</Badge>
-                        )}
-                        {isCurrent && app.status !== "rejected" && (
-                          <span className="text-[10px] text-muted-foreground mt-0.5">{app.appliedDate}</span>
-                        )}
-                      </div>
+      {isExpanded && (
+        <div className="border-t p-6 animate-in fade-in slide-in-from-top-2 duration-200 md:p-7">
+          <div className="relative mx-auto max-w-3xl pt-2 pb-4">
+            <div className="absolute top-[13px] left-[12.5%] right-[12.5%] h-0.5 bg-border" />
+            <div
+              className="absolute top-[13px] left-[12.5%] h-0.5 bg-primary transition-all duration-500"
+              style={{ width: `${(currentStageIndex / (STEPS.length - 1)) * 75}%` }}
+            />
+            <div className="relative z-10 grid grid-cols-4">
+              {STEPS.map((label, idx) => {
+                const isCompleted = idx <= currentStageIndex
+                const isCurrent = idx === currentStageIndex
+                const isRejectedEnd = isCurrent && app.status === "rejected"
+                return (
+                  <div key={label} className="flex flex-col items-center gap-2 text-center">
+                    <div
+                      className={cn(
+                        "flex size-6 items-center justify-center rounded-full border-4 border-card",
+                        isRejectedEnd
+                          ? "bg-destructive"
+                          : isCompleted
+                          ? "bg-primary"
+                          : "bg-muted-foreground/30",
+                        isCurrent && !isRejectedEnd && "ring-4 ring-brand-accent/30"
+                      )}
+                    >
+                      {isCompleted && <div className="size-2 rounded-full bg-card" />}
                     </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="mt-12 bg-background border rounded-lg p-4 text-sm text-muted-foreground">
-              {app.status === "submitted" && (
-                "Lamaran Anda telah kami terima dan akan segera direview oleh tim rekrutmen. Pantau terus status lamaran Anda secara berkala."
-              )}
-              {app.status === "under-review" && (
-                "Profil dan lamaran Anda saat ini sedang dalam tahap seleksi administratif oleh tim HRD. Jika lolos, Anda akan diundang ke tahap Wawancara AI."
-              )}
-              {app.status === "interview" && (
-                "Selamat! Anda lolos ke tahap Wawancara AI. Silakan periksa email Anda atau buka halaman detail lamaran untuk memulai sesi wawancara."
-              )}
-              {app.status === "rejected" && (
-                "Sehubungan dengan telah ditutupnya lowongan atau hasil evaluasi, maka proses rekrutmen Anda tidak dapat kami lanjutkan. Terima kasih banyak atas waktu dan energi yang Anda luangkan. Sampai berjumpa di kesempatan berikutnya."
-              )}
-            </div>
-            
-            <div className="mt-4 text-xs text-muted-foreground">
-              Belum mendapatkan pembaruan? Tim perekrut akan menghubungi Anda melalui Kotak Masuk.
+                    <span
+                      className={cn(
+                        "text-xs",
+                        isCurrent ? "font-semibold" : "text-muted-foreground"
+                      )}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+            <InfoIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+            {STAGE_HELPER[app.status] ?? STAGE_HELPER.submitted}
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
 
-export default function CandidateApplicationsCardsPage() {
+export default function CandidateApplicationsPage() {
   const { myApplications, jobs } = useDashboard()
-  const [activeTab, setActiveTab] = React.useState("Semua Tahapan")
+  const [activeFilter, setActiveFilter] = React.useState(STAGE_FILTERS[0].label)
   const [searchQuery, setSearchQuery] = React.useState("")
 
-  const filteredApps = React.useMemo(() => {
-    let filtered = [...myApplications]
+  const stageCounts = React.useMemo(
+    () =>
+      Object.fromEntries(
+        STAGE_FILTERS.map(f => [f.label, myApplications.filter(f.match).length])
+      ),
+    [myApplications]
+  )
 
-    if (activeTab === "Administrasi") {
-      filtered = filtered.filter(a => a.status === "under-review")
-    } else if (activeTab === "Wawancara AI") {
-      filtered = filtered.filter(a => a.status === "interview")
-    } else if (activeTab === "Selesai / Ditolak") {
-      filtered = filtered.filter(a => a.status === "rejected")
-    }
+  const filteredApps = React.useMemo(() => {
+    const stage = STAGE_FILTERS.find(f => f.label === activeFilter) ?? STAGE_FILTERS[0]
+    let filtered = myApplications.filter(stage.match)
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
@@ -207,60 +166,80 @@ export default function CandidateApplicationsCardsPage() {
         return job.title.toLowerCase().includes(q) || job.company.toLowerCase().includes(q)
       })
     }
-
     return filtered
-  }, [myApplications, jobs, activeTab, searchQuery])
+  }, [myApplications, jobs, activeFilter, searchQuery])
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
-
-          <PageHeader
-            title="Riwayat Lamaran"
-            description="Pantau dan kelola seluruh lamaran pekerjaan Anda."
-          />
-
-          <div className="flex flex-col md:flex-row gap-4 mt-4 p-4 border rounded-xl bg-background/50 backdrop-blur-sm">
-            <div className="relative flex-1">
-              <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground size-4" />
-              <Input
-                placeholder="Temukan Posisi atau Perusahaan..."
-                className="pl-9 bg-background"
+      <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 md:py-8 lg:px-6">
+        <PageHeader
+          eyebrow="Progres Kamu"
+          title="Riwayat Lamaran"
+          description="Semua lamaranmu kepantau di satu tempat. Nggak perlu bolak-balik cek email."
+          action={
+            <div className="w-full md:w-80">
+              <SearchInput
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={setSearchQuery}
+                placeholder="Cari posisi atau perusahaan..."
               />
             </div>
-            
-            <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-              <Select value={activeTab} onValueChange={(val) => val && setActiveTab(val)}>
-                <SelectTrigger className="w-full md:w-[240px] bg-background">
-                  <SelectValue placeholder="Semua Tahapan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Semua Tahapan">Semua Tahapan</SelectItem>
-                  <SelectItem value="Administrasi">Administrasi</SelectItem>
-                  <SelectItem value="Wawancara AI">Wawancara AI</SelectItem>
-                  <SelectItem value="Selesai / Ditolak">Selesai / Ditolak</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          }
+        />
 
-          <div className="flex flex-col gap-4 mt-2">
-            {filteredApps.length > 0 ? (
-              filteredApps.map(app => {
-                const job = jobs.find(j => j.id === app.jobId)
-                if (!job) return null
-                return <ApplicationCard key={app.id} app={app} job={job} />
-              })
-            ) : (
-              <div className="text-center p-12 border rounded-xl bg-muted/20">
-                <p className="text-muted-foreground">Tidak ada lamaran yang sesuai dengan pencarian Anda.</p>
-              </div>
-            )}
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {STAGE_FILTERS.map(f => {
+            const active = f.label === activeFilter
+            return (
+              <button
+                key={f.label}
+                onClick={() => setActiveFilter(f.label)}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors",
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-ink-muted hover:text-foreground"
+                )}
+              >
+                {f.label}
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 text-[11px] tabular-nums",
+                    active ? "bg-white/20" : "bg-muted"
+                  )}
+                >
+                  {stageCounts[f.label]}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
+        <div className="flex flex-col gap-4">
+          {filteredApps.length > 0 ? (
+            filteredApps.map(app => {
+              const job = jobs.find(j => j.id === app.jobId)
+              if (!job) return null
+              return <ApplicationCard key={app.id} app={app} job={job} />
+            })
+          ) : (
+            <EmptyState
+              icon={SearchIcon}
+              title="Nggak ada yang cocok"
+              description="Coba kata kunci lain atau ganti filter tahapannya."
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setActiveFilter(STAGE_FILTERS[0].label)
+                  }}
+                >
+                  Reset Filter
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -54,6 +55,7 @@
      (landing, jobs, auth, dst), independen dari token shadcn di atas. */
   --color-primary-strong: var(--primary-strong);
   --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-strong: var(--brand-accent-strong);
   --color-canvas: var(--canvas);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
@@ -114,6 +116,8 @@
      immune terhadap dark-mode toggle dashboard (lihat body{} di bawah). */
   --primary-strong: #084e96;
   --brand-accent: #f97316;
+  /* Varian oranye utk teks kecil (eyebrow dsb): 4.9:1 di putih. */
+  --brand-accent-strong: #c2410c;
   --canvas: #ffffff;
   --surface-1: #f4f6f8;
   --surface-2: #e8ecf0;
@@ -161,6 +165,7 @@
 
   --primary-strong: #084e96;
   --brand-accent: #f97316;
+  --brand-accent-strong: #fb923c;
   --canvas: #ffffff;
   --surface-1: #f4f6f8;
   --surface-2: #e8ecf0;

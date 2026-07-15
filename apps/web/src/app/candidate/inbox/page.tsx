@@ -125,7 +125,7 @@ export default function CandidateInboxPage() {
             <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
               type="search"
-              placeholder="Cari email dari perusahaan..."
+              placeholder="Cari kabar dari perusahaan..."
               className="pl-8 bg-background h-9 text-sm w-full focus-visible:ring-1"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -153,7 +153,7 @@ export default function CandidateInboxPage() {
                 <button
                   key={msg.id}
                   onClick={() => handleMarkAsRead(msg.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors border ${selectedMessageId === msg.id ? 'bg-primary/10 border-primary/20' : 'bg-transparent border-transparent hover:bg-muted'}`}
+                  className={`w-full text-left p-3 rounded-lg transition-colors border ${selectedMessageId === msg.id ? 'border-primary bg-background' : 'bg-transparent border-transparent hover:bg-muted'}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export default function CandidateInboxPage() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
               <MailIcon className="size-16 opacity-20 mb-4" />
-              <p>Pilih pesan untuk membacanya</p>
+              <p>Pilih pesan buat dibaca</p>
             </div>
           )}
         </div>

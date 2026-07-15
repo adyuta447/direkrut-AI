@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -117,13 +118,15 @@ export default function CandidateProfilePage() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto space-y-6">
 
-      <div className="flex flex-col gap-1 mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Profil Saya</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Kelola informasi pribadi, pendidikan, dan pengalaman kerja Anda.</p>
-      </div>
+      <PageHeader
+        className="mb-6"
+        eyebrow="Personal Branding"
+        title="Profil Saya"
+        description="Profil yang lengkap bikin peluang dilirik HRD makin gede."
+      />
 
       {!hasAutoFilled && (
-        <Card className="border-primary/50 bg-primary/5 shadow-sm overflow-hidden relative">
+        <Card className="overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <BotIcon className="size-24 text-primary" />
           </div>
@@ -133,12 +136,12 @@ export default function CandidateProfilePage() {
               Isi Profil Otomatis dengan AI
             </CardTitle>
             <CardDescription className="text-base text-foreground/80">
-              Tidak perlu mengisi manual dari awal! Unggah CV Anda (PDF/DOCX) dan biarkan Direkrut AI mengekstrak data Anda ke dalam profil ini.
+              Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/DOCX), biar Direkrut AI yang ngisiin profilnya.
             </CardDescription>
           </CardHeader>
           <CardContent className="relative z-10">
             <div 
-              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? 'border-primary bg-primary/10' : 'border-primary/30 bg-background/50'} rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:bg-primary/10`}
+              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? 'border-primary bg-muted/50' : 'border-border bg-background'} rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:bg-primary/10`}
               onClick={!isUploading && !isSimulatingAI ? simulateAIFill : undefined}
             >
               {isUploading ? (
@@ -150,7 +153,7 @@ export default function CandidateProfilePage() {
                 <div className="flex flex-col items-center gap-4">
                   <BotIcon className="size-10 text-primary" />
                   <div className="space-y-1">
-                    <p className="font-medium text-primary">AI sedang mengekstrak data Anda...</p>
+                    <p className="font-medium text-primary">AI lagi baca CV kamu...</p>
                     <p className="text-sm text-muted-foreground">Membaca pengalaman kerja, pendidikan, dan skills</p>
                   </div>
                 </div>
@@ -160,7 +163,7 @@ export default function CandidateProfilePage() {
                     <UploadCloudIcon className="size-8 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-lg">Klik untuk mengunggah CV Anda</p>
+                    <p className="font-medium text-lg">Klik buat upload CV kamu</p>
                     <p className="text-sm text-muted-foreground mt-1">Sistem kami akan mengisi seluruh kolom di bawah secara otomatis.</p>
                   </div>
                 </div>
@@ -171,7 +174,7 @@ export default function CandidateProfilePage() {
       )}
 
       {hasAutoFilled && (
-        <div className="bg-success/15 border border-success/30 text-success p-4 rounded-xl flex items-start gap-3">
+        <div className="rounded-2xl border p-4 flex items-start gap-3 text-primary">
           <CheckCircleIcon className="size-5 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium">Profil Berhasil Dilengkapi oleh AI!</p>
@@ -454,7 +457,7 @@ export default function CandidateProfilePage() {
                 <div className="space-y-6">
                   {profile.experience.map((exp, index) => (
                     <div key={exp.id} className={`flex gap-4 group ${index !== profile.experience.length - 1 ? "border-b pb-6" : ""}`}>
-                      <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
+                      <Avatar className="size-14 rounded-md border shrink-0">
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><BriefcaseIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -527,7 +530,7 @@ export default function CandidateProfilePage() {
                 <div className="space-y-6">
                   {profile.education.map((edu, index) => (
                     <div key={edu.id} className={`flex gap-4 group ${index !== profile.education.length - 1 ? "border-b pb-6" : ""}`}>
-                      <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
+                      <Avatar className="size-14 rounded-md border shrink-0">
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><GraduationCapIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -588,7 +591,7 @@ export default function CandidateProfilePage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[120px] bg-muted/10 content-start shadow-inner">
+                    <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[120px] bg-muted/10 content-start ">
                       {profile.skills.map((skill, i) => (
                         <Badge key={i} variant="secondary" className="px-3 py-1.5 text-sm bg-primary text-primary-foreground flex items-center gap-2">
                           {skill}
