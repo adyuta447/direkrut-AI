@@ -23,8 +23,8 @@ pnpm-debug.log*
 lerna-debug.log*
 dist
 dist-ssr
-apps/web/.next
-apps/web/next-env.d.ts
+.next
+next-env.d.ts
 apps/web/tsconfig.tsbuildinfo
 *storybook.log
 storybook-static
