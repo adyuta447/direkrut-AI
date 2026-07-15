@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { User, Application, Job } from "../types";
 import { mockApplications, mockJobs } from "../mock";
 
@@ -13,8 +13,6 @@ interface AppContextType {
   jobs: Job[];
   addJob: (job: Job) => void;
   updateJob: (id: string, updates: Partial<Job>) => void;
-  darkMode: boolean;
-  toggleDarkMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -24,29 +22,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [applications, setApplications] =
     useState<Application[]>(mockApplications);
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    // localStorage/matchMedia nggak ada di SSR, jadi nggak bisa dihitung
-    // saat render (bakal beda dari hasil render server -> hydration
-    // mismatch). Wajib dibaca setelah mount.
-    const stored = localStorage.getItem("DirekrutAI-dark");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDarkMode(
-      stored ? stored === "true" : window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("DirekrutAI-dark", String(darkMode));
-  }, [darkMode]);
-
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const addApplication = (app: Application) => {
     setApplications((prev) => [...prev, app]);
@@ -79,8 +54,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         jobs,
         addJob,
         updateJob,
-        darkMode,
-        toggleDarkMode,
       }}
     >
       {children}

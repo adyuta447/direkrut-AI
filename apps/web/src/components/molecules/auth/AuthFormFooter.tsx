@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
-type Role = "applicant" | "hrd";
+type Role = "candidate" | "hrd";
 
 interface AuthFormFooterProps {
   isLogin: boolean;
@@ -34,7 +34,7 @@ export function AuthFormFooter({ isLogin, role, onQuickAccess }: AuthFormFooterP
 
       <p className="text-[12px] text-ink-muted mt-2 text-center">
         Kamu akan masuk sebagai{" "}
-        <span className="font-medium text-ink">{role === "applicant" ? "Kandidat" : "HRD"}</span>
+        <span className="font-medium text-ink">{role === "candidate" ? "Kandidat" : "HRD"}</span>
       </p>
     </>
   );

@@ -3,15 +3,16 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HeroSearchBar } from "../../molecules/landing/HeroSearchBar";
 
-const popularSearches = ["Backend Engineer", "Product Designer", "Data Analyst", "Marketing"];
+const popularSearches = [
+  "Backend Engineer",
+  "Product Designer",
+  "Data Analyst",
+  "Marketing",
+];
 
 export function HeroSection() {
   return (
     <section className="sticky top-0 z-0 overflow-hidden">
-      {/* Elemen LCP: lewat next/image (bukan CSS background) supaya
-          dioptimasi ke AVIF/WebP + responsive sizes oleh Vercel, ter-
-          discover dini di HTML, dan dapat fetchpriority=high dari
-          prop priority. */}
       <Image
         src="/hero-section.jpg"
         alt=""
@@ -33,7 +34,9 @@ export function HeroSection() {
 
         <h1 className="text-[clamp(52px,8.5vw,112px)] leading-[0.98] font-bold tracking-[-0.03em] mb-10 text-white">
           <span className="block overflow-hidden pb-[0.14em] -mb-[0.14em]">
-            <span className="hero-line-inner block">Kamu tinggal upload CV,</span>
+            <span className="hero-line-inner block">
+              Kamu tinggal upload CV,
+            </span>
           </span>
           <span className="block overflow-hidden pb-[0.14em] -mb-[0.14em]">
             <span className="hero-line-inner block">
@@ -48,13 +51,15 @@ export function HeroSection() {
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="hero-chip text-[13px] text-white/60 mr-1">Lagi banyak dicari:</span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="hero-chip flex items-center gap-1.5 text-[13px] font-medium text-white/70 mr-1">
+                Lagi banyak dicari
+              </span>
               {popularSearches.map((term) => (
                 <Link
                   key={term}
                   href={`/jobs?q=${encodeURIComponent(term)}`}
-                  className="hero-chip px-4 py-1.5 rounded-full border border-white/30 text-[13px] text-white hover:border-white hover:bg-white/10 transition-none"
+                  className="hero-chip group flex items-center gap-2 pl-3.5 pr-4 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-[13px] font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-white hover:text-neutral-900 hover:border-white"
                 >
                   {term}
                 </Link>
