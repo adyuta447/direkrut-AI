@@ -268,22 +268,28 @@ export default function ApplicationDetailPage() {
                     Umpan Balik Wawancara AI
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2 rounded-2xl bg-primary p-5 text-white">
-                      <h5 className="flex items-center gap-2 text-sm font-semibold">
+                    <div className="rounded-[28px] bg-primary p-6 text-white md:p-8">
+                      <p className="mb-3 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.22em] text-white/60">
                         <CheckCircleIcon className="size-4" />
+                        Hasil Analisis AI
+                      </p>
+                      <h5 className="mb-3 text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">
                         Kekuatan Kamu
                       </h5>
-                      <p className="text-sm leading-relaxed text-white/90">
+                      <p className="text-[15px] leading-relaxed text-white/90">
                         Pemahamanmu soal peran yang dilamar dalem banget. Cara komunikasimu selama sesi
                         wawancara jelas dan terstruktur — penjelasan pengalamanmu meyakinkan.
                       </p>
                     </div>
-                    <div className="space-y-2 rounded-2xl bg-brand-accent-strong p-5 text-white">
-                      <h5 className="flex items-center gap-2 text-sm font-semibold">
+                    <div className="rounded-[28px] bg-brand-accent p-6 text-white md:p-8">
+                      <p className="mb-3 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.22em] text-white/70">
                         <ClockIcon className="size-4" />
+                        Ruang Bertumbuh
+                      </p>
+                      <h5 className="mb-3 text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">
                         Yang Bisa Ditingkatin
                       </h5>
-                      <p className="text-sm leading-relaxed text-white/90">
+                      <p className="text-[15px] leading-relaxed text-white/90">
                         Coba perkuat jawaban dengan contoh nyata yang lebih spesifik dan terukur. Beberapa
                         jawaban masih terlalu umum, belum kelihatan dampak konkretnya.
                       </p>
