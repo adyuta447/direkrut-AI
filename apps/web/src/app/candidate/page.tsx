@@ -33,6 +33,7 @@ export default function CandidateDashboardPage() {
       <div className="@container/main flex flex-1 flex-col gap-8 py-6 md:py-8">
         <div className="px-4 lg:px-6">
           <PageHeader
+            size="lg"
             eyebrow="Dasbor Kamu"
             title={`Halo, ${currentUser?.name ?? "Kandidat"} 👋`}
             description={
@@ -74,7 +75,7 @@ export default function CandidateDashboardPage() {
 
         <div className="flex flex-col gap-4 px-4 lg:px-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold">Lamaran Terbaru</h2>
+            <h2 className="text-xl font-bold tracking-[-0.02em] md:text-2xl">Lamaran Terbaru</h2>
             <Button
               variant="ghost"
               className="text-muted-foreground hover:text-foreground"
@@ -142,16 +143,16 @@ export default function CandidateDashboardPage() {
         </div>
 
         <div className="px-4 lg:px-6">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-primary p-8 text-primary-foreground sm:flex-row sm:items-center md:p-10">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-4xl bg-primary p-8 text-primary-foreground sm:flex-row sm:items-center md:p-10">
             <div className="space-y-2">
               <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/90">
                 <SparklesIcon className="size-4 text-brand-accent" />
                 Rekomendasi AI
               </p>
-              <h2 className="text-xl font-bold tracking-tight md:text-2xl">
+              <h2 className="text-2xl font-bold leading-[1.1] tracking-[-0.02em] md:text-3xl">
                 Belum nemu yang pas?
               </h2>
-              <p className="max-w-md text-sm text-primary-foreground/80">
+              <p className="max-w-md text-[15px] leading-relaxed text-primary-foreground/80">
                 Lowongan baru masuk tiap hari. Upload CV sekali, biar AI yang nyariin posisi
                 paling cocok buat kamu.
               </p>

@@ -28,8 +28,10 @@ export function StatCard({
   return (
     <Card className={cn("@container/card", className)}>
       <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+        <CardDescription className="text-xs font-semibold uppercase tracking-wider">
+          {label}
+        </CardDescription>
+        <CardTitle className="text-3xl font-bold tracking-[-0.02em] tabular-nums @[250px]/card:text-4xl">
           {value}
         </CardTitle>
         {badge && <CardAction>{badge}</CardAction>}
