@@ -268,22 +268,22 @@ export default function ApplicationDetailPage() {
                     Umpan Balik Wawancara AI
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2 rounded-2xl border p-5">
+                    <div className="space-y-2 rounded-2xl bg-primary p-5 text-white">
                       <h5 className="flex items-center gap-2 text-sm font-semibold">
-                        <CheckCircleIcon className="size-4 text-primary" />
+                        <CheckCircleIcon className="size-4" />
                         Kekuatan Kamu
                       </h5>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
+                      <p className="text-sm leading-relaxed text-white/90">
                         Pemahamanmu soal peran yang dilamar dalem banget. Cara komunikasimu selama sesi
                         wawancara jelas dan terstruktur — penjelasan pengalamanmu meyakinkan.
                       </p>
                     </div>
-                    <div className="space-y-2 rounded-2xl border p-5">
+                    <div className="space-y-2 rounded-2xl bg-brand-accent-strong p-5 text-white">
                       <h5 className="flex items-center gap-2 text-sm font-semibold">
-                        <ClockIcon className="size-4 text-brand-accent-strong" />
+                        <ClockIcon className="size-4" />
                         Yang Bisa Ditingkatin
                       </h5>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
+                      <p className="text-sm leading-relaxed text-white/90">
                         Coba perkuat jawaban dengan contoh nyata yang lebih spesifik dan terukur. Beberapa
                         jawaban masih terlalu umum, belum kelihatan dampak konkretnya.
                       </p>
