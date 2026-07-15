@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -117,10 +118,12 @@ export default function CandidateProfilePage() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto space-y-6">
 
-      <div className="flex flex-col gap-1 mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Profil Saya</h1>
-        <p className="text-muted-foreground mt-1 text-sm">Kelola informasi pribadi, pendidikan, dan pengalaman kerja Anda.</p>
-      </div>
+      <PageHeader
+        className="mb-6"
+        eyebrow="Personal Branding"
+        title="Profil Saya"
+        description="Profil yang lengkap bikin peluang dilirik HRD makin gede."
+      />
 
       {!hasAutoFilled && (
         <Card className="border-primary/50 bg-primary/5 shadow-sm overflow-hidden relative">
@@ -133,7 +136,7 @@ export default function CandidateProfilePage() {
               Isi Profil Otomatis dengan AI
             </CardTitle>
             <CardDescription className="text-base text-foreground/80">
-              Tidak perlu mengisi manual dari awal! Unggah CV Anda (PDF/DOCX) dan biarkan Direkrut AI mengekstrak data Anda ke dalam profil ini.
+              Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/DOCX), biar Direkrut AI yang ngisiin profilnya.
             </CardDescription>
           </CardHeader>
           <CardContent className="relative z-10">
@@ -150,7 +153,7 @@ export default function CandidateProfilePage() {
                 <div className="flex flex-col items-center gap-4">
                   <BotIcon className="size-10 text-primary" />
                   <div className="space-y-1">
-                    <p className="font-medium text-primary">AI sedang mengekstrak data Anda...</p>
+                    <p className="font-medium text-primary">AI lagi baca CV kamu...</p>
                     <p className="text-sm text-muted-foreground">Membaca pengalaman kerja, pendidikan, dan skills</p>
                   </div>
                 </div>
@@ -160,7 +163,7 @@ export default function CandidateProfilePage() {
                     <UploadCloudIcon className="size-8 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-lg">Klik untuk mengunggah CV Anda</p>
+                    <p className="font-medium text-lg">Klik buat upload CV kamu</p>
                     <p className="text-sm text-muted-foreground mt-1">Sistem kami akan mengisi seluruh kolom di bawah secara otomatis.</p>
                   </div>
                 </div>

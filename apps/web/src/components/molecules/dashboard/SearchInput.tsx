@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
-/** Input pencarian standar dengan icon (3 implementasi berbeda -> 1). */
 export function SearchInput({
   value,
   onChange,

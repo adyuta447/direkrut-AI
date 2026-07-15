@@ -33,8 +33,9 @@ export default function CandidateJobsPage() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-6 w-full space-y-6">
       <PageHeader
+        eyebrow="Waktunya Gerak"
         title="Cari Lowongan"
-        description="Temukan pekerjaan impian Anda dan lamar sekarang."
+        description="Ribuan posisi terbuka. Ketemu yang pas, langsung gas lamar."
         action={
           <div className="w-full md:w-72">
             <SearchInput

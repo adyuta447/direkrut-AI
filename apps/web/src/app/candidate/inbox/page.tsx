@@ -125,7 +125,7 @@ export default function CandidateInboxPage() {
             <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
               type="search"
-              placeholder="Cari email dari perusahaan..."
+              placeholder="Cari kabar dari perusahaan..."
               className="pl-8 bg-background h-9 text-sm w-full focus-visible:ring-1"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -241,7 +241,7 @@ export default function CandidateInboxPage() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
               <MailIcon className="size-16 opacity-20 mb-4" />
-              <p>Pilih pesan untuk membacanya</p>
+              <p>Pilih pesan buat dibaca</p>
             </div>
           )}
         </div>

@@ -160,21 +160,21 @@ function ApplicationCard({ app, job }: { app: Application; job: Job }) {
 
             <div className="mt-12 bg-background border rounded-lg p-4 text-sm text-muted-foreground">
               {app.status === "submitted" && (
-                "Lamaran Anda telah kami terima dan akan segera direview oleh tim rekrutmen. Pantau terus status lamaran Anda secara berkala."
+                "Lamaranmu udah masuk dan bakal segera dicek tim rekrutmen. Pantau terus progresnya di sini ya."
               )}
               {app.status === "under-review" && (
-                "Profil dan lamaran Anda saat ini sedang dalam tahap seleksi administratif oleh tim HRD. Jika lolos, Anda akan diundang ke tahap Wawancara AI."
+                "Profil kamu lagi dicek tim HRD di tahap administrasi. Kalau lolos, kamu bakal diundang ke Wawancara AI."
               )}
               {app.status === "interview" && (
-                "Selamat! Anda lolos ke tahap Wawancara AI. Silakan periksa email Anda atau buka halaman detail lamaran untuk memulai sesi wawancara."
+                "Selamat, kamu lolos ke tahap Wawancara AI! 🎉 Cek email atau buka detail lamaran buat mulai sesinya."
               )}
               {app.status === "rejected" && (
-                "Sehubungan dengan telah ditutupnya lowongan atau hasil evaluasi, maka proses rekrutmen Anda tidak dapat kami lanjutkan. Terima kasih banyak atas waktu dan energi yang Anda luangkan. Sampai berjumpa di kesempatan berikutnya."
+                "Kali ini belum jodoh -- prosesnya nggak bisa kami lanjutkan. Makasih banyak udah meluangkan waktu. Masih banyak posisi lain yang nunggu kamu!"
               )}
             </div>
             
             <div className="mt-4 text-xs text-muted-foreground">
-              Belum mendapatkan pembaruan? Tim perekrut akan menghubungi Anda melalui Kotak Masuk.
+              Belum ada kabar? Santai, tim perekrut bakal ngabarin kamu lewat Kotak Masuk.
             </div>
           </div>
         )}
@@ -217,8 +217,9 @@ export default function CandidateApplicationsCardsPage() {
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
 
           <PageHeader
+            eyebrow="Progres Kamu"
             title="Riwayat Lamaran"
-            description="Pantau dan kelola seluruh lamaran pekerjaan Anda."
+            description="Semua lamaranmu kepantau di satu tempat. Nggak perlu bolak-balik cek email."
           />
 
           <div className="flex flex-col md:flex-row gap-4 mt-4 p-4 border rounded-xl bg-background/50 backdrop-blur-sm">
@@ -256,7 +257,7 @@ export default function CandidateApplicationsCardsPage() {
               })
             ) : (
               <div className="text-center p-12 border rounded-xl bg-muted/20">
-                <p className="text-muted-foreground">Tidak ada lamaran yang sesuai dengan pencarian Anda.</p>
+                <p className="text-muted-foreground">Nggak ada lamaran yang cocok sama pencarianmu.</p>
               </div>
             )}
           </div>

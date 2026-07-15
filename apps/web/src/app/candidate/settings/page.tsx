@@ -13,8 +13,9 @@ export default function CandidateSettingsPage() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
       <PageHeader
+        eyebrow="Akun Kamu"
         title="Pengaturan Akun"
-        description="Kelola preferensi, notifikasi, dan keamanan akun Anda."
+        description="Atur preferensi, notifikasi, dan keamanan akunmu."
       />
 
       <Tabs defaultValue="account" className="w-full">
@@ -29,13 +30,13 @@ export default function CandidateSettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Informasi Akun</CardTitle>
-                <CardDescription>Perbarui alamat email dan kredensial login Anda.</CardDescription>
+                <CardDescription>Perbarui alamat email dan kredensial login kamu.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">
                   <Label>Email Utama</Label>
                   <Input defaultValue="kandidat@example.com" />
-                  <p className="text-xs text-muted-foreground">Ini adalah email yang digunakan perusahaan untuk menghubungi Anda.</p>
+                  <p className="text-xs text-muted-foreground">Email ini yang dipakai perusahaan buat ngehubungin kamu.</p>
                 </div>
                 <div className="pt-4 flex gap-2">
                   <Button>Simpan Email</Button>
@@ -46,7 +47,7 @@ export default function CandidateSettingsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-destructive">Hapus Akun</CardTitle>
-                <CardDescription>Menghapus akun Anda secara permanen beserta semua data riwayat lamaran dan profil.</CardDescription>
+                <CardDescription>Hapus akunmu secara permanen beserta semua riwayat lamaran dan profil.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="destructive">Hapus Akun Saya</Button>
@@ -59,20 +60,20 @@ export default function CandidateSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Preferensi Notifikasi</CardTitle>
-              <CardDescription>Atur kapan dan bagaimana Anda menerima pemberitahuan.</CardDescription>
+              <CardDescription>Atur kapan dan gimana kamu mau dikabarin.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between space-x-2">
                 <div className="flex flex-col space-y-1">
                   <Label>Email Pemberitahuan Lowongan Baru</Label>
-                  <span className="text-sm text-muted-foreground">Terima email saat ada lowongan yang cocok dengan profil Anda.</span>
+                  <span className="text-sm text-muted-foreground">Dapat email tiap ada lowongan yang cocok sama profilmu.</span>
                 </div>
                 <Switch defaultChecked />
               </div>
               <div className="flex items-center justify-between space-x-2">
                 <div className="flex flex-col space-y-1">
                   <Label>Pembaruan Status Lamaran</Label>
-                  <span className="text-sm text-muted-foreground">Pemberitahuan real-time ketika HRD mengubah status lamaran Anda.</span>
+                  <span className="text-sm text-muted-foreground">Notifikasi real-time tiap HRD mengubah status lamaranmu.</span>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -91,7 +92,7 @@ export default function CandidateSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Keamanan & Kata Sandi</CardTitle>
-              <CardDescription>Ubah kata sandi dan amankan akun Anda.</CardDescription>
+              <CardDescription>Ganti kata sandi dan amankan akunmu.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
@@ -117,7 +118,7 @@ export default function CandidateSettingsPage() {
               <CardTitle className="flex items-center gap-2 text-success">
                 <ShieldIcon className="size-5" /> Autentikasi Dua Faktor (2FA)
               </CardTitle>
-              <CardDescription>Tambahkan lapisan keamanan ekstra ke akun Anda.</CardDescription>
+              <CardDescription>Tambah lapisan keamanan ekstra buat akunmu.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="border-success text-success hover:bg-success/10">

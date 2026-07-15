@@ -116,7 +116,7 @@ export default function ApplicationDetailPage() {
       done: application.status === "rejected",
       active: application.status === "interview",
       description: application.status === "rejected"
-        ? "Terima kasih atas lamaran Anda. Tetap semangat!"
+        ? "Makasih udah melamar. Tetap semangat, ya!"
         : "Menunggu keputusan dari tim HRD perusahaan",
     },
   ]
@@ -283,7 +283,7 @@ export default function ApplicationDetailPage() {
                   Perjalanan & Status Lamaran
                 </CardTitle>
                 <CardDescription>
-                  Pantau setiap tahap perjalanan lamaran Anda secara transparan
+                  Tiap tahap lamaranmu kepantau transparan di sini
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -362,7 +362,7 @@ export default function ApplicationDetailPage() {
               <CardHeader>
                 <CardTitle className="text-lg">Transkrip Wawancara AI</CardTitle>
                 <CardDescription>
-                  Rekaman lengkap sesi tanya-jawab dengan sistem AI Direkrut AI — untuk transparansi Anda
+                  Rekaman lengkap sesi tanya-jawabmu sama AI Direkrut -- biar semuanya transparan
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

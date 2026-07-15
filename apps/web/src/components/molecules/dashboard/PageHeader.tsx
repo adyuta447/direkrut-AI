@@ -7,11 +7,14 @@ import { cn } from "@/lib/utils";
  * dengan ukuran campur-campur.
  */
 export function PageHeader({
+  eyebrow,
   title,
   description,
   action,
   className,
 }: {
+  /** Micro-label oranye di atas judul (pola eyebrow landing page). */
+  eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
@@ -25,6 +28,11 @@ export function PageHeader({
       )}
     >
       <div className="space-y-1">
+        {eyebrow && (
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-brand-accent-strong">
+            {eyebrow}
+          </p>
+        )}
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
