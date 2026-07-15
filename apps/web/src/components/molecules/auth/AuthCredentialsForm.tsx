@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { AuthFormField } from "../../atoms/auth/AuthFormField";
 
-type Role = "applicant" | "hrd";
+type Role = "candidate" | "hrd";
 
 export interface AuthFormData {
   name: string;

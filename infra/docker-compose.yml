@@ -5,6 +5,11 @@
 # storage layer-nya.
 #
 # Jalankan: docker compose -f infra/docker-compose.yml up -d
+#
+# Migrasi database (skema di apps/api-go/migrations) dijalankan lewat
+# service "migrate" -- gak perlu install Postgres/migrate CLI di lokal:
+#   docker compose -f infra/docker-compose.yml --profile tools run --rm migrate up
+#   docker compose -f infra/docker-compose.yml --profile tools run --rm migrate down 1
 name: direkrut-ai
 
 services:
@@ -55,6 +60,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  migrate:
+    image: migrate/migrate:v4.17.1
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../apps/api-go/migrations:/migrations:ro
+    entrypoint:
+      [
+        "migrate",
+        "-path", "/migrations",
+        "-database", "postgres://direkrut:direkrut@postgres:5432/direkrut_ai?sslmode=disable",
+      ]
+    command: ["up"]
 
 volumes:
   postgres_data:
