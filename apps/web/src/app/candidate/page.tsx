@@ -63,7 +63,6 @@ export default function CandidateDashboardPage() {
           <StatCard
             label="Wawancara"
             value={<span className={wawancara > 0 ? "text-brand-accent" : undefined}>{wawancara}</span>}
-            className={wawancara > 0 ? "border-brand-accent/40" : undefined}
             footerDetail={wawancara > 0 ? "Gas, siapin dirimu!" : "Belum ada jadwal"}
           />
           <StatCard

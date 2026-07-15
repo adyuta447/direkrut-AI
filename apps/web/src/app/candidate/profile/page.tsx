@@ -141,7 +141,7 @@ export default function CandidateProfilePage() {
           </CardHeader>
           <CardContent className="relative z-10">
             <div 
-              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? 'border-primary bg-primary/10' : 'border-primary/30 bg-background/50'} rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:bg-primary/10`}
+              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? 'border-primary bg-muted/50' : 'border-border bg-background'} rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:bg-primary/10`}
               onClick={!isUploading && !isSimulatingAI ? simulateAIFill : undefined}
             >
               {isUploading ? (
@@ -174,7 +174,7 @@ export default function CandidateProfilePage() {
       )}
 
       {hasAutoFilled && (
-        <div className="bg-success/15 border border-success/30 text-success p-4 rounded-xl flex items-start gap-3">
+        <div className="rounded-2xl border p-4 flex items-start gap-3 text-primary">
           <CheckCircleIcon className="size-5 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium">Profil Berhasil Dilengkapi oleh AI!</p>

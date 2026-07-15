@@ -183,7 +183,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   const renderStep3 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {isProfileComplete && (
-        <div className="bg-success/10 border border-success/20 text-success p-4 rounded-xl flex items-start gap-3 mb-6">
+        <div className="rounded-2xl border p-4 flex items-start gap-3 mb-6 text-primary">
           <CheckCircleIcon className="size-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-sm">Data Diambil dari Profil Kamu</p>
@@ -222,7 +222,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
     return (
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-12 w-full flex items-center justify-center">
         <div className="max-w-md w-full text-center space-y-6 animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto shadow-lg  dark:shadow-none animate-in zoom-in spin-in-12 duration-700">
+          <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto animate-in zoom-in spin-in-12 duration-700">
             <CheckCircleIcon className="size-10" />
           </div>
           
@@ -233,7 +233,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
             </p>
           </div>
 
-          <div className="bg-primary/10 border border-primary/20 p-6 rounded-2xl text-left space-y-4 mt-8">
+          <div className="rounded-2xl border p-6 text-left space-y-4 mt-8">
             <div className="flex items-center gap-3 text-primary">
               <VideoIcon className="size-6" />
               <h3 className="font-semibold text-lg">Tahap Selanjutnya: Wawancara AI</h3>

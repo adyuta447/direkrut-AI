@@ -152,15 +152,9 @@ export default function ApplicationDetailPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge variant="outline">{job.type}</Badge>
-              {isFreshGrad ? (
-                <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
-                  Fresh Graduate Welcome
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                  Professional
-                </Badge>
-              )}
+              <Badge variant="secondary">
+                {isFreshGrad ? "Fresh Graduate Welcome" : "Professional"}
+              </Badge>
             </div>
           </div>
 
@@ -233,16 +227,16 @@ export default function ApplicationDetailPage() {
                   <div key={i} className="relative flex gap-5 pb-8 last:pb-0">
                     {i < timelineSteps.length - 1 && (
                       <div
-                        className={`absolute left-4 top-9 bottom-0 w-px -translate-x-1/2 ${step.done ? "bg-success" : "bg-border"}`}
+                        className={`absolute left-4 top-9 bottom-0 w-px -translate-x-1/2 ${step.done ? "bg-primary/40" : "bg-border"}`}
                       />
                     )}
 
                     <div
                       className={`relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full ${
                         step.done
-                          ? "bg-success text-white"
+                          ? "bg-primary text-primary-foreground"
                           : step.active
-                          ? "bg-primary text-primary-foreground ring-4 ring-primary/15"
+                          ? "bg-brand-accent text-white ring-4 ring-brand-accent/15"
                           : "border bg-background text-muted-foreground"
                       }`}
                     >
@@ -254,7 +248,7 @@ export default function ApplicationDetailPage() {
                         <h4 className={`text-sm font-semibold ${step.active ? "text-primary" : ""}`}>
                           {step.label}
                           {step.active && (
-                            <Badge variant="outline" className="ml-2 border-brand-accent/40 bg-brand-accent/10 text-brand-accent-strong">
+                            <Badge className="ml-2 border-transparent bg-brand-accent text-white">
                               Sekarang
                             </Badge>
                           )}
@@ -274,15 +268,21 @@ export default function ApplicationDetailPage() {
                     Umpan Balik Wawancara AI
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2 rounded-2xl border border-l-4 border-l-success p-5">
-                      <h5 className="text-sm font-semibold text-success">Kekuatan Kamu</h5>
+                    <div className="space-y-2 rounded-2xl border p-5">
+                      <h5 className="flex items-center gap-2 text-sm font-semibold">
+                        <CheckCircleIcon className="size-4 text-primary" />
+                        Kekuatan Kamu
+                      </h5>
                       <p className="text-sm leading-relaxed text-muted-foreground">
                         Pemahamanmu soal peran yang dilamar dalem banget. Cara komunikasimu selama sesi
                         wawancara jelas dan terstruktur — penjelasan pengalamanmu meyakinkan.
                       </p>
                     </div>
-                    <div className="space-y-2 rounded-2xl border border-l-4 border-l-warning p-5">
-                      <h5 className="text-sm font-semibold text-warning">Yang Bisa Ditingkatin</h5>
+                    <div className="space-y-2 rounded-2xl border p-5">
+                      <h5 className="flex items-center gap-2 text-sm font-semibold">
+                        <ClockIcon className="size-4 text-brand-accent-strong" />
+                        Yang Bisa Ditingkatin
+                      </h5>
                       <p className="text-sm leading-relaxed text-muted-foreground">
                         Coba perkuat jawaban dengan contoh nyata yang lebih spesifik dan terukur. Beberapa
                         jawaban masih terlalu umum, belum kelihatan dampak konkretnya.
@@ -341,18 +341,14 @@ export default function ApplicationDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 rounded-2xl border p-4">
                   <h4 className="flex items-center gap-2 text-sm font-semibold">
-                    <IconUsers className="size-4 text-info" />
+                    <IconUsers className="size-4 text-primary" />
                     Terbuka untuk
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {(isFreshGrad || !application.category) && (
-                      <Badge variant="outline" className="border-info/30 bg-info/10 text-info">
-                        Fresh Graduate
-                      </Badge>
+                      <Badge variant="secondary">Fresh Graduate</Badge>
                     )}
-                    <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                      Professional
-                    </Badge>
+                    <Badge variant="secondary">Professional</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {job.requirements?.[0] || "Terbuka untuk semua jenjang karir yang memenuhi kualifikasi"}
@@ -403,7 +399,7 @@ export default function ApplicationDetailPage() {
                         ]
                     ).map((req, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
-                        <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-success" />
+                        <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
                         <span>{req}</span>
                       </li>
                     ))}
@@ -416,7 +412,7 @@ export default function ApplicationDetailPage() {
                     <ul className="space-y-2">
                       {job.detailedQualifications.map((q, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-info" />
+                          <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
                           <span>{q}</span>
                         </li>
                       ))}

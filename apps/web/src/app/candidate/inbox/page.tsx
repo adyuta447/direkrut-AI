@@ -153,7 +153,7 @@ export default function CandidateInboxPage() {
                 <button
                   key={msg.id}
                   onClick={() => handleMarkAsRead(msg.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors border ${selectedMessageId === msg.id ? 'bg-primary/10 border-primary/20' : 'bg-transparent border-transparent hover:bg-muted'}`}
+                  className={`w-full text-left p-3 rounded-lg transition-colors border ${selectedMessageId === msg.id ? 'border-primary bg-background' : 'bg-transparent border-transparent hover:bg-muted'}`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">

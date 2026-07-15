@@ -266,13 +266,13 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             )}
           </div>
 
-          <div className={`absolute bottom-8 right-8 w-48 md:w-64 aspect-video bg-black/90 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-500 ${isAiSpeaking || isAiProcessing ? 'border-white/20 scale-95' : 'border-success scale-100'}`}>
+          <div className={`absolute bottom-8 right-8 w-48 md:w-64 aspect-video bg-black/90 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-500 ${isAiSpeaking || isAiProcessing ? 'border-white/20 scale-95' : 'border-brand-accent scale-100'}`}>
             
             <div className="flex h-full w-full items-center justify-center bg-black/80 text-2xl font-bold text-white/70">
               Anda
             </div>
             {!isAiSpeaking && (
-               <div className="absolute top-2 right-2 bg-success text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
+               <div className="absolute top-2 right-2 bg-brand-accent text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
                  <div className="size-1.5 bg-white rounded-full"></div> Rec
                </div>
             )}
@@ -300,7 +300,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
       <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-700">
         
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto shadow-sm">
+          <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto">
             <CheckCircleIcon className="size-10" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Wawancara Selesai!</h1>
@@ -317,11 +317,11 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
               </div>
               
               <div className="space-y-4">
-                <div className="bg-success/10 p-4 rounded-xl text-success text-sm leading-relaxed border border-success/20">
+                <div className="rounded-2xl border p-4 text-sm leading-relaxed">
                   <strong>Poin Positif:</strong> Kepercayaan diri dan intonasi suara Anda sangat baik. Anda merespons pertanyaan studi kasus dengan terstruktur, menunjukkan kemampuan pemecahan masalah yang matang.
                 </div>
                 
-                <div className="bg-info/10 p-4 rounded-xl text-info text-sm leading-relaxed border border-info/20">
+                <div className="rounded-2xl border p-4 text-sm leading-relaxed">
                   <strong>Saran Pengembangan:</strong> Saat menjelaskan transisi karir, Anda bisa lebih memfokuskan pada *transferable skills* (keahlian yang bisa dibawa) ke peran baru ini agar semakin meyakinkan HRD.
                 </div>
 
@@ -338,10 +338,10 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 <InfoIcon className="size-5 text-muted-foreground" /> Status Lamaran Anda
               </h3>
 
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-success before:via-muted before:to-muted">
+              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-border">
 
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-success text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <CheckCircleIcon className="size-4" />
                   </div>
                   <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-4 rounded-xl border bg-card shadow-sm">
@@ -351,7 +351,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 </div>
 
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-success text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <CheckCircleIcon className="size-4" />
                   </div>
                   <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-4 rounded-xl border bg-card shadow-sm">

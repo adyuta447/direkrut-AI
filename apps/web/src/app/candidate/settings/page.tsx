@@ -113,7 +113,7 @@ export default function CandidateSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="mt-6 border-success/30 bg-success/5">
+          <Card className="mt-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-success">
                 <ShieldIcon className="size-5" /> Autentikasi Dua Faktor (2FA)
@@ -121,7 +121,7 @@ export default function CandidateSettingsPage() {
               <CardDescription>Tambah lapisan keamanan ekstra buat akunmu.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="border-success text-success hover:bg-success/10">
+              <Button variant="outline" className="text-primary hover:text-primary">
                 Aktifkan 2FA
               </Button>
             </CardContent>
