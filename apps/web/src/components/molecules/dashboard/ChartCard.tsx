@@ -23,9 +23,9 @@ export function ChartCard({
 }) {
   return (
     <div className={cn("flex flex-col rounded-xl border bg-background p-6", className)}>
-      <h3 className="text-center text-base font-semibold">{title}</h3>
+      <h3 className="text-center text-xl font-bold leading-[1.1] tracking-[-0.02em]">{title}</h3>
       {description && (
-        <p className="mt-1 mb-4 text-center text-xs text-muted-foreground">
+        <p className="mt-2 mb-4 text-center text-sm text-muted-foreground">
           {description}
         </p>
       )}

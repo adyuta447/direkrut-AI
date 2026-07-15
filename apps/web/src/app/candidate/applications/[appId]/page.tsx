@@ -215,7 +215,7 @@ export default function ApplicationDetailPage() {
         <TabsContent value="perjalanan" className="space-y-6 py-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">
                 <ClockIcon className="size-5 text-primary" />
                 Perjalanan Lamaran
               </CardTitle>
@@ -263,7 +263,7 @@ export default function ApplicationDetailPage() {
 
               {(application.status === "under-review" || application.status === "interview") && (
                 <div className="mt-8 space-y-4">
-                  <h4 className="flex items-center gap-2 text-base font-semibold">
+                  <h4 className="flex items-center gap-2 text-lg font-bold tracking-[-0.02em] md:text-xl">
                     <MessageSquareIcon className="size-5 text-primary" />
                     Umpan Balik Wawancara AI
                   </h4>
@@ -304,7 +304,7 @@ export default function ApplicationDetailPage() {
         <TabsContent value="transkrip" className="space-y-4 py-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Transkrip Wawancara AI</CardTitle>
+              <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Transkrip Wawancara AI</CardTitle>
               <CardDescription>
                 Rekaman lengkap sesi tanya-jawabmu sama AI Direkrut — biar semuanya transparan.
               </CardDescription>
@@ -336,7 +336,7 @@ export default function ApplicationDetailPage() {
         <TabsContent value="posisi" className="space-y-6 py-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Deskripsi Pekerjaan</CardTitle>
+              <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Deskripsi Pekerjaan</CardTitle>
               <CardDescription>{job.title} di {job.company}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -387,7 +387,7 @@ export default function ApplicationDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Persyaratan & Kualifikasi</CardTitle>
+              <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Persyaratan & Kualifikasi</CardTitle>
               <CardDescription>Yang perlu kamu punya buat posisi ini.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -432,7 +432,7 @@ export default function ApplicationDetailPage() {
           {companyJobs.length > 1 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Posisi Lain di {job.company}</CardTitle>
+                <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Posisi Lain di {job.company}</CardTitle>
                 <CardDescription>Siapa tau ada yang lebih cocok buat kamu.</CardDescription>
               </CardHeader>
               <CardContent>
