@@ -128,7 +128,7 @@ const chartData = [
 
 const chartConfig = {
   visitors: {
-    label: "Pelamar",
+    label: "Kandidat",
   },
   total: {
     label: "Total Lamaran",

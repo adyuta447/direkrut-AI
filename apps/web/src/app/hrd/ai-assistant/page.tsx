@@ -8,11 +8,13 @@ import {
   IconPaperclip,
 } from "@tabler/icons-react"
 import { useSearchParams } from "next/navigation"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
+import { TypingDots } from "@/components/atoms/shared/TypingDots"
+import { ChatBubble } from "@/components/molecules/dashboard/ChatBubble"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 type Message = {
@@ -141,7 +143,7 @@ function AIAssistantChat() {
           <div>
             <h1 className="font-semibold text-lg">Asisten AI</h1>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+              <span className="w-2 h-2 rounded-full bg-success inline-block"></span>
               Selalu siap membantu
             </p>
           </div>
@@ -160,7 +162,6 @@ function AIAssistantChat() {
                 <Avatar className="w-8 h-8 shrink-0 mt-auto">
                   {isUser ? (
                     <>
-                      <AvatarImage src="/avatars/user.jpg" />
                       <AvatarFallback className="bg-primary/20 text-primary text-xs">
                         {currentUser?.name?.charAt(0) || "U"}
                       </AvatarFallback>
@@ -178,15 +179,12 @@ function AIAssistantChat() {
                   <span className="text-[10px] text-muted-foreground px-1 shrink-0">
                     {isUser ? "Anda" : "AI"} • {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <div 
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed animate-in fade-in slide-in-from-bottom-2 break-words break-all whitespace-pre-wrap ${
-                      isUser 
-                        ? "bg-primary text-primary-foreground rounded-br-sm" 
-                        : "bg-muted text-foreground rounded-bl-sm"
-                    }`}
+                  <ChatBubble
+                    from={isUser ? "user" : "ai"}
+                    className="max-w-none animate-in fade-in slide-in-from-bottom-2 break-words break-all whitespace-pre-wrap"
                   >
                     {msg.content}
-                  </div>
+                  </ChatBubble>
                 </div>
               </div>
             )
@@ -201,10 +199,8 @@ function AIAssistantChat() {
               </Avatar>
               <div className="flex flex-col gap-1 items-start">
                 <div className="px-4 py-3 rounded-2xl bg-muted text-foreground rounded-bl-sm">
-                  <div className="flex gap-1.5 items-center h-4">
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce"></span>
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                  <div className="flex items-center h-4">
+                    <TypingDots />
                   </div>
                 </div>
               </div>

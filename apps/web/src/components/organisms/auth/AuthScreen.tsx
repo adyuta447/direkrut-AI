@@ -9,7 +9,7 @@ import { RoleToggle } from "../../molecules/auth/RoleToggle";
 import { AuthCredentialsForm, AuthFormData } from "../../molecules/auth/AuthCredentialsForm";
 import { AuthFormFooter } from "../../molecules/auth/AuthFormFooter";
 
-type Role = "applicant" | "hrd";
+type Role = "candidate" | "hrd";
 
 interface AuthScreenProps {
   mode: "login" | "register";
@@ -30,7 +30,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   const isLogin = mode === "login";
   const { setCurrentUser } = useApp();
   const router = useRouter();
-  const [role, setRole] = useState<Role>("applicant");
+  const [role, setRole] = useState<Role>("candidate");
   const [formData, setFormData] = useState<AuthFormData>({
     name: "",
     email: "",
@@ -38,7 +38,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     company: "",
   });
 
-  const goToDashboard = () => router.push(role === "applicant" ? "/candidate" : "/hrd");
+  const goToDashboard = () => router.push(role === "candidate" ? "/candidate" : "/hrd");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

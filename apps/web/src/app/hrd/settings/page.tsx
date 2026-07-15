@@ -1,4 +1,5 @@
 "use client"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
 import * as React from "react"
 import { useTheme } from "next-themes"
@@ -21,12 +22,11 @@ export default function SettingsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 w-full">
-      <div className="flex items-center justify-between space-y-2 mb-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pengaturan</h2>
-          <p className="text-muted-foreground mt-1">Kelola preferensi akun, sistem AI, dan tagihan Anda.</p>
-        </div>
-      </div>
+      <PageHeader
+        className="mb-6"
+        title="Pengaturan"
+        description="Kelola preferensi akun, sistem AI, dan tagihan Anda."
+      />
 
       <Tabs defaultValue="account" className="space-y-6">
         <TabsList className="bg-muted/50 p-1">
@@ -60,7 +60,7 @@ export default function SettingsPage() {
               
               <div className="border-t pt-6 mt-6">
                 <h4 className="font-medium mb-4 flex items-center gap-2">
-                  <ShieldCheckIcon className="size-4 text-green-500" />
+                  <ShieldCheckIcon className="size-4 text-success" />
                   Koneksi Pihak Ketiga
                 </h4>
                 <div className="flex items-center justify-between p-4 border rounded-lg max-w-md">
@@ -78,7 +78,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground">hr@perusahaan.com</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">Putuskan</Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">Putuskan</Button>
                 </div>
               </div>
             </CardContent>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
             <CardContent>
               <div className="bg-primary/5 border border-primary/20 p-6 rounded-xl flex items-center justify-between">
                 <div>
-                  <Badge className="bg-amber-500 hover:bg-amber-600 mb-2">Pro Tier</Badge>
+                  <Badge className="bg-warning hover:bg-warning/90 mb-2">Pro Tier</Badge>
                   <h3 className="text-2xl font-bold">Direkrut AI Professional</h3>
                   <p className="text-sm text-muted-foreground mt-1">Sisa kredit AI: 2,450 tokens (Reset pada 1 Agustus)</p>
                 </div>

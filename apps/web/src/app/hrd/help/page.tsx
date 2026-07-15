@@ -1,4 +1,5 @@
 "use client"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -8,12 +9,11 @@ import { BookOpenIcon, ScaleIcon, BrainCircuitIcon, LifeBuoyIcon } from "lucide-
 export default function HelpPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 w-full">
-      <div className="flex items-center justify-between space-y-2 mb-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Pusat Bantuan & Panduan</h2>
-          <p className="text-muted-foreground mt-1">Pelajari cara menggunakan Dasbor Direkrut AI secara maksimal.</p>
-        </div>
-      </div>
+      <PageHeader
+        className="mb-6"
+        title="Pusat Bantuan & Panduan"
+        description="Pelajari cara menggunakan dasbor Direkrut AI secara maksimal."
+      />
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="md:col-span-2 overflow-hidden pt-0 gap-0">
@@ -32,28 +32,28 @@ export default function HelpPage() {
               <div className="bg-muted/30 p-4 rounded-lg border flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm">1. Kecocokan Keterampilan (Skills Match)</span>
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200">Bobot: 40%</Badge>
+                  <Badge variant="outline" className="bg-info/10 text-info border-info/20">Bobot: 40%</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">Mengekstrak dan mencocokkan kata kunci keahlian teknis (hard skills) maupun non-teknis (soft skills) dari CV terhadap kebutuhan di Lowongan.</p>
               </div>
               <div className="bg-muted/30 p-4 rounded-lg border flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm">2. Pengalaman Relevan (Experience)</span>
-                  <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 border-indigo-200">Bobot: 35%</Badge>
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Bobot: 35%</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">Menilai seberapa lama dan seberapa mendalam pengalaman kerja kandidat pada posisi yang serupa dengan yang sedang dilamar.</p>
               </div>
               <div className="bg-muted/30 p-4 rounded-lg border flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm">3. Latar Belakang Pendidikan & Sertifikasi</span>
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-200">Bobot: 15%</Badge>
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/20">Bobot: 15%</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">Memvalidasi apakah kandidat memiliki kualifikasi pendidikan minimal atau sertifikasi profesional yang disyaratkan.</p>
               </div>
               <div className="bg-muted/30 p-4 rounded-lg border flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm">4. Konsistensi & Format CV (Quality)</span>
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200">Bobot: 10%</Badge>
+                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Bobot: 10%</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">Mengevaluasi kejelasan informasi, tidak adanya celah karir (career gap) yang mencurigakan tanpa penjelasan, dan profesionalisme penulisan.</p>
               </div>

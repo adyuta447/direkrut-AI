@@ -20,8 +20,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Candidate } from "@/components/data-table"
-import { useDashboard } from "@/components/dashboard-provider"
+import { Candidate } from "@/components/organisms/dashboard/CandidateDataTable"
+import { useDashboard } from "@/context/DashboardContext"
 import { toast } from "sonner"
 
 interface DecisionDialogProps {
@@ -120,9 +120,9 @@ Tim Rekrutmen`
 
   const scoreInfo = React.useMemo(() => {
     const score = candidate.recommendationScore || 0;
-    if (score >= 75) return { label: 'Memenuhi Syarat', variant: 'default' as const, color: 'text-green-600 bg-green-50' }
-    if (score >= 55) return { label: 'Perlu Dikembangkan', variant: 'secondary' as const, color: 'text-yellow-600 bg-yellow-50' }
-    return { label: 'Tidak Sesuai', variant: 'destructive' as const, color: 'text-red-600 bg-red-50' }
+    if (score >= 75) return { label: 'Memenuhi Syarat', variant: 'default' as const, color: 'text-success bg-success/10' }
+    if (score >= 55) return { label: 'Perlu Dikembangkan', variant: 'secondary' as const, color: 'text-warning bg-warning/10' }
+    return { label: 'Tidak Sesuai', variant: 'destructive' as const, color: 'text-destructive bg-destructive/10' }
   }, [candidate.recommendationScore])
 
   return (
@@ -134,8 +134,8 @@ Tim Rekrutmen`
       <DialogContent className="sm:max-w-[900px] gap-0 p-0 overflow-hidden">
         {showConfirmation ? (
           <div className="p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-8 h-8 text-success" />
             </div>
             <DialogTitle className="text-2xl mb-2">Notifikasi Terkirim</DialogTitle>
             <DialogDescription className="text-base text-muted-foreground">
@@ -157,10 +157,10 @@ Tim Rekrutmen`
 
             <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">
               {decision === "reject" && (
-                <Alert className="bg-yellow-50/50 border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-900/50">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <AlertTitle className="text-yellow-800 dark:text-yellow-400 font-semibold">Feedback Bermartabat</AlertTitle>
-                  <AlertDescription className="text-yellow-700 dark:text-yellow-500/80 mt-1">
+                <Alert className="bg-warning/5 border-warning/20">
+                  <AlertCircle className="h-4 w-4 text-warning" />
+                  <AlertTitle className="text-warning font-semibold">Feedback Bermartabat</AlertTitle>
+                  <AlertDescription className="text-warning/90 mt-1">
                     Email penolakan ini telah diisi secara otomatis oleh AI berdasarkan profil keahlian dan hasil wawancara kandidat, sehingga bersifat personal dan berbasis data — bukan pemberitahuan generik.
                   </AlertDescription>
                 </Alert>

@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import * as React from "react"
 import { useState } from "react"
 import { 
@@ -9,7 +10,7 @@ import {
   IconTrash, 
   IconBriefcase 
 } from "@tabler/icons-react"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,13 +88,12 @@ export default function JobManagementPage() {
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-8 @container/main w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manajemen Lowongan</h1>
-          <p className="text-muted-foreground mt-1">
-            Kelola posisi dan lowongan pekerjaan yang terbuka di perusahaan Anda.
-          </p>
-        </div>
-        
+        <PageHeader
+          className="flex-1"
+          title="Manajemen Lowongan"
+          description="Kelola posisi dan lowongan pekerjaan yang terbuka di perusahaan Anda."
+        />
+
         <Button onClick={handleOpenAdd}>
           <IconPlus className="size-4 mr-2" />
           Lowongan Baru
@@ -196,7 +196,7 @@ export default function JobManagementPage() {
                   <Switch 
                     checked={job.status === "active"} 
                     onCheckedChange={(c) => handleToggleStatus(job.id, c)}
-                    className="data-[state=checked]:bg-green-500"
+                    className="data-[state=checked]:bg-success"
                   />
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function JobManagementPage() {
                 </div>
                 {job.timeline && (
                   <div className="flex items-center text-sm text-muted-foreground gap-2 font-medium">
-                    <span className="bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                    <span className="bg-warning/10 text-warning px-2 py-0.5 rounded text-xs flex items-center gap-1">
                       Berakhir: {format(new Date(job.timeline.to), "dd MMM yyyy")}
                     </span>
                   </div>
@@ -233,7 +233,7 @@ export default function JobManagementPage() {
                   <IconEdit className="size-4" />
                 </Button>
                 <Dialog>
-                  <DialogTrigger render={<Button variant="outline" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" />}>
+                  <DialogTrigger render={<Button variant="outline" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" />}>
                       <IconTrash className="size-4" />
                     </DialogTrigger>
                   <DialogContent className="sm:max-w-md">

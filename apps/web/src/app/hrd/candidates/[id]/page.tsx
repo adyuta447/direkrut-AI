@@ -4,14 +4,12 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { 
-  IconChevronLeft, 
   IconFileText, 
   IconCheck, 
   IconX, 
   IconVideo,
   IconBriefcase,
   IconSchool,
-  IconBrandLinkedin,
   IconChevronDown,
   IconChevronUp,
   IconSparkles
@@ -23,10 +21,12 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { DecisionDialog } from "@/components/decision-dialog"
+import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
 
-import { useDashboard } from "@/components/dashboard-provider"
-import { getExtendedData } from "@/components/data-table"
+import { useDashboard } from "@/context/DashboardContext"
+import { BackButton } from "@/components/molecules/dashboard/BackButton"
+import { CHART_TOOLTIP_STYLE } from "@/components/molecules/dashboard/ChartCard"
+import { getExtendedData } from "@/lib/dashboard/extended-data"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts"
 
 export default function CandidateDetailPage() {
@@ -65,45 +65,40 @@ export default function CandidateDetailPage() {
   ]
 
   const softSkillData = [
-    { name: "Komunikasi", score: Math.min(100, baseScore + 10), fill: "#3b82f6" },
-    { name: "Kerja Sama Tim", score: Math.min(100, baseScore + 5), fill: "#10b981" },
-    { name: "Adaptabilitas", score: Math.max(0, baseScore - 5), fill: "#f59e0b" },
-    { name: "Kepemimpinan", score: Math.max(0, baseScore - 15), fill: "#8b5cf6" },
-    { name: "Inisiatif", score: baseScore, fill: "#ec4899" },
+    { name: "Komunikasi", score: Math.min(100, baseScore + 10), fill: "var(--chart-1)" },
+    { name: "Kerja Sama Tim", score: Math.min(100, baseScore + 5), fill: "var(--chart-2)" },
+    { name: "Adaptabilitas", score: Math.max(0, baseScore - 5), fill: "var(--chart-3)" },
+    { name: "Kepemimpinan", score: Math.max(0, baseScore - 15), fill: "var(--chart-4)" },
+    { name: "Inisiatif", score: baseScore, fill: "var(--chart-5)" },
   ]
 
   const weightData = isFreshGrad ? [
-    { name: "Wawancara", value: 40, fill: "#3b82f6" },
-    { name: "Magang & Proyek", value: 35, fill: "#10b981" },
-    { name: "Pendidikan Akademik", value: 25, fill: "#f59e0b" },
+    { name: "Wawancara", value: 40, fill: "var(--chart-1)" },
+    { name: "Magang & Proyek", value: 35, fill: "var(--chart-3)" },
+    { name: "Pendidikan Akademik", value: 25, fill: "var(--chart-5)" },
   ] : [
-    { name: "Wawancara", value: 40, fill: "#3b82f6" },
-    { name: "Pengalaman Kerja", value: 50, fill: "#10b981" },
-    { name: "Pendidikan & Sertifikasi", value: 10, fill: "#f59e0b" },
+    { name: "Wawancara", value: 40, fill: "var(--chart-1)" },
+    { name: "Pengalaman Kerja", value: 50, fill: "var(--chart-3)" },
+    { name: "Pendidikan & Sertifikasi", value: 10, fill: "var(--chart-5)" },
   ]
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main">
       
-      <div>
-        <Button render={<Link href="/hrd" className="flex flex-row items-center gap-1" />} variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary">
-            <IconChevronLeft className="size-4 shrink-0" />
-            <span>Kembali ke Manajemen Pelamar</span>
-          </Button>
-      </div>
+      <BackButton href="/hrd" label="Kembali ke Manajemen Kandidat" />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-3xl font-bold tracking-tight">{candidate.applicantName}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{candidate.applicantName}</h1>
             <Badge variant={candidate.status === 'interview' ? 'default' : candidate.status === 'rejected' ? 'destructive' : 'secondary'} className="capitalize">
               {candidate.status === 'under-review' ? 'Administrasi' : candidate.status}
             </Badge>
-            <Badge variant="outline" className={isFreshGrad ? "text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-900/20" : "text-violet-600 border-violet-600/30 bg-violet-50 dark:bg-violet-900/20"}>
+            <Badge variant="outline" className={isFreshGrad ? "text-info border-info/30 bg-info/10" : "text-primary border-primary/30 bg-primary/10"}>
               {isFreshGrad ? "Fresh Graduate" : "Professional"}
             </Badge>
             {candidate.isJobHopper && (
-              <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">
+              <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
                 ⚠️ Indikasi Job Hopping
               </Badge>
             )}
@@ -113,24 +108,26 @@ export default function CandidateDetailPage() {
 
         <div className="flex flex-col sm:flex-row gap-2 shrink-0">
           {candidate.resumeLink && (
-            <Button variant="outline" render={<a href="#" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2" />}>
-              <a href={candidate.resumeLink} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2">
-                <IconFileText className="size-4 shrink-0" /> 
-                <span className="truncate">Lihat CV</span>
-              </a>
+            <Button
+              variant="outline"
+              render={
+                <a
+                  href={candidate.resumeLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2"
+                />
+              }
+            >
+              <IconFileText className="size-4 shrink-0" />
+              <span className="truncate">Lihat CV</span>
             </Button>
           )}
-          <Button variant="outline" className="text-[#0a66c2] border-[#0a66c2]/30 hover:bg-[#0a66c2]/10 hover:text-[#0a66c2]" render={
-            <a href="#" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2" />
-          }>
-              <IconBrandLinkedin className="size-4 shrink-0" />
-              <span className="truncate">LinkedIn</span>
-            </Button>
           <DecisionDialog 
             candidate={candidate} 
             decision="invite" 
             trigger={
-              <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2">
+              <Button className="bg-success hover:bg-success/90 text-white flex items-center justify-center gap-2">
                 <IconCheck className="size-4 shrink-0" /> 
                 <span className="truncate">Undang Wawancara</span>
               </Button>
@@ -216,7 +213,7 @@ export default function CandidateDetailPage() {
                   </Pie>
                   <RechartsTooltip 
                     formatter={(value: any) => [`${value}%`, "Bobot"]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -241,7 +238,7 @@ export default function CandidateDetailPage() {
                   <PolarAngleAxis dataKey="parameter" tick={{ fill: "currentColor", fontSize: 10 }} />
                   <Radar name="Skor" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} dot={{ r: 3, fillOpacity: 1 }} />
                   <RechartsTooltip 
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -259,7 +256,7 @@ export default function CandidateDetailPage() {
                   <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={85} />
                   <RechartsTooltip 
                     cursor={{ fill: 'var(--muted)' }}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                     formatter={(value: any) => [`${value} / 100`, "Skor"]}
                   />
                   <Bar dataKey="score" radius={[0, 4, 4, 0]} maxBarSize={20} />
@@ -307,14 +304,14 @@ export default function CandidateDetailPage() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div 
-                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-blue-500/50"
+                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-info/50"
                       onClick={() => toggleCard('wawancara')}
                     >
                       <div className="absolute top-0 right-0 p-2 opacity-5">
                         <IconVideo className="size-16" />
                       </div>
                       <div className="flex justify-between items-start mb-1">
-                        <div className="font-bold text-3xl text-blue-500">40%</div>
+                        <div className="font-bold text-3xl text-info">40%</div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 relative z-10">
                           {expandedCards['wawancara'] ? <IconChevronUp className="h-4 w-4" /> : <IconChevronDown className="h-4 w-4" />}
                         </Button>
@@ -324,22 +321,22 @@ export default function CandidateDetailPage() {
                       
                       {expandedCards['wawancara'] && (
                         <div className="mt-3 pt-3 border-t animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
-                          <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Jawaban Teknis</span><span className="font-medium text-blue-600">15%</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Pemecahan Masalah (Studi Kasus)</span><span className="font-medium text-blue-600">15%</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Kejelasan Komunikasi</span><span className="font-medium text-blue-600">10%</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Jawaban Teknis</span><span className="font-medium text-info">15%</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Pemecahan Masalah (Studi Kasus)</span><span className="font-medium text-info">15%</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Kejelasan Komunikasi</span><span className="font-medium text-info">10%</span></div>
                         </div>
                       )}
                     </div>
 
                     <div 
-                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-emerald-500/50"
+                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-success/50"
                       onClick={() => toggleCard('pengalaman')}
                     >
                       <div className="absolute top-0 right-0 p-2 opacity-5">
                         <IconBriefcase className="size-16" />
                       </div>
                       <div className="flex justify-between items-start mb-1">
-                        <div className="font-bold text-3xl text-emerald-500">{isFreshGrad ? "35%" : "50%"}</div>
+                        <div className="font-bold text-3xl text-success">{isFreshGrad ? "35%" : "50%"}</div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 relative z-10">
                           {expandedCards['pengalaman'] ? <IconChevronUp className="h-4 w-4" /> : <IconChevronDown className="h-4 w-4" />}
                         </Button>
@@ -353,15 +350,15 @@ export default function CandidateDetailPage() {
                         <div className="mt-3 pt-3 border-t animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
                           {isFreshGrad ? (
                             <>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Bidang Magang</span><span className="font-medium text-emerald-600">15%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Proyek Relevan</span><span className="font-medium text-emerald-600">15%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Aktif Berorganisasi</span><span className="font-medium text-emerald-600">5%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Bidang Magang</span><span className="font-medium text-success">15%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Proyek Relevan</span><span className="font-medium text-success">15%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Aktif Berorganisasi</span><span className="font-medium text-success">5%</span></div>
                             </>
                           ) : (
                             <>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Kesamaan Role Sebelumnya</span><span className="font-medium text-emerald-600">20%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Jenjang Posisi (Senioritas)</span><span className="font-medium text-emerald-600">15%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Durasi Masa Kerja Terkait</span><span className="font-medium text-emerald-600">15%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Kesamaan Role Sebelumnya</span><span className="font-medium text-success">20%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Jenjang Posisi (Senioritas)</span><span className="font-medium text-success">15%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Durasi Masa Kerja Terkait</span><span className="font-medium text-success">15%</span></div>
                             </>
                           )}
                         </div>
@@ -369,14 +366,14 @@ export default function CandidateDetailPage() {
                     </div>
 
                     <div 
-                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-amber-500/50"
+                      className="border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all hover:border-warning/50"
                       onClick={() => toggleCard('akademik')}
                     >
                       <div className="absolute top-0 right-0 p-2 opacity-5">
                         <IconSchool className="size-16" />
                       </div>
                       <div className="flex justify-between items-start mb-1">
-                        <div className="font-bold text-3xl text-amber-500">{isFreshGrad ? "25%" : "10%"}</div>
+                        <div className="font-bold text-3xl text-warning">{isFreshGrad ? "25%" : "10%"}</div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 relative z-10">
                           {expandedCards['akademik'] ? <IconChevronUp className="h-4 w-4" /> : <IconChevronDown className="h-4 w-4" />}
                         </Button>
@@ -390,13 +387,13 @@ export default function CandidateDetailPage() {
                         <div className="mt-3 pt-3 border-t animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
                           {isFreshGrad ? (
                             <>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Jurusan/Fakultas</span><span className="font-medium text-amber-600">15%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">IPK Akademik</span><span className="font-medium text-amber-600">10%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Jurusan/Fakultas</span><span className="font-medium text-warning">15%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">IPK Akademik</span><span className="font-medium text-warning">10%</span></div>
                             </>
                           ) : (
                             <>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Sertifikasi Profesional (Mis. PMP)</span><span className="font-medium text-amber-600">5%</span></div>
-                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Gelar/Fakultas</span><span className="font-medium text-amber-600">5%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Sertifikasi Profesional (Mis. PMP)</span><span className="font-medium text-warning">5%</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">Kesesuaian Gelar/Fakultas</span><span className="font-medium text-warning">5%</span></div>
                             </>
                           )}
                         </div>
@@ -415,7 +412,7 @@ export default function CandidateDetailPage() {
                   <div className="bg-muted/50 p-4 rounded-lg border">
                     <p className="text-sm italic text-muted-foreground mb-2">Kutipan dari CV kandidat:</p>
                     <p className="text-sm leading-relaxed">
-                      "Bertanggung jawab penuh atas <mark className="bg-yellow-200 dark:bg-yellow-900 px-1 rounded font-medium">strategi manajemen di 3 proyek berskala nasional</mark> yang menghasilkan peningkatan efisiensi sebesar 20% dalam waktu 6 bulan."
+                      "Bertanggung jawab penuh atas <mark className="bg-warning/20 px-1 rounded font-medium">strategi manajemen di 3 proyek berskala nasional</mark> yang menghasilkan peningkatan efisiensi sebesar 20% dalam waktu 6 bulan."
                     </p>
                     <div className="mt-3 text-xs text-primary bg-primary/10 w-fit px-2 py-1 rounded">
                       Analisis AI: Disebutkan 3x di CV terkait pengalaman langsung pada proyek serupa.
@@ -433,8 +430,8 @@ export default function CandidateDetailPage() {
                     <p className="text-sm leading-relaxed">
                       "Sarjana Ilmu Komputer, Universitas XYZ. Aktif dalam organisasi kemahasiswaan."
                     </p>
-                    <div className="mt-3 text-xs text-amber-600 bg-amber-500/10 w-fit px-2 py-1 rounded">
-                      Analisis AI: Memiliki gelar yang relevan, namun <mark className="bg-amber-200 dark:bg-amber-900 px-1 rounded">sertifikasi spesifik profesional tidak ditemukan</mark>.
+                    <div className="mt-3 text-xs text-warning bg-warning/10 w-fit px-2 py-1 rounded">
+                      Analisis AI: Memiliki gelar yang relevan, namun <mark className="bg-warning/20 px-1 rounded">sertifikasi spesifik profesional tidak ditemukan</mark>.
                     </div>
                   </div>
                 </div>

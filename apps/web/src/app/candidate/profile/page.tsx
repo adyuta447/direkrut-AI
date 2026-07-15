@@ -4,7 +4,7 @@ import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { 
   PenIcon, BriefcaseIcon, GraduationCapIcon, 
   MapPinIcon, UploadCloudIcon, ChevronRightIcon,
@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 
 export default function CandidateProfilePage() {
   const { isProfileComplete, setIsProfileComplete } = useDashboard()
@@ -73,11 +73,11 @@ export default function CandidateProfilePage() {
           location: "Jakarta Selatan, DKI Jakarta",
           about: "Saya adalah seorang Software Engineer dengan pengalaman dalam membangun aplikasi web modern dan scalable. Sangat antusias terhadap teknologi terbaru dan senang berkolaborasi dalam tim.",
           experience: [
-            { id: "1", role: "Software Engineer", company: "TechStart", startDate: "Agt 2022", endDate: "Sekarang", description: "Mengembangkan backend microservices menggunakan Node.js dan Go.", logo: "https://avatar.vercel.sh/techstart" },
-            { id: "2", role: "Intern Backend Developer", company: "DataCorp", startDate: "Jan 2021", endDate: "Des 2021", description: "Merancang API dan optimasi database PostgreSQL.", logo: "https://avatar.vercel.sh/datacorp" }
+            { id: "1", role: "Software Engineer", company: "TechStart", startDate: "Agt 2022", endDate: "Sekarang", description: "Mengembangkan backend microservices menggunakan Node.js dan Go." },
+            { id: "2", role: "Intern Backend Developer", company: "DataCorp", startDate: "Jan 2021", endDate: "Des 2021", description: "Merancang API dan optimasi database PostgreSQL." }
           ],
           education: [
-            { id: "1", school: "Universitas Indonesia", degree: "S1 Ilmu Komputer", startYear: "2018", endYear: "2022", logo: "https://avatar.vercel.sh/ui" }
+            { id: "1", school: "Universitas Indonesia", degree: "S1 Ilmu Komputer", startYear: "2018", endYear: "2022" }
           ],
           skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS", "Go"],
           links: [
@@ -171,7 +171,7 @@ export default function CandidateProfilePage() {
       )}
 
       {hasAutoFilled && (
-        <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 p-4 rounded-xl flex items-start gap-3">
+        <div className="bg-success/15 border border-success/30 text-success p-4 rounded-xl flex items-start gap-3">
           <CheckCircleIcon className="size-5 mt-0.5 shrink-0" />
           <div>
             <p className="font-medium">Profil Berhasil Dilengkapi oleh AI!</p>
@@ -245,7 +245,6 @@ export default function CandidateProfilePage() {
             <CardContent className="px-6 pb-6 pt-0 relative">
               <div className="flex justify-between items-start">
                 <Avatar className="size-28 border-4 border-card -mt-12 bg-muted relative">
-                  <AvatarImage src="/avatars/kandidat.jpg" />
                   <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">{profile.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer rounded-full">
                     <PenIcon className="size-6 text-white" />
@@ -386,7 +385,7 @@ export default function CandidateProfilePage() {
                         </div>
                         <div className="overflow-hidden">
                           <p className="font-semibold text-sm truncate">{link.platform}</p>
-                          <a href={`https://${link.url}`} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline truncate block">
+                          <a href={`https://${link.url}`} target="_blank" rel="noreferrer" className="text-sm text-info hover:underline truncate block">
                             {link.url}
                           </a>
                         </div>
@@ -456,7 +455,6 @@ export default function CandidateProfilePage() {
                   {profile.experience.map((exp, index) => (
                     <div key={exp.id} className={`flex gap-4 group ${index !== profile.experience.length - 1 ? "border-b pb-6" : ""}`}>
                       <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
-                        <AvatarImage src={exp.logo} className="object-contain p-1" />
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><BriefcaseIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -530,7 +528,6 @@ export default function CandidateProfilePage() {
                   {profile.education.map((edu, index) => (
                     <div key={edu.id} className={`flex gap-4 group ${index !== profile.education.length - 1 ? "border-b pb-6" : ""}`}>
                       <Avatar className="size-14 rounded-md border shadow-sm shrink-0">
-                        <AvatarImage src={edu.logo} className="object-contain p-1" />
                         <AvatarFallback className="rounded-md bg-muted text-muted-foreground"><GraduationCapIcon className="size-6" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
@@ -595,7 +592,7 @@ export default function CandidateProfilePage() {
                       {profile.skills.map((skill, i) => (
                         <Badge key={i} variant="secondary" className="px-3 py-1.5 text-sm bg-primary text-primary-foreground flex items-center gap-2">
                           {skill}
-                          <button onClick={() => handleRemoveSkill(skill)} className="hover:text-red-300 rounded-full p-0.5 transition-colors focus:outline-none">
+                          <button onClick={() => handleRemoveSkill(skill)} className="hover:text-destructive rounded-full p-0.5 transition-colors focus:outline-none">
                             <TrashIcon className="size-3" />
                           </button>
                         </Badge>

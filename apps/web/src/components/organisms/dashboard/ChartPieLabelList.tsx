@@ -3,7 +3,7 @@
 import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { LabelList, Pie, PieChart } from "recharts"
-import { getExtendedData } from "@/components/data-table"
+import { getExtendedData } from "@/lib/dashboard/extended-data"
 
 import {
   Card,
@@ -19,13 +19,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 
 export const description = "A pie chart displaying candidate statuses"
 
 const chartConfig = {
   count: {
-    label: "Pelamar",
+    label: "Kandidat",
   },
   "fresh-graduate": {
     label: "Fresh Graduate",
@@ -56,7 +56,7 @@ export function ChartPieLabelList() {
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Demografi Kategori Pelamar</CardTitle>
+        <CardTitle>Demografi Kategori Kandidat</CardTitle>
         <CardDescription>Fresh Graduate vs Professional</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">

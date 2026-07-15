@@ -4,12 +4,10 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import {
-  IconChevronLeft,
   IconBriefcase,
   IconBuilding,
   IconMapPin,
   IconCalendar,
-  IconExternalLink,
   IconUsers,
 } from "@tabler/icons-react"
 import {
@@ -28,8 +26,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useDashboard } from "@/components/dashboard-provider"
-import { getExtendedData } from "@/components/data-table"
+import { useDashboard } from "@/context/DashboardContext"
+import { BackButton } from "@/components/molecules/dashboard/BackButton"
+import { CHART_TOOLTIP_STYLE } from "@/components/molecules/dashboard/ChartCard"
+import { getExtendedData } from "@/lib/dashboard/extended-data"
 import { CheckCircleIcon, ClockIcon, MessageSquareIcon } from "lucide-react"
 
 export default function ApplicationDetailPage() {
@@ -72,7 +72,7 @@ export default function ApplicationDetailPage() {
 
   const applicationFlowData = [
     { name: "Terkirim", value: jobApplications.length, fill: "var(--chart-1)" },
-    { name: "Direview", value: jobApplications.filter(a => a.status === "under-review").length, fill: "var(--chart-2)" },
+    { name: "Administrasi", value: jobApplications.filter(a => a.status === "under-review").length, fill: "var(--chart-2)" },
     { name: "Wawancara", value: jobInterviewed, fill: "var(--chart-3)" },
     { name: "Ditolak", value: jobRejected, fill: "var(--chart-4)" },
   ]
@@ -104,7 +104,7 @@ export default function ApplicationDetailPage() {
       description: "Sesi wawancara dengan sistem AI Direkrut AI",
     },
     {
-      label: "Direview HRD",
+      label: "Administrasi HRD",
       date: application.status === "under-review" || application.status === "interview" || application.status === "rejected" ? "Sedang berlangsung" : "Menunggu",
       done: application.status === "interview" || application.status === "rejected",
       active: application.status === "under-review",
@@ -124,28 +124,19 @@ export default function ApplicationDetailPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main">
 
-      <div>
-        <Button
-          render={<Link href="/candidate/applications" className="flex items-center gap-1" />}
-          variant="ghost"
-          className="pl-0 hover:bg-transparent hover:text-primary"
-        >
-          <IconChevronLeft className="size-4 shrink-0" />
-          <span>Kembali ke Riwayat Lamaran</span>
-        </Button>
-      </div>
+      <BackButton href="/candidate/applications" label="Kembali ke Riwayat Lamaran" />
 
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h1 className="text-3xl font-bold tracking-tight">{job.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{job.title}</h1>
             {getStatusBadge(application.status)}
             {isFreshGrad ? (
-              <Badge variant="outline" className="text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-900/20">
+              <Badge variant="outline" className="text-info border-info/30 bg-info/10">
                 Fresh Graduate Welcome
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-violet-600 border-violet-600/30 bg-violet-50 dark:bg-violet-900/20">
+              <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">
                 Professional
               </Badge>
             )}
@@ -167,12 +158,6 @@ export default function ApplicationDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 shrink-0">
-          <Button variant="outline" className="gap-2" render={<a href="#" target="_blank" />}>
-            <IconExternalLink className="size-4" />
-            Website Perusahaan
-          </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-6 text-sm text-muted-foreground border-t pt-6">
@@ -189,7 +174,7 @@ export default function ApplicationDetailPage() {
           <span>{job.salaryRange || "Kompetitif"}</span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="font-semibold text-foreground text-xs uppercase tracking-wider">Total Pelamar</span>
+          <span className="font-semibold text-foreground text-xs uppercase tracking-wider">Total Kandidat</span>
           <span className="flex items-center gap-1">
             <IconUsers className="size-3.5" />
             {jobApplications.length} orang
@@ -224,12 +209,7 @@ export default function ApplicationDetailPage() {
                   <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis fontSize={10} tickLine={false} axisLine={false} />
                   <RechartsTooltip
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--background)",
-                      color: "var(--foreground)",
-                    }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40}>
                     {applicationFlowData.map((entry, i) => (
@@ -257,12 +237,7 @@ export default function ApplicationDetailPage() {
                   <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={100} />
                   <RechartsTooltip
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      backgroundColor: "var(--background)",
-                      color: "var(--foreground)",
-                    }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={20}>
                     {positionDistribution.map((entry, i) => (
@@ -317,12 +292,12 @@ export default function ApplicationDetailPage() {
                     <div key={i} className="relative flex gap-6 pb-8 last:pb-0">
                       
                       {i < timelineSteps.length - 1 && (
-                        <div className={`absolute left-4 top-8 bottom-0 w-0.5 ${step.done ? "bg-emerald-500" : "bg-border"}`} />
+                        <div className={`absolute left-4 top-8 bottom-0 w-0.5 ${step.done ? "bg-success" : "bg-border"}`} />
                       )}
                       
                       <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full shrink-0 ${
                         step.done
-                          ? "bg-emerald-500 text-white shadow"
+                          ? "bg-success text-white shadow"
                           : step.active
                           ? "bg-primary text-primary-foreground ring-4 ring-primary/20 shadow"
                           : "border-2 border-muted-foreground/30 bg-background"
@@ -338,7 +313,7 @@ export default function ApplicationDetailPage() {
                         step.active
                           ? "border-primary bg-primary/5"
                           : step.done
-                          ? "border-emerald-500/30 bg-emerald-500/5"
+                          ? "border-success/30 bg-success/5"
                           : "border-border bg-muted/20"
                       }`}>
                         <div className="flex items-center justify-between mb-1">
@@ -356,22 +331,22 @@ export default function ApplicationDetailPage() {
                 {(application.status === "under-review" || application.status === "interview") && (
                   <div className="mt-8 space-y-4">
                     <h4 className="font-semibold text-base flex items-center gap-2">
-                      <MessageSquareIcon className="size-5 text-emerald-600" />
+                      <MessageSquareIcon className="size-5 text-success" />
                       Umpan Balik Wawancara AI
                     </h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-emerald-500/10 p-5 rounded-xl border border-emerald-500/20 space-y-3 relative overflow-hidden">
+                      <div className="bg-success/10 p-5 rounded-xl border border-success/20 space-y-3 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                          <MessageSquareIcon className="size-20 text-emerald-500" />
+                          <MessageSquareIcon className="size-20 text-success" />
                         </div>
-                        <h5 className="font-medium text-emerald-800 dark:text-emerald-300 text-sm">Kekuatan Utama:</h5>
-                        <p className="text-sm leading-relaxed text-emerald-800 dark:text-emerald-300 relative z-10">
+                        <h5 className="font-medium text-success text-sm">Kekuatan Utama:</h5>
+                        <p className="text-sm leading-relaxed text-success relative z-10">
                           Anda menunjukkan pemahaman yang mendalam terhadap peran yang dilamar. Cara komunikasi Anda selama sesi wawancara sangat jelas dan terstruktur. Penjelasan tentang pengalaman relevan sangat meyakinkan.
                         </p>
                       </div>
-                      <div className="bg-amber-500/10 p-5 rounded-xl border border-amber-500/20 space-y-3">
-                        <h5 className="font-medium text-amber-800 dark:text-amber-300 text-sm">Area yang Dapat Dikembangkan:</h5>
-                        <p className="text-sm leading-relaxed text-amber-800/80 dark:text-amber-300/80">
+                      <div className="bg-warning/10 p-5 rounded-xl border border-warning/20 space-y-3">
+                        <h5 className="font-medium text-warning text-sm">Area yang Dapat Dikembangkan:</h5>
+                        <p className="text-sm leading-relaxed text-warning/90">
                           Pertimbangkan untuk memperkuat jawaban dengan contoh nyata yang lebih spesifik dan terukur. Beberapa jawaban masih terlalu umum dan belum menunjukkan dampak konkret dari tindakan Anda.
                         </p>
                       </div>
@@ -438,16 +413,16 @@ export default function ApplicationDetailPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="border rounded-xl p-4 space-y-2">
                     <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <IconUsers className="size-4 text-blue-500" />
+                      <IconUsers className="size-4 text-info" />
                       Terbuka untuk
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {(isFreshGrad || !application.category) && (
-                        <Badge variant="outline" className="text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-900/20">
+                        <Badge variant="outline" className="text-info border-info/30 bg-info/10">
                           Fresh Graduate
                         </Badge>
                       )}
-                      <Badge variant="outline" className="text-violet-600 border-violet-600/30 bg-violet-50 dark:bg-violet-900/20">
+                      <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">
                         Professional
                       </Badge>
                     </div>
@@ -458,7 +433,7 @@ export default function ApplicationDetailPage() {
 
                   <div className="border rounded-xl p-4 space-y-2">
                     <h4 className="font-semibold text-sm flex items-center gap-2">
-                      <IconBriefcase className="size-4 text-emerald-500" />
+                      <IconBriefcase className="size-4 text-success" />
                       Detail Posisi
                     </h4>
                     <div className="space-y-1 text-sm">
@@ -500,7 +475,7 @@ export default function ApplicationDetailPage() {
                           ]
                       ).map((req, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <CheckCircleIcon className="size-4 text-emerald-500 mt-0.5 shrink-0" />
+                          <CheckCircleIcon className="size-4 text-success mt-0.5 shrink-0" />
                           <span>{req}</span>
                         </li>
                       ))}
@@ -513,7 +488,7 @@ export default function ApplicationDetailPage() {
                       <ul className="space-y-2">
                         {job.detailedQualifications.map((q, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm">
-                            <CheckCircleIcon className="size-4 text-blue-500 mt-0.5 shrink-0" />
+                            <CheckCircleIcon className="size-4 text-info mt-0.5 shrink-0" />
                             <span>{q}</span>
                           </li>
                         ))}
@@ -552,12 +527,6 @@ export default function ApplicationDetailPage() {
               </Card>
             )}
 
-            <div className="flex items-center justify-center py-4">
-              <Button variant="outline" className="gap-2" render={<a href="#" target="_blank" />}>
-                <IconExternalLink className="size-4" />
-                Kunjungi Website {job.company}
-              </Button>
-            </div>
           </TabsContent>
         </Tabs>
       </div>

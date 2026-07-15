@@ -4,11 +4,11 @@ import { ReactNode, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
-import { DashboardProvider } from "../../components/dashboard-provider";
-import { ThemeProvider } from "../../components/theme-provider";
-import { AppSidebar } from "../../components/app-sidebar";
-import { SiteHeader } from "../../components/site-header";
-import { SearchDialog } from "../../components/search-dialog";
+import { DashboardProvider } from "@/context/DashboardContext";
+import { ThemeProvider } from "@/components/theme-provider";
+import { HrdSidebar } from "@/components/organisms/dashboard/HrdSidebar";
+import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
+import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 
 export default function HrdLayout({ children }: { children: ReactNode }) {
@@ -32,9 +32,9 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
             } as CSSProperties
           }
         >
-          <AppSidebar variant="inset" />
-          <SidebarInset className="bg-background text-foreground">
-            <SiteHeader />
+          <HrdSidebar variant="inset" />
+          <SidebarInset data-dashboard className="bg-background text-foreground">
+            <DashboardHeader />
             <main className="flex-1 overflow-y-auto p-0">{children}</main>
           </SidebarInset>
           <SearchDialog />

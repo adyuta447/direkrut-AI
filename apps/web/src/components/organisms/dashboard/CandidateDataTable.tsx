@@ -7,9 +7,7 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconCircleCheckFilled,
   IconDotsVertical,
-  IconLoader,
   IconArrowUp,
   IconArrowDown,
   IconArrowsSort,
@@ -34,9 +32,11 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table"
-import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { getExtendedData } from "@/lib/dashboard/extended-data"
+import { getScoreLevel, getStatusMeta } from "@/lib/dashboard/status"
+import { ScoreBadge, StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -79,72 +79,17 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { DecisionDialog } from "@/components/decision-dialog"
+import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
 
-export const candidateSchema = z.object({
-  id: z.string(),
-  applicantName: z.string(),
-  jobTitle: z.string(),
-  resumeLink: z.string().optional(),
-  recommendationScore: z.number().optional(),
-  status: z.string(),
-  appliedDate: z.string(),
-  jobId: z.string(),
-})
-
-export type Candidate = z.infer<typeof candidateSchema>
-
-function getScoreLabel(score?: number): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } {
-  if (!score) return { label: "—", variant: "outline" };
-  if (score >= 75) return { label: "Memenuhi Syarat", variant: "default" };
-  if (score >= 55) return { label: "Perlu Dikembangkan", variant: "secondary" };
-  return { label: "Tidak Sesuai", variant: "destructive" };
-}
-
-export function getExtendedData(name: string) {
-  const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  const domiciles = ["Jakarta Pusat, DKI Jakarta", "Bandung, Jawa Barat", "Surabaya, Jawa Timur", "Medan, Sumatera Utara", "Tangerang Selatan, Banten", "Depok, Jawa Barat", "Semarang, Jawa Tengah", "Bogor, Jawa Barat"];
-  const domicile = domiciles[hash % domiciles.length];
-  
-  const years = hash % 5;
-  const months = (hash * 3) % 11;
-  const experience = years === 0 && months === 0 ? "Fresh Graduate" : years === 0 ? `${months} bln` : `${years} thn ${months} bln`;
-  
-  const positions = ["Software Engineer", "Marketing Specialist", "Product Manager", "Data Analyst", "Sales Executive", "UI/UX Designer", "HR Admin", "Finance Staff"];
-  const lastPosition = positions[hash % positions.length];
-  
-  const universities = ["Universitas Indonesia", "Institut Teknologi Bandung", "Universitas Gadjah Mada", "Bina Nusantara", "Universitas Padjadjaran", "Universitas Diponegoro", "Telkom University"];
-  const degrees = ["S1 - Sistem Informasi", "S1 - Manajemen", "S1 - Ilmu Komunikasi", "D3 - Akuntansi", "S1 - Teknik Informatika", "S1 - Psikologi"];
-  const education = `${degrees[hash % degrees.length]}\n${universities[(hash * 2) % universities.length]}\nAug 2019 - Jul 2023`;
-  
-  const genders = ["Laki-laki", "Perempuan"];
-  const gender = genders[hash % 2];
-  
-  const activeTimes = ["Beberapa detik yang lalu", "2 menit yang lalu", "1 jam yang lalu", "Kemarin", "2 hari yang lalu"];
-  const lastActive = activeTimes[hash % activeTimes.length];
-
-  const category = (hash % 3 === 0) ? "fresh-graduate" : "professional";
-  const isJobHopper = category === "professional" && (hash % 4 === 0);
-  const waitingDays = (hash % 14) + 1;
-  const crossRoleEmailed = hash % 2 === 0;
-  const experienceSummary = category === "professional" 
-    ? "3 tahun di bidang yang relevan, pernah di 2 perusahaan teknologi, pengalaman mengelola sistem skala menengah."
-    : "Pengalaman magang 6 bulan sebagai asisten lab dan 3 bulan di perusahaan startup lokal. Aktif di himpunan mahasiswa.";
-
-  return { 
-    domicile, 
-    experience, 
-    lastPosition, 
-    education, 
-    gender, 
-    lastActive,
-    category,
-    isJobHopper,
-    waitingDays,
-    crossRoleEmailed,
-    experienceSummary
-  };
+export interface Candidate {
+  id: string
+  applicantName: string
+  jobTitle: string
+  resumeLink?: string
+  recommendationScore?: number
+  status: string
+  appliedDate: string
+  jobId: string
 }
 
 const columns: ColumnDef<Candidate>[] = [
@@ -224,15 +169,7 @@ const columns: ColumnDef<Candidate>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => {
-      const score = row.original.recommendationScore;
-      const scoreInfo = getScoreLabel(score);
-      return score ? (
-        <Badge variant={scoreInfo.variant}>{scoreInfo.label}</Badge>
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      );
-    },
+    cell: ({ row }) => <ScoreBadge score={row.original.recommendationScore} />,
   },
   {
     accessorKey: "status",
@@ -248,41 +185,13 @@ const columns: ColumnDef<Candidate>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => {
-      const status = row.original.status;
-      let variant: "default" | "secondary" | "outline" | "destructive" = "outline";
-      let label = "Terkirim";
-      let Icon = IconCircleCheckFilled;
-      let iconColor = "fill-slate-500";
-
-      if (status === "interview") {
-        variant = "default";
-        label = "Wawancara";
-        iconColor = "fill-blue-500";
-      } else if (status === "under-review") {
-        variant = "secondary";
-        label = "Administrasi";
-        Icon = IconLoader;
-        iconColor = "text-yellow-500";
-      } else if (status === "rejected") {
-        variant = "outline";
-        label = "Ditolak";
-        iconColor = "fill-red-500";
-      }
-
-      return (
-        <Badge variant={variant} className="gap-1 px-1.5 py-0.5 whitespace-nowrap">
-          <Icon className={`size-3 ${iconColor}`} />
-          {label}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
   {
     id: "whatsapp",
     header: () => <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">WhatsApp</div>,
     cell: () => (
-      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-full">
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:text-success hover:bg-success/10 rounded-full">
         <IconBrandWhatsapp className="size-5" />
       </Button>
     ),
@@ -360,10 +269,10 @@ const columns: ColumnDef<Candidate>[] = [
     header: () => <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tindakan</div>,
     cell: ({ row }) => (
       <div className="flex items-center gap-1.5">
-        <Button size="icon" className="h-8 w-8 bg-blue-600 hover:bg-blue-700 text-white rounded">
+        <Button size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded">
           <IconMessageCircle className="size-4" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8 rounded text-muted-foreground hover:text-red-600 border-border">
+        <Button variant="outline" size="icon" className="h-8 w-8 rounded text-muted-foreground hover:text-destructive border-border">
           <IconX className="size-4" />
         </Button>
         <DropdownMenu>
@@ -387,7 +296,7 @@ const columns: ColumnDef<Candidate>[] = [
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600 focus:text-red-700">Tolak Kandidat</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive">Tolak Kandidat</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -652,7 +561,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">First page</span>
+                <span className="sr-only">Halaman pertama</span>
                 <IconChevronsLeft className="size-4" />
               </Button>
               <Button
@@ -662,7 +571,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">Previous page</span>
+                <span className="sr-only">Halaman sebelumnya</span>
                 <IconChevronLeft className="size-4" />
               </Button>
               <Button
@@ -672,7 +581,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Next page</span>
+                <span className="sr-only">Halaman berikutnya</span>
                 <IconChevronRight className="size-4" />
               </Button>
               <Button
@@ -682,7 +591,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Last page</span>
+                <span className="sr-only">Halaman terakhir</span>
                 <IconChevronsRight className="size-4" />
               </Button>
             </div>
@@ -695,7 +604,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
 
 function TableCellViewer({ item, triggerNode }: { item: Candidate, triggerNode?: React.ReactNode }) {
   const isMobile = useIsMobile()
-  const scoreInfo = getScoreLabel(item.recommendationScore)
+  const scoreInfo = getScoreLevel(item.recommendationScore)
 
   return (
     <Drawer swipeDirection={isMobile ? "down" : "right"}>
@@ -725,7 +634,7 @@ function TableCellViewer({ item, triggerNode }: { item: Candidate, triggerNode?:
           <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
             <div>
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
-              <div className="font-medium mt-1">{item.status === 'under-review' ? 'Administrasi' : item.status === 'interview' ? 'Wawancara' : item.status === 'rejected' ? 'Ditolak' : 'Terkirim'}</div>
+              <div className="font-medium mt-1">{getStatusMeta(item.status).label}</div>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">Kecocokan AI</Label>
@@ -767,7 +676,7 @@ function TableCellViewer({ item, triggerNode }: { item: Candidate, triggerNode?:
                 candidate={item} 
                 decision="reject" 
                 trigger={
-                  <Button className="justify-start w-full text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" variant="outline">
+                  <Button className="justify-start w-full text-destructive hover:text-destructive hover:bg-destructive/10" variant="outline">
                     Tolak Kandidat Ini
                   </Button>
                 } 
@@ -776,7 +685,7 @@ function TableCellViewer({ item, triggerNode }: { item: Candidate, triggerNode?:
           </div>
         </div>
         <DrawerFooter className="pt-2 border-t mt-auto gap-2">
-          <Button className="w-full" render={<Link href={`/hrd/candidate/${item.id}`} />}>
+          <Button className="w-full" render={<Link href={`/hrd/candidates/${item.id}`} />}>
               Lihat Analisis Penuh
           </Button>
           <DrawerClose render={<Button variant="outline" className="w-full">Tutup</Button>} />

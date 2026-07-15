@@ -11,7 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 import { LayoutDashboardIcon, FolderIcon, CircleHelpIcon, Settings2Icon, UserIcon, FileTextIcon, BriefcaseIcon } from "lucide-react"
 
 export function SearchDialog() {
@@ -85,7 +85,7 @@ export function SearchDialog() {
               <CommandItem
                 key={app.id}
                 value={app.applicantName}
-                onSelect={() => runCommand(() => router.push(`/hrd/candidate/${app.id}`))}
+                onSelect={() => runCommand(() => router.push(`/hrd/candidates/${app.id}`))}
               >
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>{app.applicantName}</span>

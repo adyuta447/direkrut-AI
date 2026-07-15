@@ -19,6 +19,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -82,6 +85,13 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Status tokens -- divalidasi scripts/validate_palette.js (dataviz)
+     terhadap surface light #ffffff & dark #0a0a0a: lightness band,
+     chroma, CVD separation, kontras >= 3:1 semuanya PASS. Selalu
+     dipasangkan icon + label, tidak pernah warna saja. */
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #2563eb;
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -129,6 +139,9 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #3b82f6;
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -155,6 +168,19 @@
   --ink-muted: #5a6572;
   --hairline: #e4e7ec;
   --inverse-canvas: #161616;
+}
+
+/* Jembatan token: di dalam shell dashboard, token brand marketing
+   (canvas/ink/surface/hairline) di-remap ke token semantik shadcn
+   supaya komponen landing (JobListItem, Pagination, dst.) bisa dipakai
+   ulang di dashboard dan otomatis ikut dark mode. */
+[data-dashboard] {
+  --canvas: var(--background);
+  --ink: var(--foreground);
+  --ink-muted: var(--muted-foreground);
+  --surface-1: var(--muted);
+  --surface-2: var(--accent);
+  --hairline: var(--border);
 }
 
 @layer base {

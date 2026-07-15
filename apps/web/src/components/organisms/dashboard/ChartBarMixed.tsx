@@ -18,7 +18,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 
 export const description = "A mixed bar chart showing top jobs"
 
@@ -44,7 +44,7 @@ export function ChartBarMixed() {
     ]
     
     const config: ChartConfig = {
-      count: { label: "Pelamar" }
+      count: { label: "Kandidat" }
     }
     
     const topJobsData = sorted.map(([jobTitle, count], index) => {

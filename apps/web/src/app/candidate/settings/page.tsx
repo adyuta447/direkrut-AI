@@ -1,4 +1,5 @@
 "use client"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,10 +12,10 @@ import { BellIcon, LockIcon, UserIcon, ShieldIcon } from "lucide-react"
 export default function CandidateSettingsPage() {
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Pengaturan Akun</h2>
-        <p className="text-muted-foreground mt-2">Kelola preferensi, notifikasi, dan keamanan akun Anda.</p>
-      </div>
+      <PageHeader
+        title="Pengaturan Akun"
+        description="Kelola preferensi, notifikasi, dan keamanan akun Anda."
+      />
 
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="mb-4">
@@ -111,15 +112,15 @@ export default function CandidateSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="mt-6 border-emerald-500/30 bg-emerald-500/5">
+          <Card className="mt-6 border-success/30 bg-success/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+              <CardTitle className="flex items-center gap-2 text-success">
                 <ShieldIcon className="size-5" /> Autentikasi Dua Faktor (2FA)
               </CardTitle>
               <CardDescription>Tambahkan lapisan keamanan ekstra ke akun Anda.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-500/10">
+              <Button variant="outline" className="border-success text-success hover:bg-success/10">
                 Aktifkan 2FA
               </Button>
             </CardContent>

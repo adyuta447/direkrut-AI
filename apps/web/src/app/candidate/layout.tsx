@@ -4,11 +4,11 @@ import { ReactNode, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
-import { DashboardProvider } from "../../components/dashboard-provider";
-import { ThemeProvider } from "../../components/theme-provider";
-import { CandidateSidebar } from "../../components/candidate-sidebar";
-import { SiteHeader } from "../../components/site-header";
-import { SearchDialog } from "../../components/search-dialog";
+import { DashboardProvider } from "@/context/DashboardContext";
+import { ThemeProvider } from "@/components/theme-provider";
+import { CandidateSidebar } from "@/components/organisms/dashboard/CandidateSidebar";
+import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
+import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 
 export default function CandidateLayout({ children }: { children: ReactNode }) {
@@ -33,8 +33,8 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
           }
         >
           <CandidateSidebar />
-          <SidebarInset className="bg-background text-foreground">
-            <SiteHeader />
+          <SidebarInset data-dashboard className="bg-background text-foreground">
+            <DashboardHeader />
             <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
             <SearchDialog />
           </SidebarInset>

@@ -1,8 +1,9 @@
 "use client"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
 import * as React from "react"
 import Link from "next/link"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 import {
   Card,
   CardContent,
@@ -22,7 +23,6 @@ import {
 } from "@tabler/icons-react"
 import type { Application, Job } from "@/lib/types"
 
-const dummyLogo = "https://media.wired.com/photos/5926ffe47034dc5f91bed4e8/3:2/w_2560%2Cc_limit/google-logo.jpg"
 
 function getStageIndex(status: string) {
   if (status === "submitted") return 0
@@ -34,7 +34,7 @@ function getStageIndex(status: string) {
 
 function getStageName(status: string) {
   if (status === "submitted") return "Terkirim"
-  if (status === "under-review") return "Seleksi Administratif"
+  if (status === "under-review") return "Administrasi"
   if (status === "interview") return "Wawancara AI"
   if (status === "rejected") return "Keputusan Akhir"
   return "Terkirim"
@@ -42,7 +42,7 @@ function getStageName(status: string) {
 
 function getStatusText(status: string) {
   if (status === "submitted") return "Lamaran Diterima"
-  if (status === "under-review") return "Sedang Diproses"
+  if (status === "under-review") return "Administrasi"
   if (status === "interview") return "Menunggu Wawancara"
   if (status === "rejected") return "Lowongan Telah Ditutup / Ditolak"
   return "Menunggu"
@@ -54,7 +54,7 @@ function ApplicationCard({ app, job }: { app: Application; job: Job }) {
   
   const steps = [
     { title: "Terkirim", index: 0 },
-    { title: "Seleksi Administratif", index: 1 },
+    { title: "Administrasi", index: 1 },
     { title: "Wawancara AI", index: 2 },
     { title: "Keputusan Akhir", index: 3 },
   ]
@@ -65,9 +65,8 @@ function ApplicationCard({ app, job }: { app: Application; job: Job }) {
         <div className="p-4 sm:p-6 pb-4">
           <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
 
-            <div className="shrink-0 rounded-lg overflow-hidden border bg-white flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20">
-              
-              <img src={dummyLogo} alt="Company Logo" className="object-cover w-full h-full" />
+            <div className="shrink-0 rounded-lg border bg-muted flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 text-lg font-bold text-muted-foreground">
+              {job.company?.charAt(0) ?? "?"}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -175,7 +174,7 @@ function ApplicationCard({ app, job }: { app: Application; job: Job }) {
             </div>
             
             <div className="mt-4 text-xs text-muted-foreground">
-              Belum mendapatkan update informasi? <a href="#" className="font-medium text-primary hover:underline">Hubungi tim perekrut</a> atau kunjungi <a href="#" className="font-medium text-primary hover:underline">FAQ</a>
+              Belum mendapatkan pembaruan? Tim perekrut akan menghubungi Anda melalui Kotak Masuk.
             </div>
           </div>
         )}
@@ -185,14 +184,14 @@ function ApplicationCard({ app, job }: { app: Application; job: Job }) {
 }
 
 export default function CandidateApplicationsCardsPage() {
-  const { applications, jobs } = useDashboard()
+  const { myApplications, jobs } = useDashboard()
   const [activeTab, setActiveTab] = React.useState("Semua Tahapan")
   const [searchQuery, setSearchQuery] = React.useState("")
 
   const filteredApps = React.useMemo(() => {
-    let filtered = [...applications]
+    let filtered = [...myApplications]
 
-    if (activeTab === "Seleksi Administratif") {
+    if (activeTab === "Administrasi") {
       filtered = filtered.filter(a => a.status === "under-review")
     } else if (activeTab === "Wawancara AI") {
       filtered = filtered.filter(a => a.status === "interview")
@@ -210,17 +209,17 @@ export default function CandidateApplicationsCardsPage() {
     }
 
     return filtered
-  }, [applications, jobs, activeTab, searchQuery])
+  }, [myApplications, jobs, activeTab, searchQuery])
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
 
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Daftar Riwayat Lamaran</h1>
-            <p className="text-muted-foreground mt-1 text-sm">Pantau dan kelola seluruh lamaran pekerjaan Anda.</p>
-          </div>
+          <PageHeader
+            title="Riwayat Lamaran"
+            description="Pantau dan kelola seluruh lamaran pekerjaan Anda."
+          />
 
           <div className="flex flex-col md:flex-row gap-4 mt-4 p-4 border rounded-xl bg-background/50 backdrop-blur-sm">
             <div className="relative flex-1">
@@ -240,7 +239,7 @@ export default function CandidateApplicationsCardsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Semua Tahapan">Semua Tahapan</SelectItem>
-                  <SelectItem value="Seleksi Administratif">Seleksi Administratif</SelectItem>
+                  <SelectItem value="Administrasi">Administrasi</SelectItem>
                   <SelectItem value="Wawancara AI">Wawancara AI</SelectItem>
                   <SelectItem value="Selesai / Ditolak">Selesai / Ditolak</SelectItem>
                 </SelectContent>

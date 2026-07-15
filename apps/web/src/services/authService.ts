@@ -20,7 +20,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
     });
   }
   return {
-    user: { id: crypto.randomUUID(), name: email.split("@")[0], email, role: "applicant" },
+    user: { id: crypto.randomUUID(), name: email.split("@")[0], email, role: "candidate" },
     token: "mock-token",
   };
 }

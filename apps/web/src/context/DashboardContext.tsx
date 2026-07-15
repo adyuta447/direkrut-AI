@@ -8,6 +8,12 @@ interface DashboardContextType {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   applications: Application[];
+  /**
+   * Lamaran milik kandidat yang sedang login (subset mock deterministik +
+   * lamaran yang dia buat sendiri). Dasbor kandidat WAJIB pakai ini, bukan
+   * `applications` (itu seluruh lamaran perusahaan, milik sisi HRD).
+   */
+  myApplications: Application[];
   addApplication: (app: Application) => void;
   updateApplication: (id: string, updates: Partial<Application>) => void;
   jobs: Job[];
@@ -65,12 +71,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  // Mock: 5 lamaran pertama dianggap milik kandidat yang login, plus semua
+  // lamaran yang dia kirim sendiri lewat addApplication (id di luar mock).
+  const mockIds = new Set(mockApplications.map((a) => a.id));
+  const myApplications = applications.filter(
+    (a, index) => index < 5 || !mockIds.has(a.id)
+  );
+
   return (
     <DashboardContext.Provider
       value={{
         currentUser,
         setCurrentUser,
         applications,
+        myApplications,
         addApplication,
         updateApplication,
         jobs,

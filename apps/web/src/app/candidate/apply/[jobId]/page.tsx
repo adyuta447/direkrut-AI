@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
+import { useApp } from "@/context/AppContext"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,17 +14,18 @@ import { ArrowLeftIcon, ArrowRightIcon, BriefcaseIcon, CheckCircleIcon, FileText
 export default function ApplyJobPage({ params }: { params: Promise<{ jobId: string }> }) {
   const unwrappedParams = React.use(params)
   const { jobs, addApplication, isProfileComplete } = useDashboard()
+  const { currentUser } = useApp()
   const router = useRouter()
   const job = jobs.find(j => j.id === unwrappedParams.jobId)
 
   const [step, setStep] = React.useState(1)
 
   const [formData, setFormData] = React.useState({
-    name: "Raffi Rabbani Widyputra",
-    email: "raffirabbani518@gmail.com",
-    phone: "+6283434343434",
-    linkedin: "linkedin.com/in/raffirabbani",
-    portfolio: "raffirabbani.my.id",
+    name: currentUser?.name ?? "",
+    email: currentUser?.email ?? "",
+    phone: "",
+    linkedin: "",
+    portfolio: "",
   })
 
   const [file, setFile] = React.useState<File | null>(null)
@@ -127,7 +129,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
              if (file) return
              setIsParsing(true)
              setTimeout(() => {
-               setFile(new File([""], "CV_Raffi_Rabbani.pdf", { type: "application/pdf" }))
+               setFile(new File([""], "CV_Kandidat.pdf", { type: "application/pdf" }))
                setIsParsing(false)
              }, 1500)
            }}>
@@ -145,7 +147,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
             <div>
               <p className="font-medium text-lg">{file.name}</p>
               <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
-                <CheckCircleIcon className="size-4 text-emerald-500" />
+                <CheckCircleIcon className="size-4 text-success" />
                 Berhasil diunggah dan dibaca oleh AI
               </p>
             </div>
@@ -181,7 +183,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   const renderStep3 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {isProfileComplete && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-xl flex items-start gap-3 mb-6">
+        <div className="bg-success/10 border border-success/20 text-success p-4 rounded-xl flex items-start gap-3 mb-6">
           <CheckCircleIcon className="size-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-sm">Data Diambil dari Profil Anda</p>
@@ -220,12 +222,12 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
     return (
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-12 w-full flex items-center justify-center">
         <div className="max-w-md w-full text-center space-y-6 animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-100 dark:shadow-none animate-in zoom-in spin-in-12 duration-700">
+          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto shadow-lg  dark:shadow-none animate-in zoom-in spin-in-12 duration-700">
             <CheckCircleIcon className="size-10" />
           </div>
           
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight">Lamaran Terkirim!</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Lamaran Terkirim!</h2>
             <p className="text-muted-foreground">
               Anda telah berhasil melamar posisi <strong>{job.title}</strong> di <strong>{job.company}</strong>.
             </p>
@@ -263,7 +265,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
           <BriefcaseIcon className="size-4" />
           <span className="text-sm font-medium">{job.company}</span>
         </div>
-        <h2 className="text-3xl font-bold tracking-tight">Melamar untuk {job.title}</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Melamar untuk {job.title}</h2>
         <div className="flex items-center gap-4 mt-3">
           <Badge variant="secondary" className="font-normal">{job.location}</Badge>
           <Badge variant="secondary" className="font-normal">{job.type}</Badge>

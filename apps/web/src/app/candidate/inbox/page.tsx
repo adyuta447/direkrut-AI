@@ -50,7 +50,7 @@ Tim Rekrutmen TechNova Solutions`
   {
     id: "msg-2",
     company: "DataCorp Indonesia",
-    subject: "Offering Letter - Data Analyst",
+    subject: "Surat Penawaran - Data Analyst",
     snippet: "Kami dengan senang hati menawarkan posisi Data Analyst kepada Anda...",
     date: "Kemarin",
     read: true,
@@ -60,7 +60,7 @@ Tim Rekrutmen TechNova Solutions`
 
 Berdasarkan seluruh rangkaian proses seleksi yang telah Anda lalui, kami dengan senang hati menawarkan Anda posisi sebagai Data Analyst di DataCorp Indonesia.
 
-Terlampir adalah dokumen Offering Letter resmi yang memuat rincian kompensasi, benefit, dan tanggal efektif mulai bekerja. 
+Terlampir adalah dokumen Surat Penawaran (offering letter) resmi yang memuat rincian kompensasi, benefit, dan tanggal efektif mulai bekerja. 
 
 Silakan pelajari dokumen tersebut dan berikan tanda tangan Anda paling lambat tanggal 17 Juli 2026 jika Anda menerima tawaran ini.
 
@@ -109,8 +109,8 @@ export default function CandidateInboxPage() {
 
   const getTypeBadge = (type: string) => {
     switch(type) {
-      case 'invitation': return <Badge className="bg-blue-500 hover:bg-blue-600">Undangan</Badge>
-      case 'offer': return <Badge className="bg-emerald-500 hover:bg-emerald-600">Penerimaan</Badge>
+      case 'invitation': return <Badge className="bg-info hover:bg-info/90">Undangan</Badge>
+      case 'offer': return <Badge className="bg-success hover:bg-success/90">Penerimaan</Badge>
       case 'rejection': return <Badge variant="secondary" className="text-muted-foreground">Pemberitahuan</Badge>
       default: return <Badge variant="outline">Info</Badge>
     }
@@ -203,7 +203,7 @@ export default function CandidateInboxPage() {
                   </div>
                   <div className="text-sm text-muted-foreground whitespace-nowrap pt-1 flex items-center gap-2">
                     {selectedMessage.date}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-500">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-warning">
                       <StarIcon className={`size-5 ${selectedMessage.starred ? 'fill-current' : ''}`} />
                     </Button>
                   </div>

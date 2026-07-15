@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { useState, useMemo } from "react"
 import { 
   IconSearch, 
@@ -13,8 +14,9 @@ import {
   IconChevronUp,
   IconExternalLink
 } from "@tabler/icons-react"
-import { useDashboard } from "@/components/dashboard-provider"
-import { getExtendedData } from "@/components/data-table"
+import { useDashboard } from "@/context/DashboardContext"
+import { CHART_TOOLTIP_STYLE } from "@/components/molecules/dashboard/ChartCard"
+import { getExtendedData } from "@/lib/dashboard/extended-data"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 
 import { Button } from "@/components/ui/button"
@@ -88,7 +90,7 @@ export default function CrossRoleRecommendationPage() {
     roleCounts[item.suggestedRole] = (roleCounts[item.suggestedRole] || 0) + 1
   })
   
-  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"]
+  const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
   let chartData = Object.entries(roleCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([name, value], idx) => ({
@@ -100,7 +102,7 @@ export default function CrossRoleRecommendationPage() {
   if (chartData.length > 5) {
     const top5 = chartData.slice(0, 5)
     const others = chartData.slice(5).reduce((acc, curr) => acc + curr.value, 0)
-    chartData = [...top5, { name: "Posisi Lainnya", value: others, color: "#94a3b8" }]
+    chartData = [...top5, { name: "Posisi Lainnya", value: others, color: "var(--muted-foreground)" }]
   }
 
   const relevanceCounts = { "Sangat Relevan": 0, "Potensi Adaptasi Cepat": 0 }
@@ -110,8 +112,8 @@ export default function CrossRoleRecommendationPage() {
     }
   })
   const relevanceData = [
-    { name: "Sangat Relevan", count: relevanceCounts["Sangat Relevan"], fill: "#10b981" },
-    { name: "Adaptasi Cepat", count: relevanceCounts["Potensi Adaptasi Cepat"], fill: "#f59e0b" },
+    { name: "Sangat Relevan", count: relevanceCounts["Sangat Relevan"], fill: "var(--success)" },
+    { name: "Adaptasi Cepat", count: relevanceCounts["Potensi Adaptasi Cepat"], fill: "var(--warning)" },
   ]
 
   const evidenceCounts = { cv: 0, interview: 0 }
@@ -120,8 +122,8 @@ export default function CrossRoleRecommendationPage() {
     else evidenceCounts.interview++
   })
   const evidenceData = [
-    { name: "Kutipan CV", count: evidenceCounts.cv, fill: "#3b82f6" },
-    { name: "Log Wawancara", count: evidenceCounts.interview, fill: "#8b5cf6" },
+    { name: "Kutipan CV", count: evidenceCounts.cv, fill: "var(--chart-2)" },
+    { name: "Log Wawancara", count: evidenceCounts.interview, fill: "var(--chart-4)" },
   ]
 
   if (jobs.length < 2) {
@@ -139,14 +141,17 @@ export default function CrossRoleRecommendationPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Rekomendasi Lintas Posisi</h1>
-          <p className="text-muted-foreground text-lg max-w-3xl">
-            Daftar kandidat yang memiliki <span className="italic">transferable skills</span> untuk dipindahkan ke posisi alternatif. 
-            Mencegah pembuangan talenta jika kuota peran asal sudah penuh.
-          </p>
-        </div>
-        
+        <PageHeader
+          className="flex-1"
+          title="Rekomendasi Lintas Posisi"
+          description={
+            <>
+              Daftar kandidat dengan <span className="italic">transferable skills</span> yang dapat
+              dipindahkan ke posisi alternatif, agar talenta tidak terbuang saat kuota peran asal penuh.
+            </>
+          }
+        />
+
         {filteredList.length > 0 && (
           <Button variant="outline" onClick={() => setShowChart(!showChart)}>
             <IconChartPie className="size-4 mr-2 text-primary" />
@@ -180,7 +185,7 @@ export default function CrossRoleRecommendationPage() {
                   </Pie>
                   <RechartsTooltip 
                     formatter={(value: any) => [`${value} Kandidat`, "Jumlah"]}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
@@ -199,7 +204,7 @@ export default function CrossRoleRecommendationPage() {
                   <YAxis fontSize={11} tickLine={false} axisLine={false} />
                   <RechartsTooltip 
                     cursor={{ fill: 'var(--muted)' }}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={60} />
                 </BarChart>
@@ -218,7 +223,7 @@ export default function CrossRoleRecommendationPage() {
                   <YAxis fontSize={11} tickLine={false} axisLine={false} />
                   <RechartsTooltip 
                     cursor={{ fill: 'var(--muted)' }}
-                    contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={60} />
                 </BarChart>
@@ -277,11 +282,11 @@ export default function CrossRoleRecommendationPage() {
             <div className="bg-muted/50 p-4 border-b flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/hrd/candidate/${item.id}`} className="hover:underline hover:text-primary transition-colors">
+                  <Link href={`/hrd/candidates/${item.id}`} className="hover:underline hover:text-primary transition-colors">
                     <h3 className="font-semibold text-lg">{item.candidateName}</h3>
                   </Link>
                   {item.emailed && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400">
+                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                       Email Terkirim
                     </Badge>
                   )}
@@ -323,7 +328,7 @@ export default function CrossRoleRecommendationPage() {
             </CardContent>
 
             <CardFooter className="p-4 pt-0 grid grid-cols-2 gap-2">
-              <Button variant="outline" className="w-full" render={<Link href={`/hrd/candidate/${item.id}`} />}>
+              <Button variant="outline" className="w-full" render={<Link href={`/hrd/candidates/${item.id}`} />}>
                 <IconExternalLink className="size-4 mr-2" />
                 <span className="truncate">Detail Kandidat</span>
               </Button>

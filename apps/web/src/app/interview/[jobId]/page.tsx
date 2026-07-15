@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useDashboard } from "@/components/dashboard-provider"
+import { useDashboard } from "@/context/DashboardContext"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -115,7 +115,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   const renderSetup = () => (
     <div className="flex flex-col h-screen max-w-5xl mx-auto p-6 md:p-12 animate-in fade-in duration-500">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Persiapan Wawancara AI</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Persiapan Wawancara AI</h1>
         <p className="text-muted-foreground mt-2">Posisi: {job.title} di {job.company}</p>
       </div>
 
@@ -123,12 +123,12 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
         <div className="space-y-6">
           <div className="bg-muted aspect-video rounded-2xl overflow-hidden relative border border-border">
             
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-zinc-900">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-black/90">
               <CameraIcon className="size-12 mb-2 opacity-50" />
               <p>Preview Kamera Anda</p>
             </div>
             <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs">
-              <MicIcon className="size-3 text-emerald-400" /> Audio Terdeteksi
+              <MicIcon className="size-3 text-success" /> Audio Terdeteksi
             </div>
           </div>
 
@@ -149,7 +149,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             
             <ul className="space-y-4">
               <li className="flex gap-3 items-start">
-                <CheckCircleIcon className="size-5 text-emerald-500 shrink-0 mt-0.5" />
+                <CheckCircleIcon className="size-5 text-success shrink-0 mt-0.5" />
                 <p className="text-sm">Pastikan Anda berada di ruangan yang tenang dan memiliki pencahayaan yang baik.</p>
               </li>
               <li className="flex gap-3 items-start">
@@ -157,7 +157,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 <p className="text-sm">Anda wajib membagikan layar (Share Screen) jika diminta oleh sistem.</p>
               </li>
               <li className="flex gap-3 items-start">
-                <AlertTriangleIcon className="size-5 text-amber-500 shrink-0 mt-0.5" />
+                <AlertTriangleIcon className="size-5 text-warning shrink-0 mt-0.5" />
                 <p className="text-sm"><strong>DILARANG</strong> membuka tab atau aplikasi lain. Sistem proctoring kami akan mencatat peringatan (warning) jika Anda meninggalkan halaman ini.</p>
               </li>
             </ul>
@@ -198,13 +198,13 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
 
         {showWarningModal && (
           <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-zinc-900 border border-red-500/50 p-8 rounded-2xl max-w-md text-center space-y-6">
-              <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto">
+            <div className="bg-black/90 border border-destructive/50 p-8 rounded-2xl max-w-md text-center space-y-6">
+              <div className="w-16 h-16 bg-destructive/20 text-destructive rounded-full flex items-center justify-center mx-auto">
                 <AlertTriangleIcon className="size-8" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Peringatan Integritas!</h2>
-                <p className="text-zinc-400 mt-2">Sistem mendeteksi Anda meninggalkan layar wawancara atau membuka aplikasi lain. Peringatan ke-{warningCount}.</p>
+                <p className="text-white/60 mt-2">Sistem mendeteksi Anda meninggalkan layar wawancara atau membuka aplikasi lain. Peringatan ke-{warningCount}.</p>
               </div>
               <Button variant="destructive" className="w-full" onClick={() => setShowWarningModal(false)}>
                 Saya Mengerti, Lanjutkan
@@ -227,13 +227,13 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 <MessageSquareIcon className="size-4" /> AI sedang berbicara...
               </span>
             ) : (
-              <span className="flex items-center gap-2 text-emerald-400 font-medium text-sm animate-pulse">
+              <span className="flex items-center gap-2 text-success font-medium text-sm animate-pulse">
                 <MicIcon className="size-4" /> Giliran Anda berbicara...
               </span>
             )}
           </div>
           
-          <div className={`font-mono text-xl font-bold tabular-nums px-4 py-2 rounded-lg backdrop-blur-md border ${timeLeft < 30 ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-white/10 text-white border-white/20'}`}>
+          <div className={`font-mono text-xl font-bold tabular-nums px-4 py-2 rounded-lg backdrop-blur-md border ${timeLeft < 30 ? 'bg-destructive/20 text-destructive border-destructive/50' : 'bg-white/10 text-white border-white/20'}`}>
             {formatTime(timeLeft)}
           </div>
         </div>
@@ -241,11 +241,11 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
         <div className="flex-1 relative flex items-center justify-center overflow-hidden">
           
           <div className="absolute inset-0 flex items-center justify-center">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2000&auto=format&fit=crop" 
-              alt="AI Interviewer" 
-              className={`w-full h-full object-cover transition-opacity duration-1000 ${isAiSpeaking && !isAiProcessing ? 'opacity-100' : 'opacity-40 grayscale'}`} 
-            />
+            <div
+              className={`flex size-40 items-center justify-center rounded-full bg-primary/20 ring-8 ring-primary/10 transition-all duration-1000 ${isAiSpeaking && !isAiProcessing ? "scale-100 opacity-100" : "scale-90 opacity-50"}`}
+            >
+              <SparklesIcon className="size-16 text-primary" />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
           </div>
 
@@ -255,7 +255,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             ) : (
               <div className="space-y-4">
                 {exchangeIndex > 0 && isAiSpeaking && (
-                  <p className="text-sm font-medium text-emerald-400 opacity-80 uppercase tracking-widest">
+                  <p className="text-sm font-medium text-success opacity-80 uppercase tracking-widest">
                     AI Follow-Up
                   </p>
                 )}
@@ -266,15 +266,13 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             )}
           </div>
 
-          <div className={`absolute bottom-8 right-8 w-48 md:w-64 aspect-video bg-zinc-900 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-500 ${isAiSpeaking || isAiProcessing ? 'border-zinc-700 scale-95' : 'border-emerald-500 scale-100'}`}>
+          <div className={`absolute bottom-8 right-8 w-48 md:w-64 aspect-video bg-black/90 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-500 ${isAiSpeaking || isAiProcessing ? 'border-white/20 scale-95' : 'border-success scale-100'}`}>
             
-            <img 
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500&auto=format&fit=crop" 
-              alt="Kandidat" 
-              className="w-full h-full object-cover"
-            />
+            <div className="flex h-full w-full items-center justify-center bg-black/80 text-2xl font-bold text-white/70">
+              Anda
+            </div>
             {!isAiSpeaking && (
-               <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
+               <div className="absolute top-2 right-2 bg-success text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
                  <div className="size-1.5 bg-white rounded-full"></div> Rec
                </div>
             )}
@@ -285,7 +283,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
           {!isAiSpeaking && !isAiProcessing && (
             <Button 
               size="lg" 
-              className="bg-white text-black hover:bg-zinc-200 rounded-full px-8 font-semibold shadow-2xl"
+              className="bg-white text-black hover:bg-white/90 rounded-full px-8 font-semibold shadow-2xl"
               onClick={handleFinishSpeaking}
             >
               Selesai Menjawab & Analisis <ArrowRightIcon className="ml-2 size-4" />
@@ -302,10 +300,10 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
       <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-8 duration-700">
         
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto shadow-sm">
             <CheckCircleIcon className="size-10" />
           </div>
-          <h1 className="text-3xl font-bold">Wawancara Selesai!</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Wawancara Selesai!</h1>
           <p className="text-muted-foreground text-lg">Terima kasih telah menyelesaikan tahap wawancara AI.</p>
         </div>
 
@@ -319,11 +317,11 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
               </div>
               
               <div className="space-y-4">
-                <div className="bg-emerald-500/10 p-4 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm leading-relaxed border border-emerald-500/20">
+                <div className="bg-success/10 p-4 rounded-xl text-success text-sm leading-relaxed border border-success/20">
                   <strong>Poin Positif:</strong> Kepercayaan diri dan intonasi suara Anda sangat baik. Anda merespons pertanyaan studi kasus dengan terstruktur, menunjukkan kemampuan pemecahan masalah yang matang.
                 </div>
                 
-                <div className="bg-blue-500/10 p-4 rounded-xl text-blue-700 dark:text-blue-400 text-sm leading-relaxed border border-blue-500/20">
+                <div className="bg-info/10 p-4 rounded-xl text-info text-sm leading-relaxed border border-info/20">
                   <strong>Saran Pengembangan:</strong> Saat menjelaskan transisi karir, Anda bisa lebih memfokuskan pada *transferable skills* (keahlian yang bisa dibawa) ke peran baru ini agar semakin meyakinkan HRD.
                 </div>
 
@@ -340,10 +338,10 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 <InfoIcon className="size-5 text-muted-foreground" /> Status Lamaran Anda
               </h3>
 
-              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-emerald-500 before:via-muted before:to-muted">
+              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-success before:via-muted before:to-muted">
 
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-success text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <CheckCircleIcon className="size-4" />
                   </div>
                   <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-4 rounded-xl border bg-card shadow-sm">
@@ -353,7 +351,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                 </div>
 
                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-success text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                     <CheckCircleIcon className="size-4" />
                   </div>
                   <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-4 rounded-xl border bg-card shadow-sm">

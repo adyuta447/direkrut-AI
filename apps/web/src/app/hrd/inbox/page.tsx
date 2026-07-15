@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import {
   Card,
   CardContent,
@@ -47,9 +48,10 @@ const MOCK_EMAILS = [
 export default function InboxPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Kotak Masuk Email</h2>
-      </div>
+      <PageHeader
+        title="Kotak Masuk Email"
+        description="Riwayat email yang dikirim ke kandidat beserta statusnya."
+      />
 
       <Card>
         <CardHeader>
@@ -83,12 +85,12 @@ export default function InboxPage() {
                       </Badge>
                     )}
                     {email.status === "read" && (
-                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-200">
+                      <Badge variant="secondary" className="bg-info/10 text-info border-info/20">
                         <MailOpenIcon className="mr-1 h-3 w-3" /> Dibaca
                       </Badge>
                     )}
                     {email.status === "replied" && (
-                      <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200">
+                      <Badge variant="default" className="bg-success/10 text-success border-success/20">
                         <ReplyIcon className="mr-1 h-3 w-3" /> Dibalas
                       </Badge>
                     )}

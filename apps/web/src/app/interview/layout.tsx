@@ -1,9 +1,10 @@
 import * as React from "react"
 import { Metadata } from "next"
+import { InterviewGate } from "@/components/organisms/dashboard/InterviewGate"
 
 export const metadata: Metadata = {
-  title: "AI Interview | Direkrut AI",
-  description: "Wawancara Cerdas dengan Direkrut AI",
+  title: "Wawancara AI | Direkrut AI",
+  description: "Wawancara cerdas dengan Direkrut AI",
 }
 
 export default function InterviewLayout({
@@ -12,8 +13,10 @@ export default function InterviewLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-background font-sans antialiased">
-      {children}
-    </div>
+    <InterviewGate>
+      <div data-dashboard className="min-h-screen bg-background font-sans antialiased">
+        {children}
+      </div>
+    </InterviewGate>
   )
 }

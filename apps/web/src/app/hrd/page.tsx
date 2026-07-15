@@ -1,11 +1,11 @@
 "use client"
 
-import { SectionCards } from "@/components/section-cards"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
-import { DataTable } from "@/components/data-table"
-import { ChartBarMixed } from "@/components/chart-bar-mixed"
-import { ChartPieLabelList } from "@/components/chart-pie-label-list"
-import { useDashboard } from "@/components/dashboard-provider"
+import { HrdStatCards } from "@/components/organisms/dashboard/HrdStatCards"
+import { ChartAreaInteractive } from "@/components/organisms/dashboard/ChartAreaInteractive"
+import { DataTable } from "@/components/organisms/dashboard/CandidateDataTable"
+import { ChartBarMixed } from "@/components/organisms/dashboard/ChartBarMixed"
+import { ChartPieLabelList } from "@/components/organisms/dashboard/ChartPieLabelList"
+import { useDashboard } from "@/context/DashboardContext"
 
 export default function HrdDashboardPage() {
   const { applications } = useDashboard()
@@ -14,7 +14,7 @@ export default function HrdDashboardPage() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards />
+          <HrdStatCards />
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
