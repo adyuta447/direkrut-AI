@@ -50,7 +50,7 @@ export function HowItWorksSection() {
       </div>
       <div className="space-y-8">
         {steps.map((step, i) => {
-          const tone = i % 2 === 0 ? "bg-primary" : "bg-accent";
+          const tone = i % 2 === 0 ? "bg-primary" : "bg-brand-accent";
           return (
             <div
               key={step.number}

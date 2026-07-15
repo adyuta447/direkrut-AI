@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect } from "react";
+import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
-import { HrdSearchProvider } from "../../lib/hrd/HrdSearchContext";
-import { HrdSidebar } from "../../components/organisms/hrd/HrdSidebar";
-import { HrdTopbar } from "../../components/organisms/hrd/HrdTopbar";
-import { hrdPageMeta } from "../../lib/hrd/navigation";
+import { DashboardProvider } from "@/context/DashboardContext";
+import { ThemeProvider } from "@/components/theme-provider";
+import { HrdSidebar } from "@/components/organisms/dashboard/HrdSidebar";
+import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
+import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
+import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 
 export default function HrdLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
   const router = useRouter();
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser) router.replace("/auth");
@@ -20,27 +21,25 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
 
   if (!currentUser) return null;
 
-  const meta = hrdPageMeta.find((m) => pathname.startsWith(m.hrefPrefix)) ?? hrdPageMeta[hrdPageMeta.length - 1];
-
   return (
-    <HrdSearchProvider>
-      <div className="h-screen bg-canvas font-sans flex relative overflow-hidden">
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-[#393939]/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
-        )}
-
-        <HrdSidebar sidebarOpen={sidebarOpen} onNavigate={() => setSidebarOpen(false)} />
-
-        <div className="flex-1 flex flex-col h-screen overflow-hidden bg-canvas">
-          <HrdTopbar
-            title={meta.title}
-            subtitle={meta.subtitle}
-            sidebarOpen={sidebarOpen}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          />
-          <main className="flex-1 overflow-y-auto p-0">{children}</main>
-        </div>
-      </div>
-    </HrdSearchProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <DashboardProvider>
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as CSSProperties
+          }
+        >
+          <HrdSidebar variant="inset" />
+          <SidebarInset data-dashboard className="bg-background text-foreground">
+            <DashboardHeader />
+            <main className="flex-1 overflow-y-auto p-0">{children}</main>
+          </SidebarInset>
+          <SearchDialog />
+        </SidebarProvider>
+      </DashboardProvider>
+    </ThemeProvider>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -11,9 +12,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "DirekrutAI — Smart Hiring Platform",
+  title: "DirekrutAI — Platform Rekrutmen Cerdas",
   description:
-    "Transform your recruitment process with AI-powered CV analysis, automated skill validation, and intelligent candidate matching.",
+    "Ubah proses rekrutmen Anda dengan analisis CV berbasis AI, validasi keterampilan otomatis, dan pencocokan kandidat yang cerdas.",
 };
 
 export default function RootLayout({
@@ -22,7 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={jakarta.variable} data-scroll-behavior="smooth">
+    <html
+      lang="id"
+      className={cn("font-sans", jakarta.variable)}
+      data-scroll-behavior="smooth"
+    >
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

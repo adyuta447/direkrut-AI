@@ -1,4 +1,4 @@
-type Role = "applicant" | "hrd";
+type Role = "candidate" | "hrd";
 
 interface RoleToggleProps {
   role: Role;
@@ -8,7 +8,7 @@ interface RoleToggleProps {
 export function RoleToggle({ role, onChange }: RoleToggleProps) {
   return (
     <div className="flex bg-surface-1 rounded-full p-1 mb-8">
-      {(["applicant", "hrd"] as const).map((r) => (
+      {(["candidate", "hrd"] as const).map((r) => (
         <button
           key={r}
           type="button"
@@ -19,7 +19,7 @@ export function RoleToggle({ role, onChange }: RoleToggleProps) {
               : "text-ink-muted hover:text-ink"
           }`}
         >
-          {r === "applicant" ? "Kandidat" : "HRD"}
+          {r === "candidate" ? "Kandidat" : "HRD"}
         </button>
       ))}
     </div>
