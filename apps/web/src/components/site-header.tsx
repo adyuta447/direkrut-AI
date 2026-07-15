@@ -4,18 +4,13 @@ import { usePathname } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ModeToggle } from "@/components/mode-toggle"
-import { hrdPageMeta } from "@/lib/hrd/navigation"
-import { applicantNavItems } from "@/lib/applicant/navigation"
 
 function getPageTitle(pathname: string): string {
-  if (pathname.startsWith("/hrd")) {
-    const meta = hrdPageMeta.find((m) => pathname.startsWith(m.hrefPrefix))
-    return meta?.title ?? "Dashboard HRD"
-  }
-  if (pathname.startsWith("/applicant")) {
-    const item = applicantNavItems.find((i) => pathname.startsWith(i.href))
-    return item?.title ?? "Dashboard Kandidat"
-  }
+  if (pathname.startsWith("/candidate")) return "Dashboard Kandidat"
+  if (pathname.startsWith("/hrd/jobs")) return "Manajemen Lowongan"
+  if (pathname.startsWith("/hrd/ai-assistant")) return "Asisten AI"
+  if (pathname.startsWith("/hrd/cross-role")) return "Lintas Posisi"
+  if (pathname.startsWith("/hrd")) return "Dashboard HRD"
   return "Direkrut AI"
 }
 

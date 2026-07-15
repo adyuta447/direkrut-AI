@@ -15,7 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { UploadCloudIcon, MessageSquareIcon, CalendarIcon, VideoIcon, CheckCircleIcon, Settings2Icon, CommandIcon, UserIcon, FileTextIcon, HelpCircleIcon, FileIcon } from "lucide-react"
+import { LayoutDashboardIcon, BriefcaseIcon, Settings2Icon, CommandIcon, UserIcon, FileTextIcon, UploadCloudIcon, HelpCircleIcon, FileIcon } from "lucide-react"
 
 const data = {
   user: {
@@ -25,33 +25,23 @@ const data = {
   },
   navMain: [
     {
-      title: "Kirim Lamaran",
-      url: "/applicant/apply",
-      icon: <UploadCloudIcon />,
+      title: "Dasbor Lamaran",
+      url: "/candidate",
+      icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Validasi Sistem",
-      url: "/applicant/validation",
-      icon: <MessageSquareIcon />,
+      title: "Cari Lowongan",
+      url: "/candidate/jobs",
+      icon: <BriefcaseIcon />,
     },
     {
-      title: "Jadwal Interview",
-      url: "/applicant/scheduling",
-      icon: <CalendarIcon />,
-    },
-    {
-      title: "Wawancara AI",
-      url: "/applicant/ai-practice",
-      icon: <VideoIcon />,
-    },
-    {
-      title: "Status Lamaran",
-      url: "/applicant/status",
-      icon: <CheckCircleIcon />,
+      title: "Riwayat Lamaran",
+      url: "/candidate/applications",
+      icon: <FileTextIcon />,
     },
     {
       title: "Profil Saya",
-      url: "/applicant/profile",
+      url: "/candidate/profile",
       icon: <UserIcon />,
     },
   ],
@@ -80,7 +70,7 @@ const data = {
     },
     {
       title: "Pengaturan Akun",
-      url: "/applicant/settings",
+      url: "/candidate/settings",
       icon: <Settings2Icon />,
     },
   ],
@@ -94,7 +84,7 @@ export function CandidateSidebar({ ...props }: React.ComponentProps<typeof Sideb
           <SidebarMenuItem>
             <SidebarMenuButton
               className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<a href="/applicant" />}
+              render={<a href="/candidate" />}
             >
               <CommandIcon className="size-5!" />
               <span className="text-base font-semibold">Direkrut AI</span>
@@ -107,10 +97,10 @@ export function CandidateSidebar({ ...props }: React.ComponentProps<typeof Sideb
           items={data.navMain} 
           actionButton={{
             title: "Unggah CV Baru",
-            url: "/applicant/profile",
+            url: "/candidate/profile",
             icon: <UploadCloudIcon />
           }}
-          inboxUrl="/applicant/inbox"
+          inboxUrl="/candidate/inbox"
         />
         <NavDocuments items={data.navDocuments} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />

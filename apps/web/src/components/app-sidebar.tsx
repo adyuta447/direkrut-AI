@@ -15,7 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, UsersIcon, CheckSquareIcon, Settings2Icon, CommandIcon, SearchIcon, FileTextIcon, CirclePlusIcon, FileChartColumnIcon, FileIcon, FolderIcon, CircleHelpIcon, CameraIcon } from "lucide-react"
+import { LayoutDashboardIcon, UsersIcon, Settings2Icon, CommandIcon, SearchIcon, FileTextIcon, CirclePlusIcon, FileChartColumnIcon, FileIcon, FolderIcon, CircleHelpIcon, CameraIcon } from "lucide-react"
 
 const data = {
   user: {
@@ -42,7 +42,7 @@ const data = {
     },
     {
       title: "Asisten AI",
-      url: "/hrd/assistant",
+      url: "/hrd/ai-assistant",
       icon: (
         <CircleHelpIcon
         />
@@ -53,14 +53,6 @@ const data = {
       url: "/hrd/cross-role",
       icon: (
         <UsersIcon
-        />
-      ),
-    },
-    {
-      title: "Validasi Kompetensi (AI)",
-      url: "/hrd/gap-analysis",
-      icon: (
-        <CheckSquareIcon
         />
       ),
     },

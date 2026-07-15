@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 import { DashboardProvider } from "../../components/dashboard-provider";
 import { ThemeProvider } from "../../components/theme-provider";
-import { AppSidebar } from "../../components/app-sidebar";
+import { CandidateSidebar } from "../../components/candidate-sidebar";
 import { SiteHeader } from "../../components/site-header";
 import { SearchDialog } from "../../components/search-dialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 
-export default function HrdLayout({ children }: { children: ReactNode }) {
+export default function CandidateLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
   const router = useRouter();
 
@@ -32,12 +32,12 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
             } as CSSProperties
           }
         >
-          <AppSidebar variant="inset" />
+          <CandidateSidebar />
           <SidebarInset className="bg-background text-foreground">
             <SiteHeader />
-            <main className="flex-1 overflow-y-auto p-0">{children}</main>
+            <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+            <SearchDialog />
           </SidebarInset>
-          <SearchDialog />
         </SidebarProvider>
       </DashboardProvider>
     </ThemeProvider>

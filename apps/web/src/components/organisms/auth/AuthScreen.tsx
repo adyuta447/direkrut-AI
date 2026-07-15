@@ -38,7 +38,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     company: "",
   });
 
-  const goToDashboard = () => router.push(role === "applicant" ? "/applicant/apply" : "/hrd");
+  const goToDashboard = () => router.push(role === "applicant" ? "/candidate" : "/hrd");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

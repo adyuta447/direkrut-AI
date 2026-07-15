@@ -12,7 +12,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { useDashboard } from "@/components/dashboard-provider"
-import { LayoutDashboardIcon, FolderIcon, CircleHelpIcon, Settings2Icon, UserIcon, FileTextIcon, UploadCloudIcon, MessageSquareIcon, CalendarIcon, VideoIcon, CheckCircleIcon } from "lucide-react"
+import { LayoutDashboardIcon, FolderIcon, CircleHelpIcon, Settings2Icon, UserIcon, FileTextIcon, BriefcaseIcon } from "lucide-react"
 
 export function SearchDialog() {
   const { searchOpen, setSearchOpen, applications, jobs } = useDashboard()
@@ -43,35 +43,27 @@ export function SearchDialog() {
         <CommandList>
           <CommandEmpty>Tidak ada hasil yang ditemukan.</CommandEmpty>
           <CommandGroup heading="Navigasi">
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/apply"))}>
-              <UploadCloudIcon className="mr-2 h-4 w-4" />
-              <span>Kirim Lamaran</span>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate"))}>
+              <LayoutDashboardIcon className="mr-2 h-4 w-4" />
+              <span>Dasbor Lamaran</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/validation"))}>
-              <MessageSquareIcon className="mr-2 h-4 w-4" />
-              <span>Validasi Sistem</span>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate/jobs"))}>
+              <BriefcaseIcon className="mr-2 h-4 w-4" />
+              <span>Cari Lowongan</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/scheduling"))}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              <span>Jadwal Interview</span>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate/applications"))}>
+              <FolderIcon className="mr-2 h-4 w-4" />
+              <span>Riwayat Lamaran</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/ai-practice"))}>
-              <VideoIcon className="mr-2 h-4 w-4" />
-              <span>Wawancara AI</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/status"))}>
-              <CheckCircleIcon className="mr-2 h-4 w-4" />
-              <span>Status Lamaran</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/profile"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate/profile"))}>
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Profil Saya</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/inbox"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate/inbox"))}>
               <FileTextIcon className="mr-2 h-4 w-4" />
               <span>Kotak Masuk</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/applicant/settings"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/candidate/settings"))}>
               <Settings2Icon className="mr-2 h-4 w-4" />
               <span>Pengaturan Akun</span>
             </CommandItem>
@@ -93,7 +85,7 @@ export function SearchDialog() {
               <CommandItem
                 key={app.id}
                 value={app.applicantName}
-                onSelect={() => runCommand(() => router.push(`/hrd/candidates/${app.id}`))}
+                onSelect={() => runCommand(() => router.push(`/hrd/candidate/${app.id}`))}
               >
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>{app.applicantName}</span>

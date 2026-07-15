@@ -24,13 +24,13 @@ interface DashboardContextType {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 /**
- * Provider data mock buat halaman dashboard baru (kanban, inbox, settings,
- * command palette) yang di-porting dari branch teman. Sengaja terpisah dari
- * context/AppContext.tsx (auth & data existing hrd/applicant) -- dua sumber
- * mock data yang belum disatukan, lihat plan integrasi dashboard.
+ * Provider data mock buat halaman hrd/candidate yang di-porting dari branch
+ * teman. Sengaja terpisah dari context/AppContext.tsx (auth) -- dua sumber
+ * mock data yang belum disatukan, bisa disatukan belakangan kalau backend
+ * API (apps/api-go) udah nyambung beneran.
  *
  * Dark mode TIDAK dikelola di sini -- itu tanggung jawab ThemeProvider
- * (next-themes), dipasang di layout hrd/applicant.
+ * (next-themes), dipasang di layout hrd/candidate.
  */
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
