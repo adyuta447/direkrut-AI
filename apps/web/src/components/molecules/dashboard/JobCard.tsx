@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -19,16 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 
 interface Job {
   id: string
@@ -48,6 +41,8 @@ interface JobCardProps {
 
 export function JobCard({ job, onEdit }: JobCardProps) {
   const { updateJob } = useDashboard()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const handleToggleStatus = (checked: boolean) => {
     updateJob(job.id, { status: checked ? "active" : "inactive" })
@@ -112,37 +107,23 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           <Button variant="outline" size="icon" onClick={() => onEdit(job)}>
             <IconEdit className="size-4" />
           </Button>
-          <Dialog>
-            <DialogTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                />
-              }
-            >
-              <IconTrash className="size-4" />
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Hapus Lowongan</DialogTitle>
-                <DialogDescription>
-                  Apakah Anda yakin ingin menghapus lowongan{" "}
-                  <span className="font-semibold text-foreground">&quot;{job.title}&quot;</span>?
-                  Tindakan ini tidak dapat dibatalkan.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="sm:justify-end gap-2 mt-4">
-                <DialogClose render={<Button type="button" variant="outline" />}>
-                  Batal
-                </DialogClose>
-                <DialogClose render={<Button type="button" variant="destructive" />}>
-                  Ya, Hapus
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="outline"
+            size="icon"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <IconTrash className="size-4" />
+          </Button>
+          <ConfirmDialog
+            open={confirmDelete}
+            onOpenChange={setConfirmDelete}
+            title="Hapus lowongan ini?"
+            description={`Lowongan "${job.title}" akan dihapus. Tindakan ini tidak dapat dibatalkan.`}
+            confirmLabel="Ya, Hapus"
+            onConfirm={() => setNotice("Lowongan dihapus")}
+          />
+          <NoticeDialog message={notice} onClose={() => setNotice(null)} />
         </div>
       </CardFooter>
     </Card>

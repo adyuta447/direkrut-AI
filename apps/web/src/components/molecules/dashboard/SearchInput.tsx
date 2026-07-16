@@ -1,8 +1,7 @@
 "use client";
 
 import { SearchIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
 export function SearchInput({
@@ -21,7 +20,7 @@ export function SearchInput({
       <InputGroupAddon>
         <SearchIcon className="size-4 text-muted-foreground" />
       </InputGroupAddon>
-      <Input
+      <InputGroupInput
         type="search"
         placeholder={placeholder}
         value={value}
