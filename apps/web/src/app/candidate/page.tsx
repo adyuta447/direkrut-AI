@@ -29,7 +29,7 @@ export default function CandidateDashboardPage() {
         <div className="px-4 lg:px-6">
           <PageHeader
             size="lg"
-            eyebrow="Dasbor Kamu"
+            eyebrow="Dashboard Kamu"
             title={`Halo, ${currentUser?.name ?? "Kandidat"} 👋`}
             description={
               aktif > 0

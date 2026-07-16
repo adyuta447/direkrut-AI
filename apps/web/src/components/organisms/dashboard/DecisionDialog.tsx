@@ -15,8 +15,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { useDashboard } from "@/context/DashboardContext"
-import { toast } from "sonner"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import { DecisionDialogConfirmation } from "@/components/molecules/dashboard/DecisionDialogConfirmation"
 import {
   CandidateInfoPanel,
@@ -49,6 +49,7 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
   )
   const [isSending, setIsSending] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [warning, setWarning] = useState<string | null>(null)
 
   const scoreInfo = React.useMemo(() => {
     const score = candidate.recommendationScore || 0
@@ -76,7 +77,7 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
 
   const handleSend = () => {
     if (decision === "invite" && (!interviewDate || !interviewTime)) {
-      toast.error("Harap isi tanggal dan waktu wawancara.")
+      setWarning("Harap isi tanggal dan waktu wawancara")
       return
     }
     setIsSending(true)
@@ -98,14 +99,19 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      <NoticeDialog
+        message={warning}
+        image="/status/warning.svg"
+        onClose={() => setWarning(null)}
+      />
       <DialogTrigger render={(trigger ?? defaultTrigger) as React.ReactElement} />
-      <DialogContent className="sm:max-w-[900px] gap-0 p-0 overflow-hidden">
+      <DialogContent className="gap-0 p-0 overflow-hidden">
         {showConfirmation ? (
           <DecisionDialogConfirmation applicantName={candidate.applicantName} />
         ) : (
           <>
             <DialogHeader className="p-6 pb-4 border-b">
-              <DialogTitle className="text-xl">
+              <DialogTitle>
                 {decision === "invite" ? "Undang ke Wawancara" : "Tolak Lamaran"}
               </DialogTitle>
               <DialogDescription>
@@ -116,7 +122,7 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
             </DialogHeader>
             <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">
               {decision === "reject" && <RejectAlert />}
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-6">
                 <div className="space-y-6">
                   <CandidateInfoPanel candidate={candidate} scoreInfo={scoreInfo} />
                   {decision === "invite" && (

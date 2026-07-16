@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
-import { EmptyState } from "@/components/molecules/dashboard/EmptyState"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge";
+import { EmptyState } from "@/components/molecules/dashboard/EmptyState";
 import {
   Table,
   TableBody,
@@ -9,18 +9,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { FileTextIcon, ArrowRightIcon } from "lucide-react"
+} from "@/components/ui/table";
+import { FileTextIcon, ArrowRightIcon } from "lucide-react";
 
 interface Application {
-  id: string
-  jobTitle: string
-  appliedDate: string
-  status: string
+  id: string;
+  jobTitle: string;
+  appliedDate: string;
+  status: string;
 }
 
 interface CandidateRecentApplicationsProps {
-  applications: Application[]
+  applications: Application[];
 }
 
 export function CandidateRecentApplications({
@@ -33,12 +33,10 @@ export function CandidateRecentApplications({
         title="Belum ada lamaran nih"
         description="Sekali lamar, progresnya langsung muncul di sini. Nggak perlu bolak-balik ngecek email."
         action={
-          <Button render={<Link href="/candidate/jobs" />}>
-            Mulai Lamar
-          </Button>
+          <Button render={<Link href="/candidate/jobs" />}>Mulai Lamar</Button>
         }
       />
-    )
+    );
   }
 
   return (
@@ -85,15 +83,13 @@ export function CandidateRecentApplications({
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
 
 export function CandidateRecentApplicationsHeader() {
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-xl font-bold tracking-[-0.02em] md:text-2xl">
-        Lamaran Terbaru
-      </h2>
+      <h2 className="text-xl font-bold tracking-[-0.02em] md:text-2xl">Lamaran baru</h2>
       <Button
         variant="ghost"
         className="text-muted-foreground hover:text-foreground"
@@ -103,5 +99,5 @@ export function CandidateRecentApplicationsHeader() {
         <ArrowRightIcon className="size-4" />
       </Button>
     </div>
-  )
+  );
 }

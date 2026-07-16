@@ -14,6 +14,10 @@ interface HrdStatCardItemsProps {
   applications: Application[]
 }
 
+/* Gaya kartu solid yang sama dengan dashboard kandidat. */
+const SOLID_CARD = "border-transparent text-white [&_.text-muted-foreground]:text-white/80"
+const SOLID_BADGE = "border-white/40 bg-white/10 text-white"
+
 export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
   const totalLamaran = applications.length
   const administrasiApps = applications.filter((a) => a.status === "under-review")
@@ -40,8 +44,10 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Total Lamaran"
         value={totalLamaran}
+        className={`bg-primary ${SOLID_CARD}`}
+        image="/dashboard/paper.svg"
         badge={
-          <Badge variant="outline">
+          <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
             +12.5%
           </Badge>
@@ -57,17 +63,15 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Tahap Administrasi"
         value={tahapAdministrasi}
-        className={delayedApps > 0 ? "border-warning/30" : undefined}
+        className={`bg-[color-mix(in_oklch,var(--warning),black_20%)] ${SOLID_CARD}`}
+        image="/dashboard/administrasi.svg"
         badge={
           delayedApps > 0 ? (
-            <Badge
-              variant="outline"
-              className="border-destructive/30 bg-destructive/10 text-destructive"
-            >
-              {delayedApps} Terbengkalai {">"} 7 Hari
+            <Badge variant="outline" className="border-white/40 bg-white text-destructive font-semibold">
+              {delayedApps} Terbengkalai
             </Badge>
           ) : (
-            <Badge variant="outline">
+            <Badge variant="outline" className={SOLID_BADGE}>
               <IconMinus />
               Stabil
             </Badge>
@@ -75,7 +79,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
         }
         footer={
           delayedApps > 0 ? (
-            <span className="text-destructive">Perlu tindakan segera</span>
+            "Perlu tindakan segera"
           ) : (
             <>
               Proses berjalan normal <IconMinus className="size-4" />
@@ -88,8 +92,10 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Lolos Wawancara"
         value={wawancara}
+        className={`bg-brand-accent-strong ${SOLID_CARD}`}
+        image="/dashboard/conference.svg"
         badge={
-          <Badge variant="outline">
+          <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
             +5%
           </Badge>
@@ -104,10 +110,12 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
 
       <StatCard
         label="Rata-rata Kecocokan"
-        value={avgLevel.label}
+        value={avgScore ? `${avgScore}%` : "-"}
+        className={`bg-success ${SOLID_CARD}`}
+        image="/dashboard/resume.svg"
         badge={
-          <Badge variant="outline" style={{ color: avgLevel.color }}>
-            {avgScore ? `${avgScore}%` : "-"}
+          <Badge variant="outline" className={SOLID_BADGE}>
+            {avgLevel.label}
           </Badge>
         }
         footer={
