@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Bubble percakapan (asisten AI, transkrip wawancara). */
 export function ChatBubble({
   from,
   children,

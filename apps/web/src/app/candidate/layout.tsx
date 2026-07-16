@@ -33,9 +33,9 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
           }
         >
           <CandidateSidebar />
-          <SidebarInset data-dashboard className="bg-background text-foreground">
+          <SidebarInset data-dashboard className="h-svh bg-background text-foreground">
             <DashboardHeader />
-            <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+            <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
             <SearchDialog />
           </SidebarInset>
         </SidebarProvider>

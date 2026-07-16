@@ -159,7 +159,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
               <UploadCloudIcon className="size-8 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-medium text-lg">Klik untuk mengunggah CV Anda</p>
+              <p className="font-medium text-lg">Klik buat upload CV kamu</p>
               <p className="text-sm text-muted-foreground mt-1">Mendukung PDF, DOCX (Maks 5MB)</p>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
           <div className="space-y-1">
             <h4 className="font-medium text-sm text-primary">Ringkasan AI</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Direkrut AI telah mengekstrak profil Anda. Pengalaman dan keahlian yang tercantum di CV telah dicocokkan dengan kualifikasi untuk posisi <strong>{job.title}</strong>. Lanjutkan untuk mengirim lamaran.
+              Direkrut AI udah baca profilmu. Pengalaman dan keahlian di CV kamu udah dicocokkan sama kualifikasi posisi <strong>{job.title}</strong>. Lanjutkan untuk mengirim lamaran.
             </p>
           </div>
         </div>
@@ -183,11 +183,11 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   const renderStep3 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {isProfileComplete && (
-        <div className="bg-success/10 border border-success/20 text-success p-4 rounded-xl flex items-start gap-3 mb-6">
+        <div className="rounded-2xl border p-4 flex items-start gap-3 mb-6 text-primary">
           <CheckCircleIcon className="size-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-sm">Data Diambil dari Profil Anda</p>
-            <p className="text-xs opacity-90 mt-1">Karena profil Anda sudah lengkap, Anda dapat langsung meninjau dan mengirim lamaran ini.</p>
+            <p className="font-medium text-sm">Data Diambil dari Profil Kamu</p>
+            <p className="text-xs opacity-90 mt-1">Profilmu udah lengkap, jadi tinggal tinjau sebentar terus kirim deh.</p>
           </div>
         </div>
       )}
@@ -213,7 +213,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
       </div>
 
       <p className="text-sm text-muted-foreground text-center px-4">
-        Dengan menekan tombol kirim di bawah, Anda menyetujui bahwa semua data yang diberikan adalah benar dan siap diproses oleh sistem Direkrut AI.
+        Dengan menekan tombol kirim, kamu menyetujui bahwa semua data yang kamu isi benar dan siap diproses sistem Direkrut AI.
       </p>
     </div>
   )
@@ -222,27 +222,27 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
     return (
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-12 w-full flex items-center justify-center">
         <div className="max-w-md w-full text-center space-y-6 animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto shadow-lg  dark:shadow-none animate-in zoom-in spin-in-12 duration-700">
+          <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto animate-in zoom-in spin-in-12 duration-700">
             <CheckCircleIcon className="size-10" />
           </div>
           
           <div className="space-y-2">
             <h2 className="text-2xl font-bold tracking-tight">Lamaran Terkirim!</h2>
             <p className="text-muted-foreground">
-              Anda telah berhasil melamar posisi <strong>{job.title}</strong> di <strong>{job.company}</strong>.
+              Lamaranmu udah terkirim buat posisi <strong>{job.title}</strong> di <strong>{job.company}</strong>.
             </p>
           </div>
 
-          <div className="bg-primary/10 border border-primary/20 p-6 rounded-2xl text-left space-y-4 mt-8">
+          <div className="rounded-2xl border p-6 text-left space-y-4 mt-8">
             <div className="flex items-center gap-3 text-primary">
               <VideoIcon className="size-6" />
               <h3 className="font-semibold text-lg">Tahap Selanjutnya: Wawancara AI</h3>
             </div>
             <p className="text-sm text-foreground/80 leading-relaxed">
-              Perusahaan mensyaratkan wawancara video berbasis AI sebagai tahap awal seleksi. Silakan bersiap di tempat yang terang dan kondusif. Anda akan diminta untuk menyalakan kamera dan mikrofon.
+              Tahap awalnya wawancara video sama AI. Cari tempat yang terang dan tenang ya -- nanti kamu diminta nyalain kamera dan mikrofon.
             </p>
             <Button 
-              className="w-full gap-2 font-semibold text-base py-6 shadow-md"
+              className="w-full gap-2 font-semibold text-base py-6"
               onClick={() => router.push(`/interview/${job.id}`)}
             >
               Mulai Wawancara AI Sekarang <ArrowRightIcon className="size-5" />
@@ -294,13 +294,13 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
       </div>
 
       <div className="pt-8">
-        <Card className="shadow-none border-muted">
+        <Card>
           <CardHeader>
             <CardTitle>{step === 1 ? 'Informasi Pribadi' : step === 2 ? 'Dokumen Resume / CV' : 'Tinjauan Akhir'}</CardTitle>
             <CardDescription>
-              {step === 1 ? 'Pastikan data yang Anda masukkan sesuai dengan identitas Anda.' : 
+              {step === 1 ? 'Pastikan datanya sesuai sama identitas kamu ya.' : 
                step === 2 ? 'Format yang diterima: PDF, DOCX maksimal 5MB.' : 
-               'Periksa kembali data Anda sebelum mengirimkan lamaran.'}
+               'Cek sekali lagi sebelum lamaranmu meluncur.'}
             </CardDescription>
           </CardHeader>
           <CardContent>

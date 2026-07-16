@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-/** Kartu statistik dashboard (dipakai HRD & kandidat). */
 export function StatCard({
   label,
   value,
@@ -28,8 +27,10 @@ export function StatCard({
   return (
     <Card className={cn("@container/card", className)}>
       <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+        <CardDescription className="text-xs font-semibold uppercase tracking-wider">
+          {label}
+        </CardDescription>
+        <CardTitle className="text-3xl font-bold tracking-[-0.02em] tabular-nums @[250px]/card:text-4xl">
           {value}
         </CardTitle>
         {badge && <CardAction>{badge}</CardAction>}
@@ -48,10 +49,9 @@ export function StatCard({
   );
 }
 
-/** Grid pembungkus deretan StatCard dengan gradient shadcn bawaan. */
 export function StatCardGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       {children}
     </div>
   );
