@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-/** Kartu statistik dashboard (dipakai HRD & kandidat). */
 export function StatCard({
   label,
   value,
@@ -50,7 +49,6 @@ export function StatCard({
   );
 }
 
-/** Grid pembungkus deretan StatCard -- kartu flat, tanpa gradient. */
 export function StatCardGrid({ children }: { children: ReactNode }) {
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">

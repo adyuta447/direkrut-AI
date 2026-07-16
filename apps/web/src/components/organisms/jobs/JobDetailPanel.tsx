@@ -1,4 +1,5 @@
 import { Job } from "../../../types";
+import { cn } from "@/lib/utils";
 import { JobDetailHeader } from "../../molecules/jobs/JobDetailHeader";
 import { JobRequirements } from "../../molecules/jobs/JobRequirements";
 import { JobQualifications } from "../../molecules/jobs/JobQualifications";
@@ -6,12 +7,19 @@ import { JobInterviewQuestions } from "../../molecules/jobs/JobInterviewQuestion
 
 interface JobDetailPanelProps {
   job: Job;
+  applyHref?: string;
+  className?: string;
 }
 
-export function JobDetailPanel({ job }: JobDetailPanelProps) {
+export function JobDetailPanel({ job, applyHref, className }: JobDetailPanelProps) {
   return (
-    <div className="hidden lg:flex flex-1 w-full border border-hairline rounded-3xl overflow-hidden bg-canvas sticky top-24 max-h-[calc(100vh-8rem)] flex-col">
-      <JobDetailHeader job={job} />
+    <div
+      className={cn(
+        "hidden lg:flex flex-1 w-full border border-hairline rounded-3xl overflow-hidden bg-canvas sticky top-24 h-[calc(100vh-8rem)] flex-col",
+        className
+      )}
+    >
+      <JobDetailHeader job={job} applyHref={applyHref} />
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="mb-8">

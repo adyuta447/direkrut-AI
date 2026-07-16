@@ -4,9 +4,11 @@ import { Job } from "../../../types";
 
 interface JobDetailHeaderProps {
   job: Job;
+  /** Tujuan tombol Lamar; default alur publik (register). */
+  applyHref?: string;
 }
 
-export function JobDetailHeader({ job }: JobDetailHeaderProps) {
+export function JobDetailHeader({ job, applyHref = "/auth/register" }: JobDetailHeaderProps) {
   return (
     <div className="p-8 border-b border-hairline bg-surface-1">
       <h2 className="text-[clamp(28px,3vw,40px)] font-bold leading-[1.15] tracking-[-0.01em] mb-2 text-ink">
@@ -26,7 +28,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
         </span>
       </div>
 
-      <Link href="/auth/register" className="btn-primary inline-block">
+      <Link href={applyHref} className="btn-primary inline-block">
         Lamar Sekarang
       </Link>
     </div>
