@@ -1,13 +1,13 @@
 "use client"
-import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { BellIcon, LockIcon, UserIcon, ShieldIcon } from "lucide-react"
+import { BellIcon, LockIcon, UserIcon } from "lucide-react"
+import {
+  SettingsCandidateTabAccount,
+  SettingsCandidateTabSecurity,
+} from "@/components/molecules/dashboard/SettingsCandidateTabAccount"
+import { SettingsCandidateTabNotifications } from "@/components/molecules/dashboard/SettingsCandidateTabNotifications"
 
 export default function CandidateSettingsPage() {
   return (
@@ -20,112 +20,27 @@ export default function CandidateSettingsPage() {
 
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="account" className="gap-2"><UserIcon className="size-4" /> Akun</TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2"><BellIcon className="size-4" /> Notifikasi</TabsTrigger>
-          <TabsTrigger value="security" className="gap-2"><LockIcon className="size-4" /> Keamanan</TabsTrigger>
+          <TabsTrigger value="account" className="gap-2">
+            <UserIcon className="size-4" /> Akun
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <BellIcon className="size-4" /> Notifikasi
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <LockIcon className="size-4" /> Keamanan
+          </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="account">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informasi Akun</CardTitle>
-                <CardDescription>Perbarui alamat email dan kredensial login kamu.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-2">
-                  <Label>Email Utama</Label>
-                  <Input defaultValue="kandidat@example.com" />
-                  <p className="text-xs text-muted-foreground">Email ini yang dipakai perusahaan buat ngehubungin kamu.</p>
-                </div>
-                <div className="pt-4 flex gap-2">
-                  <Button>Simpan Email</Button>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-destructive">Hapus Akun</CardTitle>
-                <CardDescription>Hapus akunmu secara permanen beserta semua riwayat lamaran dan profil.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="destructive">Hapus Akun Saya</Button>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="account">
+          <SettingsCandidateTabAccount />
         </TabsContent>
 
         <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferensi Notifikasi</CardTitle>
-              <CardDescription>Atur kapan dan gimana kamu mau dikabarin.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between space-x-2">
-                <div className="flex flex-col space-y-1">
-                  <Label>Email Pemberitahuan Lowongan Baru</Label>
-                  <span className="text-sm text-muted-foreground">Dapat email tiap ada lowongan yang cocok sama profilmu.</span>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <div className="flex flex-col space-y-1">
-                  <Label>Pembaruan Status Lamaran</Label>
-                  <span className="text-sm text-muted-foreground">Notifikasi real-time tiap HRD mengubah status lamaranmu.</span>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between space-x-2">
-                <div className="flex flex-col space-y-1">
-                  <Label>Pesan dari HRD</Label>
-                  <span className="text-sm text-muted-foreground">Notifikasi untuk kotak masuk undangan wawancara atau surat penerimaan.</span>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
+          <SettingsCandidateTabNotifications />
         </TabsContent>
 
         <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Keamanan & Kata Sandi</CardTitle>
-              <CardDescription>Ganti kata sandi dan amankan akunmu.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label>Kata Sandi Saat Ini</Label>
-                <Input type="password" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Kata Sandi Baru</Label>
-                <Input type="password" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Konfirmasi Kata Sandi Baru</Label>
-                <Input type="password" />
-              </div>
-              <div className="pt-4 flex gap-2">
-                <Button>Perbarui Kata Sandi</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-success">
-                <ShieldIcon className="size-5" /> Autentikasi Dua Faktor (2FA)
-              </CardTitle>
-              <CardDescription>Tambah lapisan keamanan ekstra buat akunmu.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="text-primary hover:text-primary">
-                Aktifkan 2FA
-              </Button>
-            </CardContent>
-          </Card>
+          <SettingsCandidateTabSecurity />
         </TabsContent>
       </Tabs>
     </div>

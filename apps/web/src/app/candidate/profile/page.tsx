@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader";
 import * as React from "react";
 import {
@@ -180,54 +181,59 @@ export default function CandidateProfilePage() {
       />
 
       {!hasAutoFilled && (
-        <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden relative bg-surface-1">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <BotIcon className="size-24 text-primary" />
+        <Card className="rounded-3xl border border-hairline bg-primary text-white shadow-none ring-0 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 opacity-15">
+            <BotIcon className="size-24 text-white" />
           </div>
           <CardHeader className="relative z-10 pb-4">
-            <CardTitle className="text-[20px] font-semibold text-ink flex items-center gap-2">
-              <BotIcon className="size-5 text-primary" />
+            <CardTitle className="text-[20px] font-semibold text-white flex items-center gap-2">
+              <BotIcon className="size-5 text-white" />
               Isi Profil Otomatis dengan AI
             </CardTitle>
-            <CardDescription className="text-base text-foreground/80">
+            <CardDescription className="text-base text-white/80">
               Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/DOCX), biar
               Direkrut AI yang ngisiin profilnya.
             </CardDescription>
           </CardHeader>
           <CardContent className="relative z-10">
             <div
-              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? "border-primary bg-canvas" : "border-hairline bg-canvas"} rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:border-primary`}
+              className={`border-2 border-dashed ${isUploading || isSimulatingAI ? "border-white bg-white/10" : "border-white/40 bg-white/10"} rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:border-white`}
               onClick={
                 !isUploading && !isSimulatingAI ? simulateAIFill : undefined
               }
             >
               {isUploading ? (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
                   <p className="font-medium">Mengunggah CV...</p>
                 </div>
               ) : isSimulatingAI ? (
                 <div className="flex flex-col items-center gap-4">
-                  <BotIcon className="size-10 text-primary" />
+                  <BotIcon className="size-10 text-white" />
                   <div className="space-y-1">
-                    <p className="font-medium text-primary">
+                    <p className="font-medium text-white">
                       AI lagi baca CV kamu...
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-white/75">
                       Membaca pengalaman kerja, pendidikan, dan skills
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 bg-primary/10 rounded-full">
-                    <UploadCloudIcon className="size-8 text-primary" />
-                  </div>
+                  <Image
+                    src="/dashboard/add_file.svg"
+                    alt=""
+                    width={160}
+                    height={120}
+                    unoptimized
+                    className="pointer-events-none h-24 w-auto select-none"
+                  />
                   <div>
                     <p className="font-medium text-lg">
                       Klik buat upload CV kamu
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-white/75 mt-1">
                       Sistem kami akan mengisi seluruh kolom di bawah secara
                       otomatis.
                     </p>
@@ -253,7 +259,7 @@ export default function CandidateProfilePage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        <div className="space-y-6 lg:col-span-1 sticky top-6">
+        <div className="space-y-6 lg:col-span-1 lg:sticky lg:top-6">
           <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0">
             <CardContent className="p-5">
               <div className="flex justify-between items-center mb-3">
@@ -273,7 +279,7 @@ export default function CandidateProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden">
+          <Card className="hidden lg:flex rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden">
             <div className="flex flex-col">
               <Button
                 variant="ghost"
@@ -412,7 +418,7 @@ export default function CandidateProfilePage() {
                         Perbarui informasi pribadi Anda di sini.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                       <div className="grid gap-2 col-span-2">
                         <Label>Nama Lengkap</Label>
                         <Input
@@ -504,22 +510,31 @@ export default function CandidateProfilePage() {
 
           <Card
             id="section-about"
-            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6"
+            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-ink">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-primary py-4 text-white">
+              <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">
                 Tentang Saya
               </CardTitle>
               <Dialog>
                 <DialogTrigger
                   render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <PenIcon className="size-4" />
-                    </Button>
+                    profile.about ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full bg-white/95 text-ink hover:bg-white"
+                      >
+                        <PenIcon className="size-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1"
+                      >
+                        <PlusIcon className="size-4" /> Tambah
+                      </Button>
+                    )
                   }
                 />
                 <DialogContent className="sm:max-w-2xl">
@@ -547,12 +562,23 @@ export default function CandidateProfilePage() {
             </CardHeader>
             <CardContent>
               {profile.about ? (
-                <p className="text-base leading-relaxed text-foreground/90">
+                <p className="text-[16px] leading-[1.6] text-ink">
                   {profile.about}
                 </p>
               ) : (
-                <div className="text-center py-8 px-6 rounded-2xl bg-surface-1">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-10 px-6 rounded-2xl bg-surface-1">
+                  <Image
+                    src="/dashboard/profile/profiles.svg"
+                    alt=""
+                    width={200}
+                    height={150}
+                    unoptimized
+                    className="pointer-events-none mx-auto mb-5 h-28 w-auto select-none"
+                  />
+                  <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">
+                    Ceritakan siapa kamu
+                  </p>
+                  <p className="mt-1 text-[14px] text-ink-muted">
                     Beritahu perusahaan apa yang membuatmu unggul untuk
                     dipekerjakan
                   </p>
@@ -570,10 +596,10 @@ export default function CandidateProfilePage() {
 
           <Card
             id="section-links"
-            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6"
+            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-ink">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-brand-accent-strong py-4 text-white">
+              <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">
                 Tautan Sosial & Portofolio
               </CardTitle>
               <Dialog>
@@ -581,7 +607,7 @@ export default function CandidateProfilePage() {
                   render={
                     <Button
                       variant="ghost"
-                      className="rounded-full text-primary font-semibold hover:bg-primary/10 gap-1"
+                      className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1"
                     >
                       <PlusIcon className="size-4" /> Tambah
                     </Button>
@@ -653,8 +679,19 @@ export default function CandidateProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 px-6 rounded-2xl bg-surface-1">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-10 px-6 rounded-2xl bg-surface-1">
+                  <Image
+                    src="/dashboard/profile/portfolio.svg"
+                    alt=""
+                    width={200}
+                    height={150}
+                    unoptimized
+                    className="pointer-events-none mx-auto mb-5 h-28 w-auto select-none"
+                  />
+                  <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">
+                    Pamerin karya terbaikmu
+                  </p>
+                  <p className="mt-1 text-[14px] text-ink-muted">
                     Tautkan profil profesional Anda untuk dilirik HRD.
                   </p>
                   <Button
@@ -671,10 +708,10 @@ export default function CandidateProfilePage() {
 
           <Card
             id="section-experience"
-            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6"
+            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-ink">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-info py-4 text-white">
+              <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">
                 Pengalaman Kerja
               </CardTitle>
               <Dialog>
@@ -682,7 +719,7 @@ export default function CandidateProfilePage() {
                   render={
                     <Button
                       variant="ghost"
-                      className="rounded-full text-primary font-semibold hover:bg-primary/10 gap-1"
+                      className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1"
                     >
                       <PlusIcon className="size-4" /> Tambah
                     </Button>
@@ -692,7 +729,7 @@ export default function CandidateProfilePage() {
                   <DialogHeader>
                     <DialogTitle>Tambah Pengalaman Kerja</DialogTitle>
                   </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                     <div className="grid gap-2 col-span-2">
                       <Label>Posisi / Jabatan</Label>
                       <Input placeholder="Contoh: Software Engineer" />
@@ -743,7 +780,7 @@ export default function CandidateProfilePage() {
                       <div className="flex-1 space-y-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold text-base leading-tight">
+                            <h4 className="text-[17px] font-semibold leading-tight text-ink">
                               {exp.role}
                             </h4>
                             <p className="text-sm font-medium mt-0.5">
@@ -778,8 +815,19 @@ export default function CandidateProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 px-6 rounded-2xl bg-surface-1">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-10 px-6 rounded-2xl bg-surface-1">
+                  <Image
+                    src="/dashboard/profile/experience.svg"
+                    alt=""
+                    width={200}
+                    height={150}
+                    unoptimized
+                    className="pointer-events-none mx-auto mb-5 h-28 w-auto select-none"
+                  />
+                  <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">
+                    Tunjukkan jam terbangmu
+                  </p>
+                  <p className="mt-1 text-[14px] text-ink-muted">
                     77,9% perusahaan menganggap pengalaman kerja sebagai hal
                     penting dalam lamaran.
                   </p>
@@ -797,10 +845,10 @@ export default function CandidateProfilePage() {
 
           <Card
             id="section-education"
-            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6"
+            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-ink">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-warning py-4 text-white">
+              <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">
                 Pendidikan
               </CardTitle>
               <Dialog>
@@ -808,7 +856,7 @@ export default function CandidateProfilePage() {
                   render={
                     <Button
                       variant="ghost"
-                      className="rounded-full text-primary font-semibold hover:bg-primary/10 gap-1"
+                      className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1"
                     >
                       <PlusIcon className="size-4" /> Tambah
                     </Button>
@@ -818,7 +866,7 @@ export default function CandidateProfilePage() {
                   <DialogHeader>
                     <DialogTitle>Tambah Pendidikan</DialogTitle>
                   </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                     <div className="grid gap-2 col-span-2">
                       <Label>Nama Institusi / Universitas</Label>
                       <Input placeholder="Contoh: Universitas Indonesia" />
@@ -862,7 +910,7 @@ export default function CandidateProfilePage() {
                       <div className="flex-1 space-y-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="font-bold text-base leading-tight">
+                            <h4 className="text-[17px] font-semibold leading-tight text-ink">
                               {edu.school}
                             </h4>
                             <p className="text-sm font-medium mt-0.5">
@@ -894,8 +942,19 @@ export default function CandidateProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 px-6 rounded-2xl bg-surface-1">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-10 px-6 rounded-2xl bg-surface-1">
+                  <Image
+                    src="/dashboard/profile/graduate.svg"
+                    alt=""
+                    width={200}
+                    height={150}
+                    unoptimized
+                    className="pointer-events-none mx-auto mb-5 h-28 w-auto select-none"
+                  />
+                  <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">
+                    Cantumkan pendidikanmu
+                  </p>
+                  <p className="mt-1 text-[14px] text-ink-muted">
                     Latar belakangmu dilihat perusahaan. Beritahu latar
                     pendidikanmu.
                   </p>
@@ -913,22 +972,31 @@ export default function CandidateProfilePage() {
 
           <Card
             id="section-skills"
-            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6"
+            className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-ink">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-success py-4 text-white">
+              <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">
                 Keahlian (Skills)
               </CardTitle>
               <Dialog>
                 <DialogTrigger
                   render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <PenIcon className="size-4" />
-                    </Button>
+                    profile.skills.length > 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full bg-white/95 text-ink hover:bg-white"
+                      >
+                        <PenIcon className="size-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1"
+                      >
+                        <PlusIcon className="size-4" /> Tambah
+                      </Button>
+                    )
                   }
                 />
                 <DialogContent className="sm:max-w-2xl">
@@ -1004,8 +1072,19 @@ export default function CandidateProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 px-6 rounded-2xl bg-surface-1">
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-10 px-6 rounded-2xl bg-surface-1">
+                  <Image
+                    src="/dashboard/profile/skills.svg"
+                    alt=""
+                    width={200}
+                    height={150}
+                    unoptimized
+                    className="pointer-events-none mx-auto mb-5 h-28 w-auto select-none"
+                  />
+                  <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">
+                    Tunjukkan keahlianmu
+                  </p>
+                  <p className="mt-1 text-[14px] text-ink-muted">
                     Beritahu apa yang kamu kuasai untuk menarik perusahaan top.
                   </p>
                   <Button
