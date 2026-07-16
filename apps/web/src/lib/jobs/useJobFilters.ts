@@ -17,14 +17,17 @@ export function useJobFilters(jobs: Job[], initial?: UseJobFiltersInitial) {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  // Reset ke halaman 1 begitu salah satu filter berubah. Dihitung selama
-  // render (bukan di useEffect) biar reset-nya kejadian di commit yang
-  // sama, tanpa sempat nge-flash halaman lama dengan filter baru.
+  // Reset halaman + pilihan begitu salah satu filter berubah. Dihitung
+  // selama render (bukan di useEffect) biar reset-nya kejadian di commit
+  // yang sama, tanpa sempat nge-flash halaman lama dengan filter baru.
+  // selectedJob ikut di-reset supaya panel detail nggak nampilin lowongan
+  // yang udah nggak lolos filter.
   const filterKey = `${searchTerm}|${locationFilter}|${typeFilter}|${salaryFilter}|${industryFilter}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (filterKey !== prevFilterKey) {
     setPrevFilterKey(filterKey);
     setPage(1);
+    setSelectedJob(null);
   }
 
   const filteredJobs = jobs.filter((job) => {

@@ -11,6 +11,7 @@ import { JobInterviewQuestions } from "../../molecules/jobs/JobInterviewQuestion
 interface JobDetailSheetProps {
   job: Job | null;
   onClose: () => void;
+  applyHref?: (job: Job) => string;
 }
 
 /**
@@ -18,7 +19,7 @@ interface JobDetailSheetProps {
  * kartu lowongan di-tap. Di desktop (lg+) tidak pernah tampil karena detail
  * sudah ada di panel samping.
  */
-export function JobDetailSheet({ job, onClose }: JobDetailSheetProps) {
+export function JobDetailSheet({ job, onClose, applyHref }: JobDetailSheetProps) {
   // Sheet hanya berlaku di bawah breakpoint lg; di desktop, klik lowongan
   // mengisi selectedJob untuk panel samping dan sheet tidak boleh aktif
   // (termasuk kunci scroll body-nya).
@@ -78,7 +79,7 @@ export function JobDetailSheet({ job, onClose }: JobDetailSheetProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          <JobDetailHeader job={job} />
+          <JobDetailHeader job={job} applyHref={applyHref?.(job)} />
           <div className="p-6 sm:p-8">
             <div className="mb-8">
               <h3 className="text-[20px] font-semibold mb-4 text-ink">Deskripsi Pekerjaan</h3>
