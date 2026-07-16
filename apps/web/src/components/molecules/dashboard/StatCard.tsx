@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Image from "next/image";
 import {
   Card,
   CardAction,
@@ -15,6 +16,7 @@ export function StatCard({
   badge,
   footer,
   footerDetail,
+  image,
   className,
 }: {
   label: ReactNode;
@@ -22,10 +24,12 @@ export function StatCard({
   badge?: ReactNode;
   footer?: ReactNode;
   footerDetail?: ReactNode;
+  /** Ilustrasi dekoratif (mis. /dashboard/paper.svg), nempel kanan-bawah. */
+  image?: string;
   className?: string;
 }) {
   return (
-    <Card className={cn("@container/card", className)}>
+    <Card className={cn("@container/card relative", className)}>
       <CardHeader>
         <CardDescription className="text-xs font-semibold uppercase tracking-wider">
           {label}
@@ -35,8 +39,20 @@ export function StatCard({
         </CardTitle>
         {badge && <CardAction>{badge}</CardAction>}
       </CardHeader>
+      {image && (
+        <Image
+          src={image}
+          alt=""
+          width={112}
+          height={112}
+          unoptimized
+          className="pointer-events-none absolute top-1/2 right-4 h-14 w-auto -translate-y-1/2 select-none @[250px]/card:h-16"
+        />
+      )}
       {(footer || footerDetail) && (
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <CardFooter
+          className={cn("flex-col items-start gap-1.5 text-sm", image && "pr-24")}
+        >
           {footer && (
             <div className="line-clamp-1 flex gap-2 font-medium">{footer}</div>
           )}
