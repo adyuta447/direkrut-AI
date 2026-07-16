@@ -1,4 +1,5 @@
-import { PenIcon, UploadCloudIcon } from "lucide-react"
+import Image from "next/image"
+import { PenIcon } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MapPinIcon } from "lucide-react"
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter,
+  Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
 
@@ -43,10 +44,10 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
             <DialogHeader>
               <DialogTitle>Ubah Foto Latar</DialogTitle>
             </DialogHeader>
-            <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/50">
-              <UploadCloudIcon className="size-10 text-muted-foreground mb-4" />
-              <p className="font-medium">Unggah Foto</p>
-              <p className="text-sm text-muted-foreground mt-1">PNG, JPG maksimal 2MB</p>
+            <div className="py-10 px-6 flex flex-col items-center justify-center text-center rounded-2xl bg-muted/50 cursor-pointer transition-colors hover:bg-muted">
+              <Image src="/dashboard/add_file.svg" alt="" width={160} height={120} unoptimized className="pointer-events-none mb-5 h-24 w-auto select-none" />
+              <p className="text-[18px] font-semibold text-foreground">Unggah Foto Latar</p>
+              <p className="text-[14px] text-muted-foreground mt-1">PNG, JPG maksimal 2MB</p>
             </div>
           </DialogContent>
         </Dialog>
@@ -69,7 +70,7 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
             >
               <PenIcon className="size-4 mr-2" /> Edit Profil
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Ubah Biodata</DialogTitle>
                 <DialogDescription>Perbarui informasi pribadi Anda di sini.</DialogDescription>
@@ -97,7 +98,8 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
                 </div>
               </div>
               <DialogFooter>
-                <Button>Simpan Perubahan</Button>
+                <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
+                <DialogClose render={<Button />}>Simpan Perubahan</DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>

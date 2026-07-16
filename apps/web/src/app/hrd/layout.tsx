@@ -10,6 +10,7 @@ import { HrdSidebar } from "@/components/organisms/dashboard/HrdSidebar";
 import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
 import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function HrdLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
@@ -33,11 +34,12 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
           }
         >
           <HrdSidebar variant="inset" />
-          <SidebarInset data-dashboard className="h-svh bg-background text-foreground">
+          <SidebarInset data-dashboard className="bg-background text-foreground overflow-hidden">
             <DashboardHeader />
-            <main className="flex-1 overflow-y-auto p-0">{children}</main>
+            <main className="flex-1 min-h-0 overflow-y-auto p-0">{children}</main>
           </SidebarInset>
           <SearchDialog />
+          <Toaster position="top-right" />
         </SidebarProvider>
       </DashboardProvider>
     </ThemeProvider>

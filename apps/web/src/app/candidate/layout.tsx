@@ -10,6 +10,7 @@ import { CandidateSidebar } from "@/components/organisms/dashboard/CandidateSide
 import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
 import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function CandidateLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
@@ -37,6 +38,7 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
             <DashboardHeader />
             <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
             <SearchDialog />
+            <Toaster position="top-right" />
           </SidebarInset>
         </SidebarProvider>
       </DashboardProvider>

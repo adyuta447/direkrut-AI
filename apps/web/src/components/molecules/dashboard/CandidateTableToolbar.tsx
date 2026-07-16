@@ -1,6 +1,5 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { SearchInput } from "@/components/molecules/dashboard/SearchInput"
 import { type Table } from "@tanstack/react-table"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 
@@ -25,6 +25,10 @@ interface CandidateTableToolbarProps {
   uniqueJobs: string[]
 }
 
+/* Pill landing-style: border hairline, aktif = solid primary. */
+const PILL_TAB =
+  "data-active:bg-primary data-active:text-white data-active:*:data-[slot=badge]:bg-white/25 data-active:*:data-[slot=badge]:text-white"
+
 export function CandidateTableToolbar({
   table,
   data,
@@ -34,15 +38,18 @@ export function CandidateTableToolbar({
   onTableModeChange,
   uniqueJobs,
 }: CandidateTableToolbarProps) {
+  const statusCount = (status: string) =>
+    data.filter((d) => d.status === status).length
+
   return (
     <>
       <div className="flex flex-col @4xl/main:flex-row items-start @4xl/main:items-center justify-between gap-4 px-4 lg:px-6 w-full">
-        <div className="flex bg-muted p-1 rounded-lg">
+        <div className="flex rounded-full border border-hairline bg-canvas p-1">
           <Button
             variant={tableMode === "ai" ? "default" : "ghost"}
             size="sm"
             onClick={() => onTableModeChange("ai")}
-            className="rounded-md"
+            className="rounded-full"
           >
             Format Direkrut AI
           </Button>
@@ -50,7 +57,7 @@ export function CandidateTableToolbar({
             variant={tableMode === "detail" ? "default" : "ghost"}
             size="sm"
             onClick={() => onTableModeChange("detail")}
-            className="rounded-md"
+            className="rounded-full"
           >
             Detail Kandidat Lengkap
           </Button>
@@ -58,14 +65,15 @@ export function CandidateTableToolbar({
       </div>
 
       <div className="flex flex-col @4xl/main:flex-row items-start @4xl/main:items-center gap-4 px-4 lg:px-6 mb-2 w-full">
-        <div className="w-full @4xl/main:w-auto flex-1 max-w-xs">
-          <Input
+        <div className="w-full @4xl/main:w-auto flex-1 @4xl/main:max-w-xs">
+          <SearchInput
+            className="rounded-full border-hairline bg-canvas"
             placeholder="Cari nama kandidat..."
             value={
               (table.getColumn("applicantName")?.getFilterValue() as string) ?? ""
             }
-            onChange={(event) =>
-              table.getColumn("applicantName")?.setFilterValue(event.target.value)
+            onChange={(value) =>
+              table.getColumn("applicantName")?.setFilterValue(value)
             }
           />
         </div>
@@ -76,7 +84,7 @@ export function CandidateTableToolbar({
           </Label>
           <Select value={activeTab} onValueChange={(val) => val && onTabChange(val)}>
             <SelectTrigger
-              className="flex w-full @4xl/main:hidden"
+              className="flex w-full rounded-full border-hairline bg-canvas @4xl/main:hidden"
               size="sm"
               id="view-selector"
             >
@@ -89,25 +97,21 @@ export function CandidateTableToolbar({
               <SelectItem value="ditolak">Ditolak</SelectItem>
             </SelectContent>
           </Select>
-          <TabsList className="hidden w-max **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-            <TabsTrigger value="all">Semua Kandidat</TabsTrigger>
-            <TabsTrigger value="administrasi">
+          <TabsList className="hidden w-max border border-hairline bg-canvas **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/20 **:data-[slot=badge]:px-1 @4xl/main:flex">
+            <TabsTrigger value="all" className={PILL_TAB}>
+              Semua Kandidat
+            </TabsTrigger>
+            <TabsTrigger value="administrasi" className={PILL_TAB}>
               Administrasi{" "}
-              <Badge variant="secondary">
-                {data.filter((d) => d.status === "under-review").length}
-              </Badge>
+              <Badge variant="secondary">{statusCount("under-review")}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="wawancara">
+            <TabsTrigger value="wawancara" className={PILL_TAB}>
               Wawancara{" "}
-              <Badge variant="secondary">
-                {data.filter((d) => d.status === "interview").length}
-              </Badge>
+              <Badge variant="secondary">{statusCount("interview")}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="ditolak">
+            <TabsTrigger value="ditolak" className={PILL_TAB}>
               Ditolak{" "}
-              <Badge variant="secondary">
-                {data.filter((d) => d.status === "rejected").length}
-              </Badge>
+              <Badge variant="secondary">{statusCount("rejected")}</Badge>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -124,7 +128,7 @@ export function CandidateTableToolbar({
                 ?.setFilterValue(value === "Semua Posisi" ? "" : value)
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full rounded-full border-hairline bg-canvas">
               <SelectValue placeholder="Semua Posisi" />
             </SelectTrigger>
             <SelectContent>

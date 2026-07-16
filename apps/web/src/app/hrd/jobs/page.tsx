@@ -33,6 +33,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { JobCard } from "@/components/molecules/dashboard/JobCard"
 import { JobFormFields } from "@/components/molecules/dashboard/JobFormFields"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 
 export default function JobManagementPage() {
   const { jobs } = useDashboard()
@@ -40,6 +41,7 @@ export default function JobManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("all")
+  const [notice, setNotice] = useState<string | null>(null)
 
   const filteredJobs = jobs.filter((job: any) =>
     activeTab === "all" ? true : job.status === activeTab
@@ -52,8 +54,10 @@ export default function JobManagementPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const isEdit = isSheetOpen
     setIsSheetOpen(false)
     setIsDialogOpen(false)
+    setNotice(isEdit ? "Perubahan lowongan disimpan" : "Lowongan baru ditambahkan")
   }
 
   const tabCounts = (status: string) =>
@@ -61,6 +65,7 @@ export default function JobManagementPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-8 @container/main w-full">
+      <NoticeDialog message={notice} onClose={() => setNotice(null)} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <PageHeader
           className="flex-1"
@@ -73,7 +78,7 @@ export default function JobManagementPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleSubmit} className="flex flex-col">
             <DialogHeader>
               <DialogTitle>Tambah Lowongan Baru</DialogTitle>

@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { CheckCircleIcon, ChevronRightIcon } from "lucide-react"
+import Image from "next/image"
+import { ChevronRightIcon } from "lucide-react"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { ProfileAIBanner } from "@/components/molecules/dashboard/ProfileAIBanner"
 import { ProfileBiodataCard } from "@/components/molecules/dashboard/ProfileBiodataCard"
@@ -28,6 +30,7 @@ const INITIAL_PROFILE = {
   age: "-",
   gender: "-",
   about: "",
+  aboutStatus: undefined as "draft" | "saved" | undefined,
   experience: [] as any[],
   education: [] as any[],
   skills: [] as string[],
@@ -42,19 +45,22 @@ const AI_FILLED_PROFILE = {
   email: "budi.santoso@email.com",
   phone: "+6281234567890",
   about: "Saya adalah seorang Software Engineer dengan pengalaman dalam membangun aplikasi web modern dan scalable. Sangat antusias terhadap teknologi terbaru dan senang berkolaborasi dalam tim.",
+  aboutStatus: "saved" as const,
   experience: [
-    { id: "1", role: "Software Engineer", company: "TechStart", startDate: "Agt 2022", endDate: "Sekarang", description: "Mengembangkan backend microservices menggunakan Node.js dan Go." },
-    { id: "2", role: "Intern Backend Developer", company: "DataCorp", startDate: "Jan 2021", endDate: "Des 2021", description: "Merancang API dan optimasi database PostgreSQL." },
+    { id: "1", role: "Software Engineer", company: "TechStart", startDate: "Agt 2022", endDate: "Sekarang", description: "Mengembangkan backend microservices menggunakan Node.js dan Go.", status: "saved" as const },
+    { id: "2", role: "Intern Backend Developer", company: "DataCorp", startDate: "Jan 2021", endDate: "Des 2021", description: "Merancang API dan optimasi database PostgreSQL.", status: "saved" as const },
   ],
   education: [
-    { id: "1", school: "Universitas Indonesia", degree: "S1 Ilmu Komputer", startYear: "2018", endYear: "2022" },
+    { id: "1", school: "Universitas Indonesia", degree: "S1 Ilmu Komputer", startYear: "2018", endYear: "2022", status: "saved" as const },
   ],
   skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS", "Go"],
   links: [
-    { id: "1", platform: "LinkedIn", url: "linkedin.com/in/budisantoso" },
-    { id: "2", platform: "Portofolio", url: "budisantoso.dev" },
+    { id: "1", platform: "LinkedIn", url: "linkedin.com/in/budisantoso", status: "saved" as const },
+    { id: "2", platform: "Portofolio", url: "budisantoso.dev", status: "saved" as const },
   ],
 }
+
+const genId = () => Math.random().toString(36).slice(2, 10)
 
 export default function CandidateProfilePage() {
   const { isProfileComplete, setIsProfileComplete } = useDashboard()
@@ -63,6 +69,11 @@ export default function CandidateProfilePage() {
   const [hasAutoFilled, setHasAutoFilled] = React.useState(isProfileComplete)
   const [profile, setProfile] = React.useState(INITIAL_PROFILE)
   const [newSkill, setNewSkill] = React.useState("")
+  const [notice, setNotice] = React.useState<string | null>(null)
+
+  const notify = (message: string) => setNotice(message)
+  const notifyStatus = (status: "draft" | "saved") =>
+    notify(status === "draft" ? "Draft disimpan" : "Perubahan disimpan")
 
   const simulateAIFill = () => {
     setIsUploading(true)
@@ -74,6 +85,7 @@ export default function CandidateProfilePage() {
         setHasAutoFilled(true)
         setIsProfileComplete(true)
         setProfile({ ...profile, ...AI_FILLED_PROFILE })
+        notify("Profil berhasil dilengkapi oleh AI")
       }, 2500)
     }, 1500)
   }
@@ -91,12 +103,57 @@ export default function CandidateProfilePage() {
     setProfile({ ...profile, skills: profile.skills.filter((s) => s !== skillToRemove) })
   }
 
+  const saveAbout = (value: string, status: "draft" | "saved") => {
+    setProfile({ ...profile, about: value, aboutStatus: status })
+    notifyStatus(status)
+  }
+
+  const addLink = (data: { platform: string; url: string }, status: "draft" | "saved") => {
+    setProfile({ ...profile, links: [{ id: genId(), ...data, status }, ...profile.links] })
+    notifyStatus(status)
+  }
+  const updateLink = (id: string, data: { platform: string; url: string }, status: "draft" | "saved") => {
+    setProfile({ ...profile, links: profile.links.map((l: any) => (l.id === id ? { ...l, ...data, status } : l)) })
+    notifyStatus(status)
+  }
+  const removeLink = (id: string) => {
+    setProfile({ ...profile, links: profile.links.filter((l: any) => l.id !== id) })
+    notify("Tautan dihapus")
+  }
+
+  const addExperience = (data: Record<string, string>, status: "draft" | "saved") => {
+    setProfile({ ...profile, experience: [{ id: genId(), ...data, status }, ...profile.experience] })
+    notifyStatus(status)
+  }
+  const updateExperience = (id: string, data: Record<string, string>, status: "draft" | "saved") => {
+    setProfile({ ...profile, experience: profile.experience.map((x: any) => (x.id === id ? { ...x, ...data, status } : x)) })
+    notifyStatus(status)
+  }
+  const removeExperience = (id: string) => {
+    setProfile({ ...profile, experience: profile.experience.filter((x: any) => x.id !== id) })
+    notify("Pengalaman dihapus")
+  }
+
+  const addEducation = (data: Record<string, string>, status: "draft" | "saved") => {
+    setProfile({ ...profile, education: [{ id: genId(), ...data, status }, ...profile.education] })
+    notifyStatus(status)
+  }
+  const updateEducation = (id: string, data: Record<string, string>, status: "draft" | "saved") => {
+    setProfile({ ...profile, education: profile.education.map((x: any) => (x.id === id ? { ...x, ...data, status } : x)) })
+    notifyStatus(status)
+  }
+  const removeEducation = (id: string) => {
+    setProfile({ ...profile, education: profile.education.filter((x: any) => x.id !== id) })
+    notify("Pendidikan dihapus")
+  }
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
     <div className="p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto space-y-6">
+      <NoticeDialog message={notice} onClose={() => setNotice(null)} />
       <PageHeader className="mb-6" eyebrow="Personal Branding" title="Profil Saya" description="Profil yang lengkap bikin peluang dilirik HRD makin gede." />
 
       {!hasAutoFilled && (
@@ -104,11 +161,11 @@ export default function CandidateProfilePage() {
       )}
 
       {hasAutoFilled && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 text-primary">
-          <CheckCircleIcon className="size-5 mt-0.5 shrink-0" />
-          <div>
-            <p className="font-medium">Profil Berhasil Dilengkapi oleh AI!</p>
-            <p className="text-sm opacity-90 mt-1">Silakan periksa kembali data di bawah ini. Anda dapat menekan tombol Edit (Ikon Pensil) untuk memperbaiki bagian yang salah.</p>
+        <div className="rounded-3xl border border-hairline bg-canvas p-6 flex flex-col sm:flex-row items-center gap-5">
+          <Image src="/status/success.svg" alt="" width={160} height={100} unoptimized className="pointer-events-none h-20 w-auto shrink-0 select-none" />
+          <div className="text-center sm:text-left">
+            <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">Profil Berhasil Dilengkapi oleh AI!</p>
+            <p className="text-[14px] text-ink-muted mt-1">Silakan periksa kembali data di bawah ini. Tekan tombol Edit (ikon pensil) untuk memperbaiki bagian yang salah.</p>
           </div>
         </div>
       )}
@@ -153,10 +210,10 @@ export default function CandidateProfilePage() {
             profile={profile}
             onChangeProfile={(partial) => setProfile({ ...profile, ...partial })}
           />
-          <ProfileAboutCard about={profile.about} onAboutChange={(v) => setProfile({ ...profile, about: v })} />
-          <ProfileLinksCard links={profile.links} />
-          <ProfileExperienceCard experience={profile.experience} />
-          <ProfileEducationCard education={profile.education} />
+          <ProfileAboutCard about={profile.about} aboutStatus={profile.aboutStatus} onSave={saveAbout} />
+          <ProfileLinksCard links={profile.links} onAdd={addLink} onUpdate={updateLink} onRemove={removeLink} />
+          <ProfileExperienceCard experience={profile.experience} onAdd={addExperience} onUpdate={updateExperience} onRemove={removeExperience} />
+          <ProfileEducationCard education={profile.education} onAdd={addEducation} onUpdate={updateEducation} onRemove={removeEducation} />
           <ProfileSkillsCard
             skills={profile.skills}
             newSkill={newSkill}

@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import {
   IconCheck, IconChevronRight, IconFileText,
@@ -14,6 +17,7 @@ import {
   DialogFooter, DialogClose, DialogHeader,
   DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 
 interface CrossRoleItem {
   id: string
@@ -29,6 +33,8 @@ interface CrossRoleItem {
 }
 
 export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
+  const [notice, setNotice] = useState<string | null>(null)
+
   return (
     <Card className="overflow-hidden flex flex-col">
       <div className="bg-muted/50 p-4 border-b flex justify-between items-start">
@@ -78,7 +84,7 @@ export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
             <IconCheck className="size-4 shrink-0" />
             <span className="truncate">Tawarkan Posisi</span>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Validasi &amp; Kirim Penawaran</DialogTitle>
               <DialogDescription>
@@ -103,12 +109,15 @@ export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
             </div>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
-              <DialogClose render={<Button />}>
+              <DialogClose
+                render={<Button onClick={() => setNotice("Email penawaran terkirim")} />}
+              >
                 <IconSend className="size-4 mr-2" /> Kirim Email
               </DialogClose>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <NoticeDialog message={notice} onClose={() => setNotice(null)} />
       </CardFooter>
     </Card>
   )
