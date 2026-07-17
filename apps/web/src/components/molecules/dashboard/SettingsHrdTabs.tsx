@@ -28,7 +28,7 @@ export function SettingsHrdTabAccount() {
       <CardHeader>
         <CardTitle>Keamanan Akun</CardTitle>
         <CardDescription>
-          Ubah kata sandi Anda atau kelola metode masuk alternatif.
+          Ganti kata sandi kamu atau atur metode masuk lainnya.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -95,7 +95,7 @@ export function SettingsHrdTabSystem() {
         <CardHeader>
           <CardTitle>Preferensi Tampilan</CardTitle>
           <CardDescription>
-            Sesuaikan antarmuka sesuai kenyamanan mata Anda.
+            Atur tampilan biar mata kamu nyaman.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -111,7 +111,7 @@ export function SettingsHrdTabSystem() {
               <div>
                 <p className="font-medium">Mode Gelap (Dark Mode)</p>
                 <p className="text-sm text-muted-foreground">
-                  Gunakan tema warna gelap untuk dasbor.
+                  Nyalain tema gelap buat dasbor kamu.
                 </p>
               </div>
             </div>
@@ -127,7 +127,7 @@ export function SettingsHrdTabSystem() {
             Konfigurasi Model AI
           </CardTitle>
           <CardDescription>
-            Pilih mesin AI yang digunakan untuk menganalisis kandidat (Mempengaruhi biaya kredit).
+            Pilih mesin AI buat nganalisis kandidat (ngaruh ke biaya kredit lho).
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -145,8 +145,8 @@ export function SettingsHrdTabSystem() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-2">
-                Catatan: Mengubah model AI akan mengubah cara pembobotan bahasa dan kedalaman
-                analisis. Direkrut-4o adalah bawaan standar.
+                Catatan: ganti model AI = ganti cara pembobotan bahasa &amp; kedalaman analisisnya.
+                Direkrut-4o itu defaultnya.
               </p>
             </div>
           </div>

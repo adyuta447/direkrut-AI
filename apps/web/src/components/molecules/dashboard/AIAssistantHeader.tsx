@@ -11,7 +11,7 @@ export function AIAssistantHeader() {
           <h1 className="font-semibold text-lg">Asisten AI</h1>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-success inline-block" />
-            Selalu siap membantu
+            Standby, siap dipanggil kapan aja
           </p>
         </div>
       </div>

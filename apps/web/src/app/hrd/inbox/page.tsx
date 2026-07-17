@@ -40,14 +40,14 @@ export default function InboxPage() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
         title="Kotak Masuk Email"
-        description="Riwayat email yang dikirim ke kandidat beserta statusnya."
+        description="Semua email yang udah kamu kirim ke kandidat, lengkap sama statusnya."
       />
 
       <Card>
         <CardHeader>
           <CardTitle>Riwayat Pengiriman Email</CardTitle>
           <CardDescription>
-            Lacak email yang telah Anda kirimkan kepada kandidat beserta statusnya.
+            Pantau email yang udah kamu kirim ke kandidat, plus statusnya.
           </CardDescription>
         </CardHeader>
         <CardContent>

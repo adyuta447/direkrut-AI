@@ -26,8 +26,8 @@ export default function JobCandidatesPage() {
   if (!job) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <h2 className="text-xl font-bold">Lowongan tidak ditemukan</h2>
-        <Button render={<Link href="/hrd/jobs" />}>Kembali ke Daftar Lowongan</Button>
+        <h2 className="text-xl font-bold">Lowongannya nggak ketemu nih</h2>
+        <Button render={<Link href="/hrd/jobs" />}>Balik ke Daftar Lowongan</Button>
       </div>
     )
   }

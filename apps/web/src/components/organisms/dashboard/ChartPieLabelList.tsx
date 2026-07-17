@@ -53,16 +53,20 @@ export function ChartPieLabelList() {
     ]
   }, [applications])
 
+  const total = chartData[0].count + chartData[1].count || 1
+  const fgPct = Math.round((chartData[0].count / total) * 100)
+  const proPct = 100 - fgPct
+
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Demografi Kategori Kandidat</CardTitle>
-        <CardDescription>Fresh Graduate vs Professional</CardDescription>
+    <Card className="flex flex-col h-full rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
+      <CardHeader className="items-center rounded-t-3xl bg-brand-accent-strong py-5 text-white">
+        <CardTitle className="text-[20px] font-semibold text-white">Demografi Kategori Kandidat</CardTitle>
+        <CardDescription className="text-white/80">Fresh Graduate vs Professional</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pt-6 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px] [&_.recharts-text]:fill-background"
+          className="mx-auto aspect-square max-h-[220px] [&_.recharts-text]:fill-background"
         >
           <PieChart>
             <ChartTooltip
@@ -81,13 +85,27 @@ export function ChartPieLabelList() {
             </Pie>
           </PieChart>
         </ChartContainer>
+        <div className="mt-4 flex justify-center gap-3">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
+            style={{ backgroundColor: "var(--chart-2)" }}
+          >
+            Professional {proPct}%
+          </span>
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white"
+            style={{ backgroundColor: "var(--chart-1)" }}
+          >
+            Fresh Graduate {fgPct}%
+          </span>
+        </div>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm mt-4">
         <div className="flex items-center gap-2 leading-none font-medium">
-          Mendominasi dari kategori Professional <TrendingUp className="h-4 w-4" />
+          Kandidat Professional lebih mendominasi <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Digunakan AI untuk membedakan set pembobotan
+          Dipakai AI buat nentuin bobot penilaian yang beda
         </div>
       </CardFooter>
     </Card>

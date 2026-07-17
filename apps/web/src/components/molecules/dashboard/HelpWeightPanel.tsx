@@ -65,8 +65,8 @@ export function HelpWeightPanel() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground italic mt-4 text-center">
-          Seluruh skor dikalkulasi secara otomatis oleh AI dan dapat diverifikasi ulang oleh HRD
-          melalui fitur &quot;Tanya AI&quot; di halaman kandidat.
+          Semua skor dihitung otomatis sama AI, dan bisa kamu cek ulang lewat fitur
+          &quot;Tanya AI&quot; di halaman kandidat.
         </p>
       </CardContent>
     </Card>

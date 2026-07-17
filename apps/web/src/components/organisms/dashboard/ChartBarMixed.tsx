@@ -30,12 +30,12 @@ export function ChartBarMixed() {
   )
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader>
-        <CardTitle>Top 5 Posisi Paling Diminati</CardTitle>
-        <CardDescription>Berdasarkan total pelamar yang masuk</CardDescription>
+    <Card className="flex flex-col h-full rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
+      <CardHeader className="rounded-t-3xl bg-primary py-5 text-white">
+        <CardTitle className="text-[20px] font-semibold text-white">Top 5 Posisi Paling Diminati</CardTitle>
+        <CardDescription className="text-white/80">Berdasarkan total pelamar yang masuk</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
+      <CardContent className="flex-1 pt-6">
         <ChartContainer config={chartConfig}>
           <BarChart
             accessibilityLayer
@@ -59,16 +59,16 @@ export function ChartBarMixed() {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="count" radius={5} />
+            <Bar dataKey="count" radius={8} />
           </BarChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm mt-4">
         <div className="flex gap-2 leading-none font-medium">
-          Persaingan ketat di posisi teratas <TrendingUp className="h-4 w-4" />
+          Rame banget yang ngelamar posisi ini <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Menampilkan 5 posisi dengan pelamar terbanyak
+          5 posisi paling diserbu pelamar
         </div>
       </CardFooter>
     </Card>
