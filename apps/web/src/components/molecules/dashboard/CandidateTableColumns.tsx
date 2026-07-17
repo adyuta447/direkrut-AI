@@ -59,14 +59,14 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
     <div className="flex items-center gap-1.5">
       <Button
         size="icon"
-        className="h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded"
+        className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
       >
         <IconMessageCircle className="size-4" />
       </Button>
       <Button
         variant="outline"
         size="icon"
-        className="h-8 w-8 rounded text-muted-foreground hover:text-destructive border-border"
+        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive border-hairline"
       >
         <IconX className="size-4" />
       </Button>
@@ -75,7 +75,7 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
           render={
             <Button
               variant="outline"
-              className="flex h-8 w-8 rounded text-muted-foreground border-border"
+              className="flex h-8 w-8 rounded-full text-muted-foreground border-hairline"
               size="icon"
             />
           }

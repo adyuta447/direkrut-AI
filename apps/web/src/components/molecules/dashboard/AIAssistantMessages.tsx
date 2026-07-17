@@ -49,7 +49,7 @@ export function AIAssistantMessages({
 
               <div className={`flex flex-col gap-1 min-w-0 ${isUser ? "items-end" : "items-start"}`}>
                 <span className="text-[10px] text-muted-foreground px-1 shrink-0">
-                  {isUser ? "Anda" : "AI"} •{" "}
+                  {isUser ? "Kamu" : "AI"} •{" "}
                   {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
                 <ChatBubble

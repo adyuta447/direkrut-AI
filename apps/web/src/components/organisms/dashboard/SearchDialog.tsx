@@ -75,9 +75,9 @@ export function SearchDialog() {
 
   return (
     <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-      <CommandInput placeholder="Ketik untuk mencari kandidat, lowongan, atau halaman..." />
+      <CommandInput placeholder="Ketik buat cari kandidat, lowongan, atau halaman..." />
       <CommandList>
-        <CommandEmpty>Tidak ada hasil yang ditemukan.</CommandEmpty>
+        <CommandEmpty>Nggak ketemu hasilnya nih.</CommandEmpty>
 
         {applications.length > 0 && (
           <CommandGroup heading="Kandidat">

@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { ChevronRightIcon } from "lucide-react"
+import { IconProgress } from "@tabler/icons-react"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { ProfileAIBanner } from "@/components/molecules/dashboard/ProfileAIBanner"
@@ -10,7 +11,7 @@ import { ProfileBiodataCard } from "@/components/molecules/dashboard/ProfileBiod
 import { ProfileAboutCard, ProfileLinksCard, ProfileSkillsCard } from "@/components/molecules/dashboard/ProfileSectionCards"
 import { ProfileExperienceCard, ProfileEducationCard } from "@/components/molecules/dashboard/ProfileExperienceCard"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { useDashboard } from "@/context/DashboardContext"
 
 const SECTION_LINKS = [
@@ -27,8 +28,8 @@ const INITIAL_PROFILE = {
   email: "kandidat@example.com",
   phone: "+6283434343434",
   location: "Indonesia",
-  age: "-",
-  gender: "-",
+  age: "",
+  gender: "",
   about: "",
   aboutStatus: undefined as "draft" | "saved" | undefined,
   experience: [] as any[],
@@ -151,6 +152,24 @@ export default function CandidateProfilePage() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   }
 
+  const completionChecks = [
+    profile.age.trim() !== "" && profile.gender.trim() !== "",
+    profile.about.trim() !== "",
+    profile.links.length > 0,
+    profile.experience.length > 0,
+    profile.education.length > 0,
+    profile.skills.length > 0,
+  ]
+  const progress = Math.round(
+    (completionChecks.filter(Boolean).length / completionChecks.length) * 100
+  )
+  const progressMessage =
+    progress === 100
+      ? "Mantap, profil kamu udah lengkap total! HRD bakal gampang ngelirik kamu."
+      : progress >= 60
+        ? "Profil kamu sudah cukup. Silakan kirimkan lamaran Anda sekarang juga!"
+        : "Masih ada bagian yang kosong nih. Lengkapi biar makin dilirik HRD."
+
   return (
     <div className="p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto space-y-6">
       <NoticeDialog message={notice} onClose={() => setNotice(null)} />
@@ -170,39 +189,44 @@ export default function CandidateProfilePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        <div className="space-y-6 lg:col-span-1 lg:sticky lg:top-6">
-          <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0">
-            <CardContent className="p-5">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold text-sm">Kelengkapan Data:</span>
-                <span className="font-bold text-sm text-primary">Cukup</span>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1">
+          <div className="space-y-6 lg:sticky lg:top-6">
+            <div className="rounded-3xl bg-primary p-6 text-white">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 text-[17px] font-semibold">
+                  <IconProgress className="size-5" /> Kelengkapan
+                </h3>
+                <span className="text-2xl font-bold tabular-nums">{progress}%</span>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary transition-all" style={{ width: "75%" }} />
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/20">
+                <div
+                  className="h-full rounded-full bg-white transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
-              <p className="text-xs text-muted-foreground mt-4 leading-relaxed">Profil kamu sudah cukup. Silakan kirimkan lamaran Anda sekarang juga!</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hidden lg:flex rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden">
-            <div className="flex flex-col w-full">
-              {SECTION_LINKS.map((link) => (
-                <Button
-                  key={link.id}
-                  variant="ghost"
-                  className="justify-between rounded-none px-5 py-6 border-b text-foreground font-medium"
-                  onClick={() => scrollTo(link.id)}
-                >
-                  <span>{link.label}</span>
-                  <ChevronRightIcon className="size-4 text-muted-foreground" />
-                </Button>
-              ))}
-              <div className="p-4 bg-muted/30 border-t">
-                <Button className="w-full">Simpan Perubahan</Button>
-              </div>
+              <p className="mt-4 text-sm text-white/85">{progressMessage}</p>
             </div>
-          </Card>
+
+            <Card className="hidden lg:flex rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden">
+              <div className="flex flex-col w-full">
+                {SECTION_LINKS.map((link) => (
+                  <Button
+                    key={link.id}
+                    variant="ghost"
+                    className="justify-between rounded-none px-5 py-6 border-b text-foreground font-medium"
+                    onClick={() => scrollTo(link.id)}
+                  >
+                    <span>{link.label}</span>
+                    <ChevronRightIcon className="size-4 text-muted-foreground" />
+                  </Button>
+                ))}
+                <div className="p-4 bg-muted/30 border-t">
+                  <Button className="w-full">Simpan Perubahan</Button>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
 
         <div className="space-y-6 lg:col-span-3">

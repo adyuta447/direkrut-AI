@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
-  IconCheck, IconChevronRight, IconFileText,
+  IconCheck, IconSparkles, IconFileText,
   IconVideo, IconExternalLink, IconSend,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
@@ -32,50 +32,66 @@ interface CrossRoleItem {
   emailed: boolean
 }
 
+const SOLID_BADGE = "border-white/40 bg-white/15 text-white"
+
 export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
   const [notice, setNotice] = useState<string | null>(null)
+  const isHighlyRelevant = item.label === "Sangat Relevan"
+  const bandColor = isHighlyRelevant ? "bg-primary" : "bg-brand-accent-strong"
+  const suggestedRoleColor = isHighlyRelevant ? "text-primary" : "text-brand-accent-strong"
+  const bandRing = isHighlyRelevant ? "ring-primary" : "ring-brand-accent-strong"
 
   return (
-    <Card className="overflow-hidden flex flex-col">
-      <div className="bg-muted/50 p-4 border-b flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2">
-            <Link href={`/hrd/candidates/${item.id}`} className="hover:underline hover:text-primary transition-colors">
+    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0 flex flex-col">
+      <div className={`${bandColor} p-4`}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/hrd/candidates/${item.id}`} className="hover:underline text-white">
               <h3 className="font-semibold text-lg">{item.candidateName}</h3>
             </Link>
             {item.emailed && (
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+              <Badge variant="outline" className={SOLID_BADGE}>
                 Email Terkirim
               </Badge>
             )}
           </div>
-          <div className="flex items-center text-sm text-muted-foreground mt-1">
-            <span>Melamar: <span className="line-through">{item.originalRole}</span></span>
-            <IconChevronRight className="size-4 mx-2" />
-            <span className="font-semibold text-primary">{item.suggestedRole}</span>
+          <Badge variant="outline" className={`${SOLID_BADGE} whitespace-nowrap shrink-0`}>{item.label}</Badge>
+        </div>
+
+        <div className="relative mt-4 grid grid-cols-2 gap-4">
+          <div className="min-w-0 rounded-xl bg-white/10 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Posisi Dilamar</p>
+            <p className="truncate text-sm text-white/75 line-through">{item.originalRole}</p>
+          </div>
+          <div className="min-w-0 rounded-xl bg-white px-3 py-2">
+            <p className={`text-[10px] font-semibold uppercase tracking-wider ${suggestedRoleColor} opacity-70`}>Rekomendasi AI</p>
+            <p className={`truncate text-sm font-semibold ${suggestedRoleColor}`}>{item.suggestedRole}</p>
+          </div>
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-0 w-12 -translate-x-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/40" />
+          <div className={`absolute left-1/2 top-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white ring-4 ${bandRing}`}>
+            <IconSparkles className={`size-4 ${suggestedRoleColor}`} />
           </div>
         </div>
-        <Badge variant={item.variant as any} className="whitespace-nowrap">{item.label}</Badge>
       </div>
 
       <CardContent className="p-5 flex-1 space-y-4">
         <div>
-          <h4 className="text-sm font-semibold mb-1 text-foreground">Analisis AI</h4>
-          <p className="text-sm text-muted-foreground leading-relaxed">{item.reason}</p>
+          <h4 className="text-sm font-semibold mb-1 text-ink">Analisis AI</h4>
+          <p className="text-sm text-ink-muted leading-relaxed">{item.reason}</p>
         </div>
-        <div className="bg-secondary/40 rounded-lg p-3 border border-secondary">
+        <div className="bg-surface-1 rounded-2xl border border-hairline p-4">
           <div className="flex items-center gap-2 mb-2">
             {item.evidenceType === "cv"
               ? <IconFileText className="size-4 text-primary" />
               : <IconVideo className="size-4 text-primary" />}
             <h5 className="text-xs font-semibold text-primary uppercase tracking-wider">Bukti Pendukung</h5>
           </div>
-          <p className="text-sm italic text-foreground/80 leading-relaxed">{item.evidence}</p>
+          <p className="text-sm italic text-ink/80 leading-relaxed">{item.evidence}</p>
         </div>
       </CardContent>
 
       <CardFooter className="p-4 pt-0 grid grid-cols-2 gap-2">
-        <Button variant="outline" className="w-full" render={<Link href={`/hrd/candidates/${item.id}`} />}>
+        <Button variant="outline" className="w-full border-hairline" render={<Link href={`/hrd/candidates/${item.id}`} />}>
           <IconExternalLink className="size-4 mr-2" />
           <span className="truncate">Detail Kandidat</span>
         </Button>
@@ -88,9 +104,9 @@ export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
             <DialogHeader>
               <DialogTitle>Validasi &amp; Kirim Penawaran</DialogTitle>
               <DialogDescription>
-                Tinjau dan kirim email konfirmasi ke{" "}
-                <span className="font-semibold text-foreground">{item.candidateName}</span> terkait
-                rekomendasi lintas peran ke posisi{" "}
+                Cek draft-nya, terus kirim ke{" "}
+                <span className="font-semibold text-foreground">{item.candidateName}</span> buat
+                nawarin posisi{" "}
                 <span className="font-semibold text-foreground">{item.suggestedRole}</span>.
               </DialogDescription>
             </DialogHeader>
@@ -110,7 +126,7 @@ export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
               <DialogClose
-                render={<Button onClick={() => setNotice("Email penawaran terkirim")} />}
+                render={<Button onClick={() => setNotice("Email penawaran udah terkirim!")} />}
               >
                 <IconSend className="size-4 mr-2" /> Kirim Email
               </DialogClose>

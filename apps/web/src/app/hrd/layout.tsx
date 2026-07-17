@@ -34,7 +34,7 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
           }
         >
           <HrdSidebar variant="inset" />
-          <SidebarInset data-dashboard className="bg-background text-foreground overflow-hidden">
+          <SidebarInset data-dashboard className="h-svh bg-background text-foreground overflow-hidden">
             <DashboardHeader />
             <main className="flex-1 min-h-0 overflow-y-auto p-0">{children}</main>
           </SidebarInset>

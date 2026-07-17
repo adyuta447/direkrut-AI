@@ -14,7 +14,7 @@ export default function SettingsPage() {
       <PageHeader
         className="mb-6"
         title="Pengaturan"
-        description="Kelola preferensi akun, sistem AI, dan tagihan Anda."
+        description="Akun, sistem AI, sampe tagihan — atur semua di sini."
       />
 
       <Tabs defaultValue="account" className="space-y-6">

@@ -10,7 +10,7 @@ export default function HelpPage() {
       <PageHeader
         className="mb-6"
         title="Pusat Bantuan & Panduan"
-        description="Pelajari cara menggunakan dasbor Direkrut AI secara maksimal."
+        description="Biar dasbor Direkrut AI kepake maksimal, cus pelajari di sini."
       />
 
       <div className="grid md:grid-cols-2 gap-6">
