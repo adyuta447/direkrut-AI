@@ -77,7 +77,7 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
 
   const handleSend = () => {
     if (decision === "invite" && (!interviewDate || !interviewTime)) {
-      setWarning("Harap isi tanggal dan waktu wawancara")
+      setWarning("Tanggal & waktu wawancara wajib diisi dulu ya")
       return
     }
     setIsSending(true)
@@ -116,8 +116,8 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
               </DialogTitle>
               <DialogDescription>
                 {decision === "invite"
-                  ? "Siapkan dan kirimkan undangan wawancara kepada kandidat."
-                  : "Kirimkan pemberitahuan penolakan yang bermartabat dan berbasis data profil kandidat."}
+                  ? "Siapin undangan wawancaranya, tinggal kirim ke kandidat."
+                  : "Kirim kabar penolakan yang tetap sopan dan berbasis data profil kandidat."}
               </DialogDescription>
             </DialogHeader>
             <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">

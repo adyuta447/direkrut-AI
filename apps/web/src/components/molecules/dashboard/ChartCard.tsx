@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Gaya tooltip Recharts standar (sebelumnya di-copy-paste ~10x). */
 export const CHART_TOOLTIP_STYLE = {
   borderRadius: "8px",
   border: "1px solid var(--border)",
@@ -9,7 +8,6 @@ export const CHART_TOOLTIP_STYLE = {
   color: "var(--foreground)",
 } as const;
 
-/** Kartu chart standar: judul + deskripsi + area chart min 220px. */
 export function ChartCard({
   title,
   description,

@@ -152,7 +152,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                     colSpan={candidateColumns.length}
                     className="h-24 text-center"
                   >
-                    Tidak ada kandidat ditemukan.
+                    Belum ada kandidat yang cocok nih.
                   </TableCell>
                 </TableRow>
               )}

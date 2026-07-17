@@ -51,7 +51,7 @@ export function CandidateTableToolbar({
             onClick={() => onTableModeChange("ai")}
             className="rounded-full"
           >
-            Format Direkrut AI
+            Ringkasan AI
           </Button>
           <Button
             variant={tableMode === "detail" ? "default" : "ghost"}
@@ -59,7 +59,7 @@ export function CandidateTableToolbar({
             onClick={() => onTableModeChange("detail")}
             className="rounded-full"
           >
-            Detail Kandidat Lengkap
+            Semua Detail
           </Button>
         </div>
       </div>

@@ -18,9 +18,9 @@ export function DecisionDialogConfirmation({
         unoptimized
         className="pointer-events-none mb-6 h-28 w-auto select-none"
       />
-      <DialogTitle className="mb-2">Notifikasi Terkirim</DialogTitle>
+      <DialogTitle className="mb-2">Kelar, Email Terkirim!</DialogTitle>
       <DialogDescription>
-        {applicantName} telah menerima pemberitahuan melalui email.
+        {applicantName} udah dapet kabarnya lewat email.
       </DialogDescription>
     </div>
   )
