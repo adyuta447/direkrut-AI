@@ -88,7 +88,7 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           {job.timeline && (
             <div className="flex items-center text-sm text-muted-foreground gap-2 font-medium">
               <span className="bg-warning/10 text-warning px-2 py-0.5 rounded text-xs flex items-center gap-1">
-                Berakhir: {format(new Date(job.timeline.to), "dd MMM yyyy")}
+                Tutup {format(new Date(job.timeline.to), "dd MMM yyyy")}
               </span>
             </div>
           )}
@@ -101,7 +101,7 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           variant="default"
           render={<Link href={`/hrd/jobs/${job.id}/candidates`} />}
         >
-          Lihat Detail Kandidat
+          Cek Kandidat
         </Button>
         <div className="flex gap-2 w-full sm:w-auto justify-end">
           <Button variant="outline" size="icon" onClick={() => onEdit(job)}>
@@ -118,10 +118,10 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           <ConfirmDialog
             open={confirmDelete}
             onOpenChange={setConfirmDelete}
-            title="Hapus lowongan ini?"
-            description={`Lowongan "${job.title}" akan dihapus. Tindakan ini tidak dapat dibatalkan.`}
+            title="Yakin mau hapus lowongan ini?"
+            description={`Lowongan "${job.title}" bakal hilang permanen. Nggak bisa di-undo lho.`}
             confirmLabel="Ya, Hapus"
-            onConfirm={() => setNotice("Lowongan dihapus")}
+            onConfirm={() => setNotice("Lowongan udah dihapus")}
           />
           <NoticeDialog message={notice} onClose={() => setNotice(null)} />
         </div>

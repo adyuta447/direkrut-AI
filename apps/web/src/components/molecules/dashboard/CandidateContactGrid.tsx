@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 
 interface CandidateContactGridProps {
   candidate: any
@@ -20,18 +19,19 @@ export function CandidateContactGrid({ candidate, onToggleChart, showChart }: Ca
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-6 text-sm text-muted-foreground mt-2 border-t pt-6">
+      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-hairline pt-6 text-sm lg:grid-cols-4">
         {rows.map((item) => (
           <div key={item.label} className="flex flex-col gap-1">
-            <span className="font-semibold text-foreground">{item.label}</span>
-            <span className="truncate">{item.val}</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+              {item.label}
+            </span>
+            <span className="truncate font-medium text-ink">{item.val}</span>
           </div>
         ))}
       </div>
-      <Separator />
-      <div className="flex justify-center">
-        <Button variant="outline" onClick={onToggleChart} className="rounded-full shadow-sm">
-          {showChart ? "Sembunyikan Analisis" : "Lihat Analisis Kandidat"}
+      <div className="mt-6 flex justify-center border-t border-hairline pt-6">
+        <Button variant="outline" onClick={onToggleChart} className="rounded-full border-hairline">
+          {showChart ? "Sembunyikan Analisis" : "Cek Analisis Kandidat"}
         </Button>
       </div>
     </>

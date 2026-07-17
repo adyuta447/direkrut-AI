@@ -200,12 +200,11 @@ export function RejectAlert() {
     <Alert className="bg-warning/5 border-warning/20">
       <AlertCircle className="h-4 w-4 text-warning" />
       <AlertTitle className="text-warning font-semibold">
-        Feedback Bermartabat
+        Feedback yang Tetap Manusiawi
       </AlertTitle>
       <AlertDescription className="text-warning/90 mt-1">
-        Email penolakan ini telah diisi secara otomatis oleh AI berdasarkan
-        profil keahlian dan hasil wawancara kandidat, sehingga bersifat personal
-        dan berbasis data — bukan pemberitahuan generik.
+        Draft ini udah diisi otomatis sama AI berdasarkan profil keahlian dan hasil
+        wawancara kandidat — jadi tetap personal dan berbasis data, bukan template generik.
       </AlertDescription>
     </Alert>
   )

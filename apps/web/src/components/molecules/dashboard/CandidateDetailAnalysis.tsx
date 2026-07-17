@@ -58,38 +58,38 @@ export function CandidateDetailAnalysis({ candidate, baseScore, isFreshGrad, exp
   ]
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Korelasi CV dan Wawancara</CardTitle>
-        <CardDescription>Bagaimana AI menyimpulkan nilai untuk {candidate.applicantName}</CardDescription>
+    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
+      <CardHeader className="rounded-t-3xl bg-primary py-5 text-white">
+        <CardTitle className="text-[20px] font-semibold text-white">Cocok-cocokan CV &amp; Wawancara</CardTitle>
+        <CardDescription className="text-white/80">Gini cara AI ngasih nilai buat {candidate.applicantName}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2 pb-4">
-          <h4 className="font-semibold text-base text-primary">Transparansi Penilaian (Explainable AI)</h4>
-          <p className="text-sm text-muted-foreground mb-4">
-            Metodologi dan pembobotan yang digunakan AI untuk menghasilkan skor akhir {baseScore}% untuk kandidat ini.
+          <h4 className="text-[17px] font-semibold text-ink">Transparansi Penilaian (Explainable AI)</h4>
+          <p className="text-sm text-ink-muted mb-4">
+            Ini metodologi &amp; bobot yang dipakai AI buat ngasih skor akhir {baseScore}% ke kandidat ini.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {scoreCards.map((card) => (
               <div
                 key={card.id}
-                className={`border rounded-lg p-4 bg-background shadow-sm relative overflow-hidden cursor-pointer transition-all ${card.hoverBorder}`}
+                className={`rounded-2xl border border-hairline bg-surface-1 p-5 relative overflow-hidden cursor-pointer transition-all ${card.hoverBorder}`}
                 onClick={() => onToggleCard(card.id)}
               >
                 <div className="absolute top-0 right-0 p-2 opacity-5">{card.icon}</div>
                 <div className="flex justify-between items-start mb-1">
-                  <div className={`font-bold text-3xl ${card.color}`}>{card.pct}</div>
+                  <div className={`font-bold text-3xl tracking-[-0.02em] ${card.color}`}>{card.pct}</div>
                   <Button variant="ghost" size="icon" className="h-6 w-6 relative z-10">
                     {expandedCards[card.id] ? <IconChevronUp className="h-4 w-4" /> : <IconChevronDown className="h-4 w-4" />}
                   </Button>
                 </div>
-                <h5 className="font-semibold text-sm mb-1">{card.title}</h5>
-                <p className="text-xs text-muted-foreground relative z-10">{card.desc}</p>
+                <h5 className="font-semibold text-[15px] mb-1 text-ink">{card.title}</h5>
+                <p className="text-xs text-ink-muted relative z-10">{card.desc}</p>
                 {expandedCards[card.id] && (
-                  <div className="mt-3 pt-3 border-t animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
+                  <div className="mt-3 pt-3 border-t border-hairline animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
                     {card.details.map((d, i) => (
                       <div key={i} className="flex justify-between">
-                        <span className="text-muted-foreground">{d.label}</span>
+                        <span className="text-ink-muted">{d.label}</span>
                         <span className={`font-medium ${card.color}`}>{d.val}</span>
                       </div>
                     ))}
@@ -100,22 +100,22 @@ export function CandidateDetailAnalysis({ candidate, baseScore, isFreshGrad, exp
           </div>
         </div>
 
-        <Separator />
+        <Separator className="bg-hairline" />
 
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <IconBriefcase className="size-5 text-primary" />
-            <h4 className="font-semibold text-base">Relevansi Pengalaman (Tinggi)</h4>
+            <h4 className="text-[17px] font-semibold text-ink">Relevansi Pengalaman (Tinggi)</h4>
           </div>
-          <div className="bg-muted/50 p-4 rounded-lg border">
-            <p className="text-sm italic text-muted-foreground mb-2">Kutipan dari CV kandidat:</p>
-            <p className="text-sm leading-relaxed">
+          <div className="rounded-2xl border border-hairline bg-surface-1 p-5">
+            <p className="text-sm italic text-ink-muted mb-2">Kutipan dari CV-nya:</p>
+            <p className="text-[15px] leading-relaxed text-ink">
               &quot;Bertanggung jawab penuh atas{" "}
               <mark className="bg-warning/20 px-1 rounded font-medium">strategi manajemen di 3 proyek berskala nasional</mark>{" "}
               yang menghasilkan peningkatan efisiensi sebesar 20% dalam waktu 6 bulan.&quot;
             </p>
-            <div className="mt-3 text-xs text-primary bg-primary/10 w-fit px-2 py-1 rounded">
-              Analisis AI: Disebutkan 3x di CV terkait pengalaman langsung pada proyek serupa.
+            <div className="mt-3 w-fit rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
+              Analisis AI: Disebut 3x di CV, nyambung sama pengalaman langsung di proyek serupa.
             </div>
           </div>
         </div>
@@ -123,31 +123,30 @@ export function CandidateDetailAnalysis({ candidate, baseScore, isFreshGrad, exp
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <IconSchool className="size-5 text-primary" />
-            <h4 className="font-semibold text-base">Pendidikan &amp; Sertifikasi (Menengah)</h4>
+            <h4 className="text-[17px] font-semibold text-ink">Pendidikan &amp; Sertifikasi (Menengah)</h4>
           </div>
-          <div className="bg-muted/50 p-4 rounded-lg border">
-            <p className="text-sm italic text-muted-foreground mb-2">Kutipan dari CV kandidat:</p>
-            <p className="text-sm leading-relaxed">&quot;Sarjana Ilmu Komputer, Universitas XYZ. Aktif dalam organisasi kemahasiswaan.&quot;</p>
-            <div className="mt-3 text-xs text-warning bg-warning/10 w-fit px-2 py-1 rounded">
-              Analisis AI: Memiliki gelar yang relevan, namun{" "}
-              <mark className="bg-warning/20 px-1 rounded">sertifikasi spesifik profesional tidak ditemukan</mark>.
+          <div className="rounded-2xl border border-hairline bg-surface-1 p-5">
+            <p className="text-sm italic text-ink-muted mb-2">Kutipan dari CV-nya:</p>
+            <p className="text-[15px] leading-relaxed text-ink">&quot;Sarjana Ilmu Komputer, Universitas XYZ. Aktif dalam organisasi kemahasiswaan.&quot;</p>
+            <div className="mt-3 w-fit rounded-full bg-[color-mix(in_oklch,var(--warning),black_20%)] px-3 py-1 text-xs font-medium text-white">
+              Analisis AI: Gelarnya relevan, tapi sertifikasi profesional spesifik belum ketemu.
             </div>
           </div>
         </div>
 
-        <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
-          <h4 className="font-semibold text-primary mb-1">Kesimpulan Akhir AI</h4>
-          <p className="text-sm text-foreground mb-4">
-            Kandidat ini menunjukkan korelasi yang sangat kuat antara apa yang ditulis di CV dengan jawaban saat wawancara teknis.
-            Probabilitas kecocokan sangat tinggi ({baseScore}%). Sangat direkomendasikan untuk tahap selanjutnya.
+        <div className="rounded-2xl bg-primary p-6 text-white">
+          <h4 className="text-[17px] font-semibold mb-1">Kesimpulan Akhir AI</h4>
+          <p className="text-[15px] leading-relaxed text-white/90">
+            CV dan jawaban wawancara teknisnya nyambung banget. Probabilitas kecocokan tinggi banget
+            ({baseScore}%) — gaskeun ke tahap berikutnya.
           </p>
         </div>
 
-        <div className="mt-8 mb-4 border-t border-primary/10 pt-6">
-          <h4 className="font-semibold text-primary mb-1 flex items-center gap-2">
-            <IconSparkles className="size-4" /> Asisten AI Interaktif
+        <div className="mt-8 mb-4 border-t border-hairline pt-6">
+          <h4 className="text-[17px] font-semibold text-ink mb-1 flex items-center gap-2">
+            <IconSparkles className="size-4 text-primary" /> Asisten AI Interaktif
           </h4>
-          <p className="text-sm text-muted-foreground">Ajukan pertanyaan spesifik tentang profil, pengalaman, atau hasil wawancara kandidat ini kepada Asisten AI.</p>
+          <p className="text-sm text-ink-muted">Mau tau lebih dalam soal profil, pengalaman, atau wawancara kandidat ini? Tanya aja ke Asisten AI.</p>
         </div>
 
         <form
@@ -168,12 +167,12 @@ export function CandidateDetailAnalysis({ candidate, baseScore, isFreshGrad, exp
             </div>
             <Input
               name="q"
-              placeholder={`Tanya AI lebih dalam tentang ${candidate.applicantName}...`}
-              className="pl-12 pr-4 py-6 bg-primary/5 border-primary/20 rounded-xl focus-visible:ring-primary/50 text-sm shadow-sm"
+              placeholder={`Tanya lebih lanjut soal ${candidate.applicantName}...`}
+              className="h-12 rounded-full border-hairline bg-canvas pl-12 pr-4 text-sm shadow-none focus-visible:border-primary"
               required
             />
           </div>
-          <Button type="submit" className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm h-auto py-3 px-6 sm:w-auto w-full">
+          <Button type="submit" className="h-12 rounded-full px-6 sm:w-auto w-full">
             Tanya AI
           </Button>
         </form>

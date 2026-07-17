@@ -128,7 +128,7 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
           <div>
             <Label className="text-base font-semibold">Batas Waktu (Timeline)</Label>
             <p className="text-sm text-muted-foreground">
-              Aktifkan jika lowongan memiliki batas waktu (misal: Magang)
+              Nyalain kalau lowongan ini ada tenggat, misal buat program magang
             </p>
           </div>
           <Switch checked={hasTimeline} onCheckedChange={setHasTimeline} />

@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto("http://localhost:3000/auth/login", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "HRD" }).click();
+await page.getByText("Coba Akses Cepat (Demo)").click();
+await page.waitForTimeout(1200);
+await page.evaluate(() => { const a = document.createElement("a"); a.href="/hrd/candidates/app-502"; a.id="jump"; document.body.appendChild(a); });
+await page.click("#jump");
+await page.waitForTimeout(1200);
+console.log(page.url());
+await page.screenshot({ path: "cd-before-1.png" });
+await page.mouse.wheel(0, 900);
+await page.waitForTimeout(400);
+await page.screenshot({ path: "cd-before-2.png" });
+await browser.close();

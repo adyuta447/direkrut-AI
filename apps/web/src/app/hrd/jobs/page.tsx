@@ -57,7 +57,7 @@ export default function JobManagementPage() {
     const isEdit = isSheetOpen
     setIsSheetOpen(false)
     setIsDialogOpen(false)
-    setNotice(isEdit ? "Perubahan lowongan disimpan" : "Lowongan baru ditambahkan")
+    setNotice(isEdit ? "Perubahan berhasil disimpan" : "Lowongan baru udah gas tayang")
   }
 
   const tabCounts = (status: string) =>
@@ -70,7 +70,7 @@ export default function JobManagementPage() {
         <PageHeader
           className="flex-1"
           title="Manajemen Lowongan"
-          description="Kelola posisi dan lowongan pekerjaan yang terbuka di perusahaan Anda."
+          description="Semua posisi yang lagi kamu buka, atur dari sini."
         />
         <Button onClick={() => { setSelectedJob(null); setIsDialogOpen(true) }}>
           <IconPlus className="size-4 mr-2" /> Lowongan Baru
@@ -81,8 +81,8 @@ export default function JobManagementPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <form onSubmit={handleSubmit} className="flex flex-col">
             <DialogHeader>
-              <DialogTitle>Tambah Lowongan Baru</DialogTitle>
-              <DialogDescription>Isi detail pekerjaan baru di bawah ini.</DialogDescription>
+              <DialogTitle>Buka Lowongan Baru</DialogTitle>
+              <DialogDescription>Isi detailnya, tinggal gas.</DialogDescription>
             </DialogHeader>
             <div className="py-6">
               <JobFormFields selectedJob={selectedJob} />
@@ -100,7 +100,7 @@ export default function JobManagementPage() {
           <form onSubmit={handleSubmit} className="flex flex-col min-h-full p-6">
             <SheetHeader className="px-0 pt-0 pb-4">
               <SheetTitle>Edit Lowongan</SheetTitle>
-              <SheetDescription>Ubah detail pekerjaan di bawah ini.</SheetDescription>
+              <SheetDescription>Ubah yang perlu, sisanya biar tetap sama.</SheetDescription>
             </SheetHeader>
             <div className="flex-1 py-4 space-y-6">
               <JobFormFields selectedJob={selectedJob} />
@@ -124,7 +124,7 @@ export default function JobManagementPage() {
         </TabsList>
         <div className="sm:hidden mb-6">
           <Select value={activeTab} onValueChange={(val) => val && setActiveTab(val)}>
-            <SelectTrigger><SelectValue placeholder="Pilih Kategori" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Pilih Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Lowongan</SelectItem>
               <SelectItem value="active">Aktif</SelectItem>
@@ -141,7 +141,7 @@ export default function JobManagementPage() {
           ))}
           {filteredJobs.length === 0 && (
             <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
-              Tidak ada lowongan dengan status ini.
+              Belum ada lowongan buat status ini.
             </div>
           )}
         </div>
