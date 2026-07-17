@@ -24,12 +24,12 @@ export default function HrdDashboardPage() {
         <div className="px-4 lg:px-6">
           <PageHeader
             size="lg"
-            eyebrow="Dashboard Rekrutmen"
+            eyebrow="Ringkasan Hari Ini"
             title={`Halo, ${currentUser?.name ?? "HRD"} 👋`}
             description={
               perluTinjauan > 0
-                ? `Ada ${perluTinjauan} lamaran menunggu tinjauanmu. Semua progres rekrutmen kepantau dari sini.`
-                : "Semua lamaran sudah ditinjau. Pantau progres rekrutmen dari sini."
+                ? `Ada ${perluTinjauan} lamaran nunggu ditinjau nih. Semua progres rekrutmen kepantau gampang dari sini.`
+                : "Mantap, semua lamaran udah ditinjau! Progres rekrutmen tetap kepantau dari sini."
             }
             action={
               <Button render={<Link href="/hrd/jobs" />}>

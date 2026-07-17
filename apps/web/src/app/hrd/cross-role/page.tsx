@@ -113,7 +113,7 @@ export default function CrossRoleRecommendationPage() {
           className="flex-1"
           title="Rekomendasi Lintas Posisi"
           description={
-            <>Daftar kandidat dengan <span className="italic">transferable skills</span> yang dapat dipindahkan ke posisi alternatif.</>
+            <>Kandidat yang <span className="italic">skill</span>-nya nyambung ke posisi lain, udah AI temuin buat kamu.</>
           }
         />
         <CrossRoleAnalyticsPanel

@@ -67,7 +67,7 @@ function DrawerInfoGrid({ item }: { item: Candidate }) {
               <IconFileText className="size-4" /> Lihat CV
             </a>
           ) : (
-            <span className="text-muted-foreground">Tidak ada dokumen</span>
+            <span className="text-muted-foreground">Belum ada dokumen</span>
           )}
         </div>
       </div>
@@ -144,7 +144,7 @@ export function CandidateTableCellViewer({
             <div>
               <DrawerTitle className="text-xl">{item.applicantName}</DrawerTitle>
               <DrawerDescription>
-                Melamar untuk posisi {item.jobTitle}
+                Ngelamar buat posisi {item.jobTitle}
               </DrawerDescription>
             </div>
           </div>

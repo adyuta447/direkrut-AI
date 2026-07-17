@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import Image from "next/image";
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -31,13 +30,13 @@ export function StatCard({
   return (
     <Card className={cn("@container/card relative", className)}>
       <CardHeader>
+        {badge && <div className="flex">{badge}</div>}
         <CardDescription className="text-xs font-semibold uppercase tracking-wider">
           {label}
         </CardDescription>
         <CardTitle className="text-3xl font-bold tracking-[-0.02em] tabular-nums @[250px]/card:text-4xl">
           {value}
         </CardTitle>
-        {badge && <CardAction>{badge}</CardAction>}
       </CardHeader>
       {image && (
         <Image
@@ -46,12 +45,12 @@ export function StatCard({
           width={112}
           height={112}
           unoptimized
-          className="pointer-events-none absolute top-1/2 right-4 h-14 w-auto -translate-y-1/2 select-none @[250px]/card:h-16"
+          className="pointer-events-none absolute top-1/2 right-4 h-14 w-auto max-w-28 -translate-y-1/2 select-none @[250px]/card:h-16"
         />
       )}
       {(footer || footerDetail) && (
         <CardFooter
-          className={cn("flex-col items-start gap-1.5 text-sm", image && "pr-24")}
+          className={cn("flex-col items-start gap-1.5 text-sm", image && "pr-28")}
         >
           {footer && (
             <div className="line-clamp-1 flex gap-2 font-medium">{footer}</div>

@@ -52,12 +52,8 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
             +12.5%
           </Badge>
         }
-        footer={
-          <>
-            Tren naik bulan ini <IconTrendingUp className="size-4" />
-          </>
-        }
-        footerDetail="Berdasarkan 30 hari terakhir"
+        footer="Makin rame bulan ini"
+        footerDetail="Data 30 hari terakhir"
       />
 
       <StatCard
@@ -68,25 +64,17 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
         badge={
           delayedApps > 0 ? (
             <Badge variant="outline" className="border-white/40 bg-white text-destructive font-semibold">
-              {delayedApps} Terbengkalai
+              {delayedApps} Macet
             </Badge>
           ) : (
             <Badge variant="outline" className={SOLID_BADGE}>
               <IconMinus />
-              Stabil
+              Aman
             </Badge>
           )
         }
-        footer={
-          delayedApps > 0 ? (
-            "Perlu tindakan segera"
-          ) : (
-            <>
-              Proses berjalan normal <IconMinus className="size-4" />
-            </>
-          )
-        }
-        footerDetail="Menunggu tinjauan HRD"
+        footer={delayedApps > 0 ? "Gaskeun, perlu ditindak" : "Jalan normal, tenang aja"}
+        footerDetail="Nunggu kamu tinjau"
       />
 
       <StatCard
@@ -100,12 +88,8 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
             +5%
           </Badge>
         }
-        footer={
-          <>
-            Kualitas kandidat meningkat <IconTrendingUp className="size-4" />
-          </>
-        }
-        footerDetail="Di atas rata-rata bulan lalu"
+        footer="Kualitas kandidat makin oke"
+        footerDetail="Ngalahin rata-rata bulan lalu"
       />
 
       <StatCard
@@ -118,12 +102,8 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
             {avgLevel.label}
           </Badge>
         }
-        footer={
-          <>
-            Berdasarkan skor AI <IconTrendingUp className="size-4" />
-          </>
-        }
-        footerDetail="Memenuhi kriteria perusahaan"
+        footer="Dihitung otomatis sama AI"
+        footerDetail="Udah sesuai kriteria perusahaan"
       />
     </>
   )

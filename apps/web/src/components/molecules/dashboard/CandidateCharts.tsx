@@ -14,9 +14,9 @@ interface CandidateChartsProps {
 export function CandidateCharts({ weightData, radarData, softSkillData }: CandidateChartsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 fade-in duration-300">
-      <div className="bg-background rounded-xl border p-4 sm:p-6 flex flex-col items-center justify-center shadow-sm">
+      <div className="bg-canvas rounded-3xl border border-hairline p-4 sm:p-6 flex flex-col items-center justify-center shadow-none">
         <h3 className="font-semibold mb-1 text-center text-sm sm:text-base">Pembobotan Skor AI</h3>
-        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Formula kalkulasi nilai</p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Cara AI ngitung nilainya</p>
         <div className="w-full h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -37,24 +37,24 @@ export function CandidateCharts({ weightData, radarData, softSkillData }: Candid
         </div>
       </div>
 
-      <div className="bg-background rounded-xl border p-4 sm:p-6 flex flex-col items-center justify-center shadow-sm">
+      <div className="bg-canvas rounded-3xl border border-hairline p-4 sm:p-6 flex flex-col items-center justify-center shadow-none">
         <h3 className="font-semibold mb-1 text-center text-sm sm:text-base">Peta Kompetensi Inti</h3>
-        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Radar chart kemampuan teknis</p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Kemampuan teknis dalam satu tampilan</p>
         <div className="w-full h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={radarData} outerRadius="70%">
               <PolarGrid />
               <PolarAngleAxis dataKey="parameter" tick={{ fill: "currentColor", fontSize: 10 }} />
-              <Radar name="Skor" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} dot={{ r: 3, fillOpacity: 1 }} />
+              <Radar name="Skor" dataKey="score" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.5} dot={{ r: 3, fillOpacity: 1 }} />
               <RechartsTooltip contentStyle={CHART_TOOLTIP_STYLE} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="bg-background rounded-xl border p-4 sm:p-6 flex flex-col items-center justify-center shadow-sm">
+      <div className="bg-canvas rounded-3xl border border-hairline p-4 sm:p-6 flex flex-col items-center justify-center shadow-none">
         <h3 className="font-semibold mb-1 text-center text-sm sm:text-base">Soft Skills &amp; Culture Fit</h3>
-        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Penilaian aspek non-teknis</p>
+        <p className="text-[11px] sm:text-xs text-muted-foreground text-center mb-4">Nilai soft skill kandidat</p>
         <div className="w-full h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={softSkillData} layout="vertical" margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
