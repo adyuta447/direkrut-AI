@@ -12,11 +12,11 @@ import { LockIcon, CreditCardIcon } from "lucide-react"
 const LOCKED_FEATURES = [
   {
     title: "Integrasi ATS Kustom",
-    desc: "Koneksikan langsung dengan Workday, BambooHR, dll.",
+    desc: "Nyambungin langsung ke Workday, BambooHR, dan lainnya.",
   },
   {
     title: "Wawancara Video AI Otonom",
-    desc: "Biarkan AI mewawancarai kandidat via video call.",
+    desc: "Biar AI yang wawancara kandidat lewat video call.",
   },
 ]
 
@@ -24,8 +24,8 @@ export function SettingsHrdTabBilling() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Paket Anda Saat Ini</CardTitle>
-        <CardDescription>Anda menggunakan paket perusahaan (Enterprise).</CardDescription>
+        <CardTitle>Paket Kamu Sekarang</CardTitle>
+        <CardDescription>Kamu lagi pake paket Enterprise perusahaan.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="bg-primary/5 border border-primary/20 p-6 rounded-xl flex items-center justify-between">
@@ -33,7 +33,7 @@ export function SettingsHrdTabBilling() {
             <Badge className="bg-warning hover:bg-warning/90 mb-2">Pro Tier</Badge>
             <h3 className="text-2xl font-bold">Direkrut AI Professional</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Sisa kredit AI: 2,450 tokens (Reset pada 1 Agustus)
+              Kredit AI tersisa: 2.450 token (reset 1 Agustus)
             </p>
           </div>
           <CreditCardIcon className="size-12 text-primary/50" />
@@ -42,7 +42,7 @@ export function SettingsHrdTabBilling() {
         <div className="mt-8 space-y-4">
           <h4 className="font-semibold flex items-center gap-2">
             <LockIcon className="size-4 text-muted-foreground" />
-            Fitur Terkunci (Upgrade ke Enterprise)
+            Fitur Masih Terkunci, Upgrade Dulu Yuk
           </h4>
           <div className="grid sm:grid-cols-2 gap-4">
             {LOCKED_FEATURES.map((f) => (

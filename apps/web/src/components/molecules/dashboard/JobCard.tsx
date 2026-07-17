@@ -14,10 +14,7 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
@@ -39,42 +36,42 @@ interface JobCardProps {
   onEdit: (job: Job) => void
 }
 
+const JOB_STATUS_META: Record<string, { label: string; band: string }> = {
+  active: { label: "Aktif", band: "bg-success" },
+  inactive: { label: "Tidak Aktif", band: "bg-muted-foreground" },
+  review: { label: "Direview", band: "bg-[color-mix(in_oklch,var(--warning),black_20%)]" },
+  draft: { label: "Draft", band: "bg-info" },
+}
+
 export function JobCard({ job, onEdit }: JobCardProps) {
   const { updateJob } = useDashboard()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+
+  const statusMeta = JOB_STATUS_META[job.status] ?? JOB_STATUS_META.inactive
 
   const handleToggleStatus = (checked: boolean) => {
     updateJob(job.id, { status: checked ? "active" : "inactive" })
   }
 
   return (
-    <Card className="flex flex-col relative">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <CardTitle className="text-xl line-clamp-1" title={job.title}>
-              {job.title}
-            </CardTitle>
-            <CardDescription className="flex items-center gap-1 mt-2">
-              <IconBriefcase className="size-3.5" />
-              {job.department}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase">
-              {job.status === "active" ? "Aktif" : "Nonaktif"}
-            </span>
-            <Switch
-              checked={job.status === "active"}
-              onCheckedChange={handleToggleStatus}
-              className="data-[state=checked]:bg-success"
-            />
-          </div>
+    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0 flex flex-col">
+      <div className={`${statusMeta.band} p-4`}>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-lg leading-snug text-white line-clamp-2" title={job.title}>
+            {job.title}
+          </h3>
+          <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold text-white whitespace-nowrap">
+            {statusMeta.label}
+          </span>
         </div>
-      </CardHeader>
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+          <IconBriefcase className="size-3.5 shrink-0" />
+          <span className="truncate">{job.department}</span>
+        </div>
+      </div>
 
-      <CardContent className="flex-1 space-y-4">
+      <CardContent className="flex-1 space-y-4 pt-4">
         <p className="text-sm text-muted-foreground line-clamp-3">{job.description}</p>
         <div className="flex flex-col gap-2">
           <div className="flex items-center text-sm text-muted-foreground gap-2">
@@ -93,9 +90,18 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             </div>
           )}
         </div>
+
+        <div className="flex items-center justify-between rounded-2xl bg-surface-1 px-4 py-3">
+          <span className="text-sm font-medium text-ink">Aktifkan Lowongan</span>
+          <Switch
+            checked={job.status === "active"}
+            onCheckedChange={handleToggleStatus}
+            className="data-[state=checked]:bg-success"
+          />
+        </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col sm:flex-row justify-between items-center border-t pt-4 gap-4 bg-muted/20">
+      <CardFooter className="flex flex-col sm:flex-row justify-between items-center border-t border-hairline pt-4 gap-4">
         <Button
           className="w-full sm:w-auto"
           variant="default"
@@ -104,13 +110,13 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           Cek Kandidat
         </Button>
         <div className="flex gap-2 w-full sm:w-auto justify-end">
-          <Button variant="outline" size="icon" onClick={() => onEdit(job)}>
+          <Button variant="outline" size="icon" className="border-hairline" onClick={() => onEdit(job)}>
             <IconEdit className="size-4" />
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="border-hairline text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => setConfirmDelete(true)}
           >
             <IconTrash className="size-4" />

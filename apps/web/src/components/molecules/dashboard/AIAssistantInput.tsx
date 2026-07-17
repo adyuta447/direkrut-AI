@@ -17,7 +17,7 @@ export function AIAssistantInput({ value, onChange, onSubmit }: AIAssistantInput
       >
         <div className="relative flex-1">
           <Input
-            placeholder="Tanya AI tentang kandidat, jadwal, atau analisis..."
+            placeholder="Tanya soal kandidat, jadwal, atau analisis..."
             className="pl-12 pr-16 py-6 bg-muted/50 border-muted-foreground/20 rounded-full focus-visible:ring-primary/50 text-sm"
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -41,7 +41,7 @@ export function AIAssistantInput({ value, onChange, onSubmit }: AIAssistantInput
         </Button>
       </form>
       <p className="text-center text-[10px] text-muted-foreground mt-3">
-        AI dapat membuat kesalahan. Harap verifikasi keputusan rekrutmen Anda.
+        AI kadang bisa salah — tetap cek lagi sebelum ambil keputusan rekrutmen ya.
       </p>
     </div>
   )

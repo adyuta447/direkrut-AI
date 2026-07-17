@@ -96,6 +96,10 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
                   <Label>Usia</Label>
                   <Input value={profile.age} onChange={(e) => onChangeProfile({ age: e.target.value })} />
                 </div>
+                <div className="grid gap-2">
+                  <Label>Jenis Kelamin</Label>
+                  <Input value={profile.gender} onChange={(e) => onChangeProfile({ gender: e.target.value })} />
+                </div>
               </div>
               <DialogFooter>
                 <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>

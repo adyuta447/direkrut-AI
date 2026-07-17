@@ -60,7 +60,7 @@ function AIAssistantChat() {
       {
         id: "1",
         role: "assistant",
-        content: "Halo! Saya Asisten AI Anda. Ada yang bisa saya bantu hari ini terkait perekrutan, analisis pelamar, atau penjadwalan?",
+        content: "Halo! Aku Asisten AI kamu. Ada yang bisa dibantu soal rekrutmen, analisis pelamar, atau jadwal wawancara?",
         timestamp: new Date(),
       },
     ])
@@ -76,7 +76,7 @@ function AIAssistantChat() {
         setIsTyping(true)
         setTimeout(() => {
           addAiReply(
-            `Berdasarkan ${candidateContext ? "konteks kandidat" : "data"} tersebut, saya melihat bahwa profil relevan dengan posisi. Apakah ada detail spesifik lain yang ingin Anda gali lebih dalam?`
+            `Dari ${candidateContext ? "konteks kandidat" : "data"} itu, profilnya emang relevan sama posisinya. Ada detail lain yang mau digali lebih dalam?`
           )
         }, 1500)
       }, 500)
@@ -100,7 +100,7 @@ function AIAssistantChat() {
     setIsTyping(true)
     setTimeout(() => {
       addAiReply(
-        "Berdasarkan data saat ini, saya melihat ada beberapa kandidat yang sangat cocok untuk posisi Software Engineer. Apakah Anda ingin saya menampilkannya?"
+        "Dari data yang ada, ada beberapa kandidat yang cocok banget buat posisi Software Engineer. Mau aku tampilin?"
       )
     }, 1500)
   }
@@ -128,7 +128,7 @@ export default function AIAssistantPage() {
     <Suspense
       fallback={
         <div className="flex h-[calc(100dvh-4rem)] items-center justify-center">
-          Memuat Asisten AI...
+          Lagi manggil Asisten AI...
         </div>
       }
     >

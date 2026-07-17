@@ -111,7 +111,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
       />
 
       <div className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6 py-4">
-        <div className="overflow-hidden rounded-2xl border border-hairline bg-canvas">
+        <div className="overflow-hidden rounded-3xl border border-hairline bg-canvas">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-surface-1">
               {table.getHeaderGroups().map((headerGroup) => (

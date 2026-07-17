@@ -10,7 +10,7 @@ import {
 const FAQ = [
   {
     value: "item-1",
-    question: "Bagaimana cara membaca Chart Radar & Bar?",
+    question: "Gimana cara baca Chart Radar & Bar?",
     answer: (
       <ul className="list-disc pl-4 space-y-2 mt-2">
         <li>
@@ -29,21 +29,19 @@ const FAQ = [
     question: 'Apa fungsi "Asisten AI Interaktif"?',
     answer: (
       <>
-        Asisten AI (chat) adalah sistem di mana Anda dapat menanyakan detail spesifik yang mungkin
-        tidak terlihat di ringkasan, misalnya: &quot;Apakah kandidat ini punya pengalaman dengan
-        React?&quot;. Anda bisa mengaksesnya secara global di sidebar, atau di setiap halaman
-        kandidat (untuk konteks spesifik).
+        Ini chat AI yang bisa kamu tanya-tanya soal detail yang nggak keliatan di ringkasan,
+        misalnya: &quot;Kandidat ini punya pengalaman React nggak?&quot;. Kamu bisa akses dari
+        sidebar (global), atau langsung dari halaman kandidat buat konteks yang lebih spesifik.
       </>
     ),
   },
   {
     value: "item-3",
-    question: "Bagaimana cara menggunakan Pencarian Global?",
+    question: "Gimana cara pakai Pencarian Global?",
     answer: (
       <>
-        Tekan <strong>Ctrl + K</strong> (atau Cmd + K di Mac) dari mana saja untuk membuka popup
-        pencarian. Anda bisa mencari nama kandidat, judul lowongan, atau berpindah halaman dengan
-        sangat cepat.
+        Pencet <strong>Ctrl + K</strong> (atau Cmd + K di Mac) dari mana aja buat buka popup
+        pencarian. Kamu bisa cari nama kandidat, judul lowongan, atau pindah halaman secepat kilat.
       </>
     ),
   },
@@ -85,7 +83,7 @@ export function HelpGuidePanel() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Mengalami kendala teknis atau menemukan bug? Tim support kami siap membantu Anda 24/7.
+              Nemu bug atau ada kendala teknis? Tim support kami siap gercep bantu kamu 24/7.
             </p>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-sm font-medium">Email Support:</p>
@@ -107,9 +105,8 @@ export function HelpGuidePanel() {
             <div>
               <h4 className="font-semibold text-primary mb-1">Feedback AI</h4>
               <p className="text-xs text-muted-foreground">
-                Model AI kami terus belajar. Jika Anda merasa penilaian AI kurang tepat untuk
-                industri spesifik perusahaan Anda, Anda bisa menghubungi tim kami untuk
-                menyesuaikan model dasar.
+                Model AI kami terus belajar. Kalau menurut kamu penilaiannya kurang pas buat
+                industri spesifik perusahaanmu, langsung aja hubungi tim kami buat nyesuain model dasarnya.
               </p>
             </div>
           </CardContent>

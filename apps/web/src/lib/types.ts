@@ -7,6 +7,12 @@ export interface User {
   role: UserRole;
 }
 
+export interface Department {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface Job {
   id: string;
   title: string;
