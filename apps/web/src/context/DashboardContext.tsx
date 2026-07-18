@@ -1,15 +1,23 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { User, Application, Job, Department } from "@/lib/types";
 import { mockApplications, mockJobs } from "@/lib/mockData";
+import { listJobs } from "@/services/jobService";
 
-/** Departemen awal diseed dari nilai `department` unik yang udah dipakai mockJobs,
-    biar konsisten dengan data lowongan yang ada sebelum CRUD-nya dipakai. */
 function seedDepartments(): Department[] {
   const names = Array.from(new Set(mockJobs.map((j) => j.department)));
   return names.map((name) => ({
-    id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+    id: name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, ""),
     name,
   }));
 }
@@ -36,7 +44,9 @@ interface DashboardContextType {
   setIsProfileComplete: (val: boolean) => void;
 }
 
-const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+const DashboardContext = createContext<DashboardContextType | undefined>(
+  undefined,
+);
 
 /**
  * Provider data mock buat halaman hrd/candidate yang di-porting dari branch
@@ -51,14 +61,40 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [departments, setDepartments] = useState<Department[]>(() => seedDepartments());
+  const [departments, setDepartments] = useState<Department[]>(() =>
+    seedDepartments(),
+  );
   const [currentPage, setCurrentPage] = useState("landing");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   useEffect(() => {
     setApplications(mockApplications);
-    setJobs(mockJobs);
+
+    let cancelled = false;
+    listJobs().then((fetchedJobs) => {
+      if (cancelled) return;
+      setJobs(fetchedJobs);
+      setDepartments((prev) => {
+        const existingNames = new Set(prev.map((d) => d.name));
+        const newNames = Array.from(
+          new Set(fetchedJobs.map((j) => j.department)),
+        ).filter((name) => !existingNames.has(name));
+        if (newNames.length === 0) return prev;
+        const added = newNames.map((name) => ({
+          id: name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, ""),
+          name,
+        }));
+        return [...prev, ...added];
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const addApplication = (app: Application) => {
@@ -67,7 +103,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const updateApplication = (id: string, updates: Partial<Application>) => {
     setApplications((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, ...updates } : app))
+      prev.map((app) => (app.id === id ? { ...app, ...updates } : app)),
     );
   };
 
@@ -77,7 +113,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const updateJob = (id: string, updates: Partial<Job>) => {
     setJobs((prev) =>
-      prev.map((job) => (job.id === id ? { ...job, ...updates } : job))
+      prev.map((job) => (job.id === id ? { ...job, ...updates } : job)),
     );
   };
 
@@ -87,7 +123,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const updateDepartment = (id: string, updates: Partial<Department>) => {
     setDepartments((prev) =>
-      prev.map((dept) => (dept.id === id ? { ...dept, ...updates } : dept))
+      prev.map((dept) => (dept.id === id ? { ...dept, ...updates } : dept)),
     );
   };
 
@@ -97,7 +133,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const mockIds = new Set(mockApplications.map((a) => a.id));
   const myApplications = applications.filter(
-    (a, index) => index < 5 || !mockIds.has(a.id)
+    (a, index) => index < 5 || !mockIds.has(a.id),
   );
 
   return (

@@ -10,14 +10,22 @@ import { apiFetch, isApiConfigured } from "./apiClient";
 
 export async function listApplications(): Promise<Application[]> {
   if (isApiConfigured) {
-    return apiFetch<Application[]>("/v1/applications");
+    try {
+      return await apiFetch<Application[]>("/v1/applications");
+    } catch (err) {
+      console.error("[applicationService] gagal ambil lamaran dari API (belum ada endpoint-nya), fallback ke mock:", err);
+    }
   }
   return mockApplications;
 }
 
 export async function getApplicationById(id: string): Promise<Application | null> {
   if (isApiConfigured) {
-    return apiFetch<Application>(`/v1/applications/${id}`);
+    try {
+      return await apiFetch<Application>(`/v1/applications/${id}`);
+    } catch (err) {
+      console.error("[applicationService] gagal ambil detail lamaran dari API, fallback ke mock:", err);
+    }
   }
   return mockApplications.find((app) => app.id === id) ?? null;
 }
@@ -26,10 +34,14 @@ export async function submitApplication(
   application: Omit<Application, "id" | "appliedDate" | "status" | "validationStatus">
 ): Promise<Application> {
   if (isApiConfigured) {
-    return apiFetch<Application>("/v1/applications", {
-      method: "POST",
-      body: JSON.stringify(application),
-    });
+    try {
+      return await apiFetch<Application>("/v1/applications", {
+        method: "POST",
+        body: JSON.stringify(application),
+      });
+    } catch (err) {
+      console.error("[applicationService] gagal submit lamaran lewat API, fallback ke mock:", err);
+    }
   }
   return {
     ...application,
