@@ -82,6 +82,20 @@ export async function submitApplication(jobId: string): Promise<Application | nu
   return null;
 }
 
+export async function completeInterview(id: string): Promise<Application | null> {
+  if (isApiConfigured) {
+    try {
+      const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/complete-interview`, {
+        method: "POST",
+      });
+      return mapApiApplicationToApplication(apiApp);
+    } catch (err) {
+      console.error("[applicationService] gagal tandain wawancara selesai lewat API:", err);
+    }
+  }
+  return null;
+}
+
 export async function updateApplicationStatus(
   id: string,
   status: Application["status"],
