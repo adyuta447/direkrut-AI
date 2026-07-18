@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button"
+import { Application } from "@/lib/types"
+import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 
 interface CandidateContactGridProps {
-  candidate: any
+  candidate: Application & ExtendedCandidateData
   onToggleChart: () => void
   showChart: boolean
 }

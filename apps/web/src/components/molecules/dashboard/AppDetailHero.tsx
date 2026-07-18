@@ -2,6 +2,7 @@ import { IconBuilding, IconMapPin, IconCalendar, IconUsers } from "@tabler/icons
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
 import { cn } from "@/lib/utils"
+import { Job, Application } from "@/lib/types"
 
 interface TimelineStep {
   label: string
@@ -12,15 +13,15 @@ interface TimelineStep {
 }
 
 interface AppDetailHeroProps {
-  job: any
-  application: any
+  job: Job & { _applicationCount: number }
+  application: Application
   isFreshGrad: boolean
   timelineSteps: TimelineStep[]
   statusHelper: Record<string, string>
 }
 
 function StatusPanel({ application, timelineSteps, statusHelper }: {
-  application: any
+  application: Application
   timelineSteps: TimelineStep[]
   statusHelper: Record<string, string>
 }) {

@@ -15,11 +15,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useDashboard } from "@/context/DashboardContext"
+import { Job } from "@/lib/types"
 
 const KNOWN_TYPES = ["Penuh Waktu", "Paruh Waktu", "Kontrak"]
 
 interface JobFormFieldsProps {
-  selectedJob: any
+  selectedJob: Job | null | undefined
 }
 
 /** Nilai form lowongan hasil ekstraksi FormData -- dipakai halaman Buat & Edit. */
@@ -128,7 +129,7 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
                 <IconPlus className="size-3.5" /> Kelola Departemen
               </Link>
             </div>
-            <Select value={deptMode} onValueChange={(val: any) => val && setDeptMode(val)}>
+            <Select value={deptMode} onValueChange={(val: string | null) => val && setDeptMode(val)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih..." />
               </SelectTrigger>
@@ -141,7 +142,7 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
           </div>
           <div className="space-y-2">
             <Label>Tipe Pekerjaan</Label>
-            <Select value={typeMode} onValueChange={setTypeMode}>
+            <Select value={typeMode} onValueChange={(val: string | null) => val && setTypeMode(val)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih..." />
               </SelectTrigger>

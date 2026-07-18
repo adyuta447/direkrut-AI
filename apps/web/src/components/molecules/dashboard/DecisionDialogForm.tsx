@@ -72,7 +72,7 @@ export function InterviewDetailPanel({
         <Label>Jenis Wawancara</Label>
         <Select
           value={interviewType}
-          onValueChange={(val: any) => val && onTypeChange(val)}
+          onValueChange={(val: "Wawancara Teknis" | "Wawancara HRD" | null) => val && onTypeChange(val)}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Pilih Jenis" />
