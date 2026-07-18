@@ -4,12 +4,13 @@ import { IconBriefcase, IconUsers } from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Job } from "@/lib/types"
 
 interface AppDetailJobInfoProps {
-  job: any
+  job: Job
   isFreshGrad: boolean
   hasCategory: boolean
-  companyJobs: any[]
+  companyJobs: Job[]
 }
 
 export function AppDetailJobInfo({ job, isFreshGrad, hasCategory, companyJobs }: AppDetailJobInfoProps) {
@@ -93,7 +94,7 @@ export function AppDetailJobInfo({ job, isFreshGrad, hasCategory, companyJobs }:
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
-              {companyJobs.filter((j: any) => j.id !== job.id).slice(0, 4).map((j: any) => (
+              {companyJobs.filter((j) => j.id !== job.id).slice(0, 4).map((j) => (
                 <div key={j.id} className="rounded-2xl border p-4 transition-colors hover:border-primary/50">
                   <div className="text-sm font-semibold">{j.title}</div>
                   <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">

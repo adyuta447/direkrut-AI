@@ -32,10 +32,13 @@ function AIAssistantChat() {
     try {
       const pending = localStorage.getItem("pendingAiQuery")
       if (pending) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is client-only, must read post-hydration to avoid SSR mismatch
         setInitialContext(JSON.parse(pending))
         localStorage.removeItem("pendingAiQuery")
       }
-    } catch (e) {}
+    } catch {
+      // ignore malformed pendingAiQuery
+    }
   }, [])
 
   const initialQuery = initialContext?.q || searchParams.get("q")
@@ -56,6 +59,7 @@ function AIAssistantChat() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- seeds the welcome message post-hydration to keep SSR/client output matching
     setMessages([
       {
         id: "1",

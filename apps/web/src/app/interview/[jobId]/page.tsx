@@ -87,6 +87,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   React.useEffect(() => {
     if (interviewState !== "interview" || isAiSpeaking) return
     if (timeLeft <= 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- countdown timer expiry, drives the simulated interview's state machine
       handleFinishSpeaking()
       return
     }
@@ -96,6 +97,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
 
   React.useEffect(() => {
     if (interviewState !== "interview" || isAiProcessing) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- (re)starts the simulated AI-speaking timer for each new question
     setIsAiSpeaking(true)
     const timer = setTimeout(() => {
       setIsAiSpeaking(false)
@@ -260,7 +262,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                   </p>
                 )}
                 <p className="text-2xl md:text-3xl font-medium leading-relaxed tracking-wide text-white drop-shadow-lg shadow-black">
-                  "{conversationFlow[exchangeIndex].ai}"
+                  &ldquo;{conversationFlow[exchangeIndex].ai}&rdquo;
                 </p>
               </div>
             )}

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -58,7 +58,11 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
     return { label: "Tidak Sesuai", variant: "destructive" as const, color: "text-destructive bg-destructive/10" }
   }, [candidate.recommendationScore])
 
-  useEffect(() => {
+  // Seed the email draft whenever the dialog transitions to open, adjusted
+  // during render (not an effect) per React's "resetting state" pattern.
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (open) {
       setEmailSubject(
         decision === "invite"
@@ -73,7 +77,7 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
       setShowConfirmation(false)
       setIsSending(false)
     }
-  }, [open, decision, candidate])
+  }
 
   const handleSend = async () => {
     if (decision === "invite" && (!interviewDate || !interviewTime)) {
