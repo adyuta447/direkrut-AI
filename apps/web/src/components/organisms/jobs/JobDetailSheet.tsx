@@ -14,15 +14,7 @@ interface JobDetailSheetProps {
   applyHref?: (job: Job) => string;
 }
 
-/**
- * Detail lowongan versi mobile: bottom sheet full-screen yang muncul saat
- * kartu lowongan di-tap. Di desktop (lg+) tidak pernah tampil karena detail
- * sudah ada di panel samping.
- */
 export function JobDetailSheet({ job, onClose, applyHref }: JobDetailSheetProps) {
-  // Sheet hanya berlaku di bawah breakpoint lg; di desktop, klik lowongan
-  // mengisi selectedJob untuk panel samping dan sheet tidak boleh aktif
-  // (termasuk kunci scroll body-nya).
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

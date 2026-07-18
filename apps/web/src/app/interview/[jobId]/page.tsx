@@ -16,9 +16,13 @@ type InterviewState = "setup" | "interview" | "feedback"
 
 export default function InterviewPage({ params }: { params: Promise<{ jobId: string }> }) {
   const unwrappedParams = React.use(params)
-  const { jobs } = useDashboard()
+  const { jobs, applications, currentUser, completeInterview } = useDashboard()
   const router = useRouter()
   const job = jobs.find(j => j.id === unwrappedParams.jobId)
+  const application = applications.find(
+    (a) => a.jobId === unwrappedParams.jobId && a.applicantId === currentUser?.id
+  )
+  const hasReportedCompletion = React.useRef(false)
 
   const [interviewState, setInterviewState] = React.useState<InterviewState>("setup")
   const [hasAgreed, setHasAgreed] = React.useState(false)
@@ -105,6 +109,15 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
     }, 5000)
     return () => clearTimeout(timer)
   }, [interviewState, exchangeIndex, isAiProcessing])
+
+  // Satu-satunya titik di mana wawancara (simulasi client-side) nyampe ke
+  // backend -- tanpa ini, lamaran nyangkut selamanya di status "submitted"
+  // dan HRD gak pernah lihat kandidat ini udah lewat tahap wawancara.
+  React.useEffect(() => {
+    if (interviewState !== "feedback" || hasReportedCompletion.current || !application) return
+    hasReportedCompletion.current = true
+    void completeInterview(application.id)
+  }, [interviewState, application, completeInterview])
 
   if (!job) return <div className="flex h-screen items-center justify-center">Pekerjaan tidak ditemukan.</div>
 

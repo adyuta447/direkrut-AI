@@ -41,6 +41,7 @@ func (h *Handler) Router() chi.Router {
 		pr.Get("/", h.handleListApplications)
 		pr.Get("/{applicationID}", h.handleGetApplication)
 		pr.With(appmw.RequireRole("hrd")).Patch("/{applicationID}/status", h.handleUpdateStatus)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/complete-interview", h.handleCompleteInterview)
 	})
 	return r
 }
@@ -173,9 +174,6 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 			}
 			query = query.Where("job_id = ?", jobID)
 		} else {
-			// Gak ada jobId -- balikin semua lamaran ke lowongan-lowongan
-			// company ini (buat dashboard HRD & fitur cross-role yang
-			// butuh liat lintas lowongan, bukan cuma satu).
 			query = query.Select("applications.*").
 				Joins("JOIN jobs ON jobs.id = applications.job_id").
 				Where("jobs.company_id = ?", claims.CompanyID)
@@ -296,6 +294,50 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_status", title, body)
 	}
+	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
+}
+
+// handleCompleteInterview dipanggil kandidat sendiri begitu sesi wawancara AI
+// (simulasi client-side di /interview/[jobId]) kelar -- ini satu-satunya titik
+// di mana penyelesaian wawancara nyampe ke backend, jadi dashboard HRD (yang
+// baca ulang /v1/applications) akhirnya lihat lamaran pindah dari "submitted"
+// ke "under-review". Idempotent: dipanggil lagi pas status udah lewat
+// "submitted" cuma balikin state sekarang, gak error.
+func (h *Handler) handleCompleteInterview(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
+		return
+	}
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+
+	if appRow.Status != "submitted" {
+		httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
+		return
+	}
+
+	ctx := r.Context()
+	fromStatus := appRow.Status
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
+			Update("status", "under-review").Error; err != nil {
+			return err
+		}
+		history := appdb.ApplicationStatusHistory{
+			ApplicationID: appRow.ID, FromStatus: &fromStatus, ToStatus: "under-review",
+			ChangedBy: &claims.UserID, Note: nilIfEmpty("Kandidat menyelesaikan wawancara AI"),
+		}
+		return tx.Create(&history).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal update status lamaran")
+		return
+	}
+
+	appRow.Status = "under-review"
 	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
 }
 

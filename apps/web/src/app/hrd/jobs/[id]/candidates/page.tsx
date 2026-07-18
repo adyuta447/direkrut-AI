@@ -22,10 +22,6 @@ export default function JobCandidatesPage() {
   const [showChart, setShowChart] = useState(false)
 
   const { jobs, applications } = useDashboard()
-  // Diambil langsung by-id (bukan jobs.find dari list context) -- GET
-  // /v1/jobs (list) di-cache 60 detik (Cache-Control), jadi lowongan yang
-  // baru dibuat bisa "belum kelihatan" di list beberapa detik. GET
-  // /v1/jobs/{id} gak kena masalah itu karena URL-nya unik per lowongan.
   const [job, setJob] = useState<Job | null | undefined>(() => jobs.find((j) => j.id === jobId))
   useEffect(() => {
     let cancelled = false
@@ -36,11 +32,6 @@ export default function JobCandidatesPage() {
       cancelled = true
     }
   }, [jobId])
-
-  // Lamaran buat lowongan ini di-fetch langsung dari API (scoped per-job,
-  // butuh ?jobId=), bukan filter dari `applications` context yang cuma
-  // ke-isi data asli buat kandidat (lihat DashboardContext). Di-seed dari
-  // mock yang udah difilter biar gak ada flash kosong pas fetch masih jalan.
   const [jobApplications, setJobApplications] = useState<Application[]>(() =>
     applications.filter((app) => app.jobId === jobId)
   )

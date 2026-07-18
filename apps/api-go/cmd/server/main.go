@@ -120,8 +120,7 @@ func main() {
 	}
 }
 
-// healthCheck adalah pure liveness check -- selalu 200 selama proses hidup,
-// gak cek dependency apa pun. Buat itu, pakai /readyz.
+
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "api-go"})
 }

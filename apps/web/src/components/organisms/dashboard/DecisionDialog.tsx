@@ -58,8 +58,6 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
     return { label: "Tidak Sesuai", variant: "destructive" as const, color: "text-destructive bg-destructive/10" }
   }, [candidate.recommendationScore])
 
-  // Seed the email draft whenever the dialog transitions to open, adjusted
-  // during render (not an effect) per React's "resetting state" pattern.
   const [prevOpen, setPrevOpen] = useState(open)
   if (open !== prevOpen) {
     setPrevOpen(open)
