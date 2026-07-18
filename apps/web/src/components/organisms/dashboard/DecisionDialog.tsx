@@ -38,7 +38,7 @@ interface DecisionDialogProps {
 }
 
 export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogProps) {
-  const { updateApplication } = useDashboard()
+  const { changeApplicationStatus } = useDashboard()
   const [open, setOpen] = useState(false)
   const [emailSubject, setEmailSubject] = useState("")
   const [emailBody, setEmailBody] = useState("")
@@ -75,20 +75,16 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
     }
   }, [open, decision, candidate])
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (decision === "invite" && (!interviewDate || !interviewTime)) {
       setWarning("Tanggal & waktu wawancara wajib diisi dulu ya")
       return
     }
     setIsSending(true)
-    setTimeout(() => {
-      updateApplication(candidate.id, {
-        status: decision === "invite" ? "interview" : "rejected",
-      })
-      setIsSending(false)
-      setShowConfirmation(true)
-      setTimeout(() => setOpen(false), 2500)
-    }, 1500)
+    await changeApplicationStatus(candidate.id, decision === "invite" ? "interview" : "rejected")
+    setIsSending(false)
+    setShowConfirmation(true)
+    setTimeout(() => setOpen(false), 2500)
   }
 
   const defaultTrigger = (

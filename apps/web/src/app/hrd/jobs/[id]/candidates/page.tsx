@@ -1,18 +1,20 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { IconBriefcase, IconChartPie, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 import { useDashboard } from "@/context/DashboardContext"
+import { listApplicationsForJob } from "@/services/applicationService"
+import { getJobById } from "@/services/jobService"
 import { DataTable } from "@/components/organisms/dashboard/CandidateDataTable"
-import { getExtendedData } from "@/lib/dashboard/extended-data"
+import { CandidateAnalyticsCharts } from "@/components/organisms/dashboard/CandidateAnalyticsCharts"
+import { useCandidateAnalytics } from "@/lib/dashboard/useCandidateAnalytics"
 import { BackButton } from "@/components/molecules/dashboard/BackButton"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
-import { ChartCard, CHART_TOOLTIP_STYLE } from "@/components/molecules/dashboard/ChartCard"
+import { NotFoundCard } from "@/components/molecules/dashboard/NotFoundCard"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
+import type { Application, Job } from "@/lib/types"
 
 export default function JobCandidatesPage() {
   const params = useParams()
@@ -20,61 +22,48 @@ export default function JobCandidatesPage() {
   const [showChart, setShowChart] = useState(false)
 
   const { jobs, applications } = useDashboard()
-  const job = jobs.find(j => j.id === jobId)
-  const jobApplications = applications.filter(app => app.jobId === jobId)
+  // Diambil langsung by-id (bukan jobs.find dari list context) -- GET
+  // /v1/jobs (list) di-cache 60 detik (Cache-Control), jadi lowongan yang
+  // baru dibuat bisa "belum kelihatan" di list beberapa detik. GET
+  // /v1/jobs/{id} gak kena masalah itu karena URL-nya unik per lowongan.
+  const [job, setJob] = useState<Job | null | undefined>(() => jobs.find((j) => j.id === jobId))
+  useEffect(() => {
+    let cancelled = false
+    getJobById(jobId).then((fetched) => {
+      if (!cancelled) setJob(fetched)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [jobId])
+
+  // Lamaran buat lowongan ini di-fetch langsung dari API (scoped per-job,
+  // butuh ?jobId=), bukan filter dari `applications` context yang cuma
+  // ke-isi data asli buat kandidat (lihat DashboardContext). Di-seed dari
+  // mock yang udah difilter biar gak ada flash kosong pas fetch masih jalan.
+  const [jobApplications, setJobApplications] = useState<Application[]>(() =>
+    applications.filter((app) => app.jobId === jobId)
+  )
+  useEffect(() => {
+    let cancelled = false
+    listApplicationsForJob(jobId).then((fetched) => {
+      if (!cancelled) setJobApplications(fetched)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [jobId])
+  const { statusData, scoreData, expData } = useCandidateAnalytics(jobApplications)
 
   if (!job) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <h2 className="text-xl font-bold">Lowongannya nggak ketemu nih</h2>
-        <Button render={<Link href="/hrd/jobs" />}>Balik ke Daftar Lowongan</Button>
-      </div>
+      <NotFoundCard
+        title="Lowongannya nggak ketemu nih"
+        backHref="/hrd/jobs"
+        backLabel="Balik ke Daftar Lowongan"
+      />
     )
   }
-
-  const statusCounts = { interview: 0, "under-review": 0, rejected: 0 }
-  jobApplications.forEach(app => {
-    if (statusCounts[app.status as keyof typeof statusCounts] !== undefined) {
-      statusCounts[app.status as keyof typeof statusCounts]++
-    }
-  })
-  const statusData = [
-    { name: "Wawancara", value: statusCounts.interview, color: "var(--info)" },
-    { name: "Administrasi", value: statusCounts["under-review"], color: "var(--warning)" },
-    { name: "Ditolak", value: statusCounts.rejected, color: "var(--destructive)" },
-  ].filter(d => d.value > 0)
-
-  const scoreCounts = { "Sangat Disarankan": 0, "Disarankan": 0, "Kurang": 0 }
-  jobApplications.forEach(app => {
-    const score = app.recommendationScore || 0;
-    if (score >= 75) scoreCounts["Sangat Disarankan"]++;
-    else if (score >= 55) scoreCounts["Disarankan"]++;
-    else scoreCounts["Kurang"]++;
-  })
-  const scoreData = [
-    { name: "Sangat Disarankan", count: scoreCounts["Sangat Disarankan"], fill: "var(--success)" },
-    { name: "Disarankan", count: scoreCounts["Disarankan"], fill: "var(--warning)" },
-    { name: "Kurang", count: scoreCounts["Kurang"], fill: "var(--destructive)" },
-  ].filter(d => d.count > 0)
-
-  const expCounts = { "Fresh Graduate": 0, "1-3 Tahun": 0, ">3 Tahun": 0 }
-  jobApplications.forEach(app => {
-    const ext = getExtendedData(app.applicantName);
-    const expStr = ext.experience;
-    if (expStr === "Fresh Graduate") expCounts["Fresh Graduate"]++;
-    else if (expStr.includes("thn")) {
-      const years = parseInt(expStr.split("thn")[0].trim());
-      if (years >= 3) expCounts[">3 Tahun"]++;
-      else expCounts["1-3 Tahun"]++;
-    } else {
-      expCounts["Fresh Graduate"]++;
-    }
-  })
-  const expData = [
-    { name: "Fresh Graduate", count: expCounts["Fresh Graduate"], fill: "var(--chart-1)" },
-    { name: "1-3 Tahun", count: expCounts["1-3 Tahun"], fill: "var(--chart-3)" },
-    { name: ">3 Tahun", count: expCounts[">3 Tahun"], fill: "var(--chart-5)" },
-  ].filter(d => d.count > 0)
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main w-full">
@@ -105,56 +94,7 @@ export default function JobCandidatesPage() {
       </div>
 
       {showChart && jobApplications.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 fade-in duration-300">
-          <ChartCard title="Status Kandidat" description="Sebaran status tahapan kandidat">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <RechartsTooltip
-                  formatter={(value: any) => [`${value} Kandidat`, "Jumlah"]}
-                  contentStyle={CHART_TOOLTIP_STYLE}
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="Skor Rekomendasi AI" description="Kelayakan berdasarkan analisis profil">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={scoreData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis fontSize={11} tickLine={false} axisLine={false} />
-                <RechartsTooltip cursor={{ fill: "var(--muted)" }} contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={50} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="Tingkat Pengalaman" description="Lama pengalaman kerja kandidat">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={expData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                <XAxis dataKey="name" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis fontSize={11} tickLine={false} axisLine={false} />
-                <RechartsTooltip cursor={{ fill: "var(--muted)" }} contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={50} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
+        <CandidateAnalyticsCharts statusData={statusData} scoreData={scoreData} expData={expData} />
       )}
 
       <div className="bg-background rounded-xl border pt-4 pb-2">

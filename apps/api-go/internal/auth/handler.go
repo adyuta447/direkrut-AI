@@ -3,33 +3,69 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
+	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/jwtutil"
+	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
 )
 
-// Router mendaftarkan seluruh endpoint auth di bawah /v1/auth.
-func Router() chi.Router {
+var validate = validator.New()
+
+type Handler struct {
+	db          *gorm.DB
+	issuer      *jwtutil.Issuer
+	rateLimiter func(http.Handler) http.Handler
+	requireAuth func(http.Handler) http.Handler
+}
+
+func NewHandler(gdb *gorm.DB, issuer *jwtutil.Issuer, rateLimiter, requireAuth func(http.Handler) http.Handler) *Handler {
+	return &Handler{db: gdb, issuer: issuer, rateLimiter: rateLimiter, requireAuth: requireAuth}
+}
+
+// Router mendaftarkan seluruh endpoint auth di bawah /v1/auth. register &
+// login di-rate-limit ketat -- dua endpoint ini paling rawan
+// brute-force/credential-stuffing. Endpoint /me/* butuh login (ganti
+// password/email, hapus akun).
+func (h *Handler) Router() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/register", handleRegister)
-	r.Post("/login", handleLogin)
-	r.Post("/refresh", handleRefreshToken)
+	r.With(h.rateLimiter).Post("/register", h.handleRegister)
+	r.With(h.rateLimiter).Post("/login", h.handleLogin)
+	r.Post("/refresh", h.handleRefreshToken)
+	r.Group(func(pr chi.Router) {
+		pr.Use(h.requireAuth)
+		pr.Patch("/me/password", h.handleChangePassword)
+		pr.Patch("/me/email", h.handleChangeEmail)
+		pr.Delete("/me", h.handleDeleteAccount)
+	})
 	return r
 }
 
 type registerRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"` // "applicant" | "hrd"
+	Name        string `json:"name" validate:"required,min=2,max=120"`
+	Email       string `json:"email" validate:"required,email"`
+	Password    string `json:"password" validate:"required,min=8,max=72"`
+	Role        string `json:"role" validate:"required,oneof=candidate hrd"`
+	CompanyName string `json:"companyName" validate:"required_if=Role hrd,omitempty,min=2,max=160"`
 }
 
 type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refreshToken" validate:"required"`
 }
 
 type authResponse struct {
@@ -37,29 +73,313 @@ type authResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func handleRegister(w http.ResponseWriter, r *http.Request) {
+func decodeAndValidate(r *http.Request, dst any) error {
+	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		return errors.New("request body gak valid")
+	}
+	return validate.Struct(dst)
+}
+
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	// TODO: hash password (bcrypt/argon2), simpan user ke Postgres,
-	// terbitkan access + refresh token via internal JWT service.
-	httpx.WriteJSON(w, http.StatusNotImplemented, authResponse{})
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal proses password")
+		return
+	}
+
+	ctx := r.Context()
+	var (
+		userID      string
+		companyID   string
+		hrdUserID   string
+		candidateID string
+	)
+
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		user := appdb.User{Email: req.Email, PasswordHash: string(hash), Role: req.Role, Status: "active"}
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+		userID = user.ID
+
+		if req.Role == "hrd" {
+			company := appdb.Company{Name: req.CompanyName}
+			if err := tx.Create(&company).Error; err != nil {
+				return err
+			}
+			hrdUser := appdb.HrdUser{UserID: user.ID, CompanyID: company.ID}
+			if err := tx.Create(&hrdUser).Error; err != nil {
+				return err
+			}
+			companyID = company.ID
+			hrdUserID = hrdUser.ID
+		} else {
+			candidate := appdb.Candidate{UserID: user.ID, FullName: req.Name}
+			if err := tx.Create(&candidate).Error; err != nil {
+				return err
+			}
+			candidateID = candidate.ID
+		}
+		return nil
+	})
+	if txErr != nil {
+		if errors.Is(txErr, gorm.ErrDuplicatedKey) {
+			httpx.WriteError(w, http.StatusConflict, "email_taken", "email ini udah kepake")
+			return
+		}
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal daftar akun")
+		return
+	}
+
+	h.issueTokenPair(w, r, userID, req.Role, companyID, hrdUserID, candidateID, http.StatusCreated)
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid body", http.StatusBadRequest)
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
-	// TODO: verifikasi kredensial, terbitkan JWT dengan klaim role
-	// buat middleware RBAC di layanan lain.
-	httpx.WriteJSON(w, http.StatusNotImplemented, authResponse{})
+
+	ctx := r.Context()
+	var user appdb.User
+	if err := h.db.WithContext(ctx).Where("email = ?", req.Email).First(&user).Error; err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials", "email atau password salah")
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials", "email atau password salah")
+		return
+	}
+
+	companyID, hrdUserID, candidateID := h.lookupUserContext(ctx, user)
+	h.issueTokenPair(w, r, user.ID, user.Role, companyID, hrdUserID, candidateID, http.StatusOK)
 }
 
-func handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-	// TODO: validasi refresh token, terbitkan access token baru.
-	httpx.WriteJSON(w, http.StatusNotImplemented, authResponse{})
+func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req refreshRequest
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	ctx := r.Context()
+	hash := jwtutil.HashRefreshToken(req.RefreshToken)
+
+	var stored appdb.RefreshToken
+	if err := h.db.WithContext(ctx).Where("token_hash = ?", hash).First(&stored).Error; err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_refresh_token", "refresh token gak valid")
+		return
+	}
+	if stored.RevokedAt != nil || time.Now().After(stored.ExpiresAt) {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_refresh_token", "refresh token udah gak berlaku")
+		return
+	}
+
+	var user appdb.User
+	if err := h.db.WithContext(ctx).First(&user, "id = ?", stored.UserID).Error; err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_refresh_token", "user gak ditemukan")
+		return
+	}
+
+	newRaw, newHash, err := jwtutil.NewRefreshToken()
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal terbitkan refresh token")
+		return
+	}
+
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		now := time.Now()
+		if err := tx.Model(&appdb.RefreshToken{}).Where("id = ?", stored.ID).Update("revoked_at", now).Error; err != nil {
+			return err
+		}
+		return tx.Create(&appdb.RefreshToken{UserID: user.ID, TokenHash: newHash, ExpiresAt: now.Add(jwtutil.RefreshTokenTTL)}).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal rotate refresh token")
+		return
+	}
+
+	companyID, hrdUserID, candidateID := h.lookupUserContext(ctx, user)
+	newAccess, err := h.issuer.IssueAccessToken(user.ID, user.Role, companyID, hrdUserID, candidateID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal terbitkan access token")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, authResponse{AccessToken: newAccess, RefreshToken: newRaw})
+}
+
+// lookupUserContext ngambil ID tambahan yang perlu masuk ke JWT claims sesuai
+// role -- hrd butuh company_id/hrd_user_id (buat ownership check di jobs),
+// candidate butuh candidate_id (buat ownership check di applications).
+func (h *Handler) lookupUserContext(ctx context.Context, user appdb.User) (companyID, hrdUserID, candidateID string) {
+	switch user.Role {
+	case "hrd":
+		var hrdUser appdb.HrdUser
+		if err := h.db.WithContext(ctx).Where("user_id = ?", user.ID).First(&hrdUser).Error; err != nil {
+			return "", "", ""
+		}
+		return hrdUser.CompanyID, hrdUser.ID, ""
+	case "candidate":
+		var candidate appdb.Candidate
+		if err := h.db.WithContext(ctx).Where("user_id = ?", user.ID).First(&candidate).Error; err != nil {
+			return "", "", ""
+		}
+		return "", "", candidate.ID
+	default:
+		return "", "", ""
+	}
+}
+
+func (h *Handler) issueTokenPair(w http.ResponseWriter, r *http.Request, userID, role, companyID, hrdUserID, candidateID string, status int) {
+	ctx := r.Context()
+	accessToken, err := h.issuer.IssueAccessToken(userID, role, companyID, hrdUserID, candidateID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal terbitkan access token")
+		return
+	}
+	rawRefresh, refreshHash, err := jwtutil.NewRefreshToken()
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal terbitkan refresh token")
+		return
+	}
+	record := appdb.RefreshToken{UserID: userID, TokenHash: refreshHash, ExpiresAt: time.Now().Add(jwtutil.RefreshTokenTTL)}
+	if err := h.db.WithContext(ctx).Create(&record).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan refresh token")
+		return
+	}
+	httpx.WriteJSON(w, status, authResponse{AccessToken: accessToken, RefreshToken: rawRefresh})
+}
+
+// revokeAllRefreshTokens dipanggil abis ganti password atau hapus akun --
+// sesi yang lagi aktif di device lain gak boleh tetap jalan pakai kredensial
+// lama.
+func (h *Handler) revokeAllRefreshTokens(ctx context.Context, tx *gorm.DB, userID string) error {
+	return tx.WithContext(ctx).Model(&appdb.RefreshToken{}).
+		Where("user_id = ? AND revoked_at IS NULL", userID).
+		Update("revoked_at", time.Now()).Error
+}
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" validate:"required"`
+	NewPassword     string `json:"newPassword" validate:"required,min=8,max=72"`
+}
+
+func (h *Handler) handleChangePassword(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
+		return
+	}
+	var req changePasswordRequest
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	ctx := r.Context()
+	var user appdb.User
+	if err := h.db.WithContext(ctx).First(&user, "id = ?", claims.UserID).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "user gak ditemukan")
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials", "kata sandi saat ini salah")
+		return
+	}
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal proses password")
+		return
+	}
+
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&appdb.User{}).Where("id = ?", user.ID).Update("password_hash", string(newHash)).Error; err != nil {
+			return err
+		}
+		return h.revokeAllRefreshTokens(ctx, tx, user.ID)
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ganti kata sandi")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+type changeEmailRequest struct {
+	NewEmail string `json:"newEmail" validate:"required,email"`
+}
+
+func (h *Handler) handleChangeEmail(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
+		return
+	}
+	var req changeEmailRequest
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	ctx := r.Context()
+	var existing appdb.User
+	if err := h.db.WithContext(ctx).Where("email = ?", req.NewEmail).First(&existing).Error; err == nil {
+		httpx.WriteError(w, http.StatusConflict, "email_taken", "email ini udah kepake")
+		return
+	}
+	if err := h.db.WithContext(ctx).Model(&appdb.User{}).Where("id = ?", claims.UserID).Update("email", req.NewEmail).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ganti email")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"email": req.NewEmail})
+}
+
+type deleteAccountRequest struct {
+	Password string `json:"password" validate:"required"`
+}
+
+func (h *Handler) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
+		return
+	}
+	var req deleteAccountRequest
+	if err := decodeAndValidate(r, &req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	ctx := r.Context()
+	var user appdb.User
+	if err := h.db.WithContext(ctx).First(&user, "id = ?", claims.UserID).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "user gak ditemukan")
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials", "kata sandi salah")
+		return
+	}
+
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := h.revokeAllRefreshTokens(ctx, tx, user.ID); err != nil {
+			return err
+		}
+		// Soft-delete (kolom deleted_at yang udah dipakai login buat nyaring
+		// akun nonaktif) -- bukan hard-delete, biar riwayat lamaran/lowongan
+		// yang nyambung ke user ini gak keputus FK-nya.
+		return tx.Delete(&user).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus akun")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

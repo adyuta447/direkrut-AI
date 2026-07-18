@@ -1,6 +1,6 @@
 "use client";
 
-import { useApp } from "../context/AppContext";
+import { useDashboard } from "../context/DashboardContext";
 import { useLandingAnimations } from "../lib/shared/useLandingAnimations";
 import { SiteHeader } from "../components/organisms/shared/SiteHeader";
 import { SiteFooter } from "../components/organisms/shared/SiteFooter";
@@ -13,7 +13,7 @@ import { FeaturedJobsSection } from "../components/organisms/landing/FeaturedJob
 import { CtaBanner } from "../components/organisms/landing/CtaBanner";
 
 export default function HomePage() {
-  const { jobs } = useApp();
+  const { jobs } = useDashboard();
   useLandingAnimations();
 
   return (
