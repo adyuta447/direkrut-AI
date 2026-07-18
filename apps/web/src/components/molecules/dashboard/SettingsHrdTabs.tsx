@@ -85,6 +85,7 @@ export function SettingsHrdTabAccount() {
 export function SettingsHrdTabSystem() {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- client-mount guard to avoid theme hydration mismatch, no state-free equivalent
   React.useEffect(() => setMounted(true), [])
   const darkMode = mounted && resolvedTheme === "dark"
   const toggleDarkMode = () => setTheme(darkMode ? "light" : "dark")

@@ -41,11 +41,9 @@ function formatDate(value: string) {
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState("90d")
-
-  React.useEffect(() => {
-    if (isMobile) setTimeRange("7d")
-  }, [isMobile])
+  // Default range depends on viewport (mobile = 7d) until the user picks one manually.
+  const [manualRange, setManualRange] = React.useState<string | null>(null)
+  const timeRange = manualRange ?? (isMobile ? "7d" : "90d")
 
   const filteredData = filterByTimeRange(CHART_DATA, timeRange)
 
@@ -61,8 +59,10 @@ export function ChartAreaInteractive() {
         </CardDescription>
         <CardAction>
           <ToggleGroup
-            value={timeRange as any}
-            onValueChange={(v: any) => setTimeRange(v as string)}
+            value={[timeRange]}
+            onValueChange={(groupValue) => {
+              if (groupValue[0]) setManualRange(groupValue[0])
+            }}
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
           >
@@ -72,7 +72,7 @@ export function ChartAreaInteractive() {
           </ToggleGroup>
           <Select
             value={timeRange}
-            onValueChange={(val: any) => val && setTimeRange(val)}
+            onValueChange={(val) => val && setManualRange(val)}
           >
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"

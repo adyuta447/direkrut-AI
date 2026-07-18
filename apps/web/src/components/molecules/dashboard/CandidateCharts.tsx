@@ -23,7 +23,7 @@ export function CandidateCharts({ weightData, radarData, softSkillData }: Candid
               <Pie data={weightData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={5} dataKey="value">
                 {weightData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
               </Pie>
-              <RechartsTooltip formatter={(value: any) => [`${value}%`, "Bobot"]} contentStyle={CHART_TOOLTIP_STYLE} />
+              <RechartsTooltip formatter={(value) => [`${value}%`, "Bobot"]} contentStyle={CHART_TOOLTIP_STYLE} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -61,7 +61,7 @@ export function CandidateCharts({ weightData, radarData, softSkillData }: Candid
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
               <XAxis type="number" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
               <YAxis dataKey="name" type="category" fontSize={10} tickLine={false} axisLine={false} width={85} />
-              <RechartsTooltip cursor={{ fill: "var(--muted)" }} contentStyle={CHART_TOOLTIP_STYLE} formatter={(value: any) => [`${value} / 100`, "Skor"]} />
+              <RechartsTooltip cursor={{ fill: "var(--muted)" }} contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`${value} / 100`, "Skor"]} />
               <Bar dataKey="score" radius={[0, 4, 4, 0]} maxBarSize={20} />
             </BarChart>
           </ResponsiveContainer>

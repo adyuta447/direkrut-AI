@@ -67,7 +67,7 @@ export function CrossRoleAnalyticsCharts({
                 ))}
               </Pie>
               <RechartsTooltip
-                formatter={(value: any) => [`${value} Kandidat`, "Jumlah"]}
+                formatter={(value) => [`${value} Kandidat`, "Jumlah"]}
                 contentStyle={CHART_TOOLTIP_STYLE}
               />
               <Legend wrapperStyle={{ fontSize: "11px" }} />

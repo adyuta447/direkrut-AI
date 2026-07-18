@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { IconBuildingSkyscraper } from "@tabler/icons-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { IconBuildingSkyscraper } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Department } from "@/lib/types"
+} from "@/components/ui/dialog";
+import { Department } from "@/lib/types";
 
 export function DepartmentFormDialog({
   open,
@@ -21,28 +21,28 @@ export function DepartmentFormDialog({
   department,
   onSubmit,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  /** null = mode tambah baru, isi = mode edit. */
-  department: Department | null
-  onSubmit: (values: { name: string; description: string }) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  department: Department | null;
+  onSubmit: (values: { name: string; description: string }) => void;
 }) {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-
-  useEffect(() => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
-      setName(department?.name ?? "")
-      setDescription(department?.description ?? "")
+      setName(department?.name ?? "");
+      setDescription(department?.description ?? "");
     }
-  }, [open, department])
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
-    onSubmit({ name: name.trim(), description: description.trim() })
-    onOpenChange(false)
-  }
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSubmit({ name: name.trim(), description: description.trim() });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,13 +89,20 @@ export function DepartmentFormDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" className="border-hairline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-hairline"
+              onClick={() => onOpenChange(false)}
+            >
               Batal
             </Button>
-            <Button type="submit">{department ? "Simpan Perubahan" : "Tambah Departemen"}</Button>
+            <Button type="submit">
+              {department ? "Simpan Perubahan" : "Tambah Departemen"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
