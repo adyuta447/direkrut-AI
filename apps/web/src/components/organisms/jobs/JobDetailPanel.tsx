@@ -1,4 +1,4 @@
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { JobDetailHeader } from "../../molecules/jobs/JobDetailHeader";
 import { JobRequirements } from "../../molecules/jobs/JobRequirements";

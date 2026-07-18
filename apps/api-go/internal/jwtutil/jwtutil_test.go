@@ -5,7 +5,7 @@ import "testing"
 func TestIssueAndVerifyAccessToken(t *testing.T) {
 	issuer := NewIssuer("test-secret")
 
-	token, err := issuer.IssueAccessToken("user-1", "hrd", "company-1", "hrduser-1")
+	token, err := issuer.IssueAccessToken("user-1", "hrd", "company-1", "hrduser-1", "")
 	if err != nil {
 		t.Fatalf("IssueAccessToken: %v", err)
 	}
@@ -23,7 +23,7 @@ func TestVerifyAccessTokenRejectsWrongSecret(t *testing.T) {
 	issued := NewIssuer("secret-a")
 	verifier := NewIssuer("secret-b")
 
-	token, err := issued.IssueAccessToken("user-1", "candidate", "", "")
+	token, err := issued.IssueAccessToken("user-1", "candidate", "", "", "")
 	if err != nil {
 		t.Fatalf("IssueAccessToken: %v", err)
 	}

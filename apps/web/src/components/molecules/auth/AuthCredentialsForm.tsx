@@ -16,9 +16,17 @@ interface AuthCredentialsFormProps {
   formData: AuthFormData;
   onFieldChange: (field: keyof AuthFormData, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  isSubmitting?: boolean;
 }
 
-export function AuthCredentialsForm({ isLogin, role, formData, onFieldChange, onSubmit }: AuthCredentialsFormProps) {
+export function AuthCredentialsForm({
+  isLogin,
+  role,
+  formData,
+  onFieldChange,
+  onSubmit,
+  isSubmitting,
+}: AuthCredentialsFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {!isLogin && (
@@ -57,8 +65,12 @@ export function AuthCredentialsForm({ isLogin, role, formData, onFieldChange, on
         onChange={(v) => onFieldChange("password", v)}
         placeholder="••••••••"
       />
-      <button type="submit" className="w-full flex items-center justify-center gap-2 btn-primary !py-3.5 mt-6">
-        {isLogin ? "Masuk" : "Buat Akun Gratis"}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full flex items-center justify-center gap-2 btn-primary !py-3.5 mt-6 disabled:opacity-60"
+      >
+        {isSubmitting ? "Memproses..." : isLogin ? "Masuk" : "Buat Akun Gratis"}
         <ArrowRight className="w-4 h-4" />
       </button>
     </form>

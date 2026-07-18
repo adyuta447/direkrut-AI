@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Users } from "lucide-react";
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 
 interface FeaturedJobCardProps {
   job: Job;

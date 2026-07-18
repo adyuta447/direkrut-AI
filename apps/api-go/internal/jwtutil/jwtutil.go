@@ -16,10 +16,11 @@ const (
 )
 
 type Claims struct {
-	UserID    string `json:"sub"`
-	Role      string `json:"role"`
-	CompanyID string `json:"company_id,omitempty"`
-	HrdUserID string `json:"hrd_user_id,omitempty"`
+	UserID      string `json:"sub"`
+	Role        string `json:"role"`
+	CompanyID   string `json:"company_id,omitempty"`
+	HrdUserID   string `json:"hrd_user_id,omitempty"`
+	CandidateID string `json:"candidate_id,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -31,13 +32,14 @@ func NewIssuer(accessSecret string) *Issuer {
 	return &Issuer{accessSecret: []byte(accessSecret)}
 }
 
-func (i *Issuer) IssueAccessToken(userID, role, companyID, hrdUserID string) (string, error) {
+func (i *Issuer) IssueAccessToken(userID, role, companyID, hrdUserID, candidateID string) (string, error) {
 	now := time.Now()
 	claims := Claims{
-		UserID:    userID,
-		Role:      role,
-		CompanyID: companyID,
-		HrdUserID: hrdUserID,
+		UserID:      userID,
+		Role:        role,
+		CompanyID:   companyID,
+		HrdUserID:   hrdUserID,
+		CandidateID: candidateID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(AccessTokenTTL)),

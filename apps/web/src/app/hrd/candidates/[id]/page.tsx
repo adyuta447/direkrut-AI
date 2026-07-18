@@ -12,12 +12,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
 import { useDashboard } from "@/context/DashboardContext"
+import { getApplicationById } from "@/services/applicationService"
 import { BackButton } from "@/components/molecules/dashboard/BackButton"
 import { getExtendedData } from "@/lib/dashboard/extended-data"
 import { CandidateContactGrid } from "@/components/molecules/dashboard/CandidateContactGrid"
 import { CandidateCharts } from "@/components/molecules/dashboard/CandidateCharts"
 import { CandidateDetailAnalysis } from "@/components/molecules/dashboard/CandidateDetailAnalysis"
 import { CandidateDetailCV } from "@/components/molecules/dashboard/CandidateDetailCV"
+import type { Application } from "@/lib/types"
 
 export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>()
@@ -29,7 +31,22 @@ export default function CandidateDetailPage() {
     setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const rawCandidate = applications.find((app) => app.id === params.id)
+  // Diambil langsung by-id (bukan cuma applications.find dari context) --
+  // context butuh waktu buat fetch lamaran asli pas mount, jadi deep-link
+  // langsung ke halaman ini gak boleh nunjukin "nggak ketemu" prematur.
+  const [rawCandidate, setRawCandidate] = React.useState<Application | null | undefined>(() =>
+    applications.find((app) => app.id === params.id)
+  )
+  React.useEffect(() => {
+    let cancelled = false
+    getApplicationById(params.id).then((fetched) => {
+      if (!cancelled && fetched) setRawCandidate(fetched)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [params.id])
+
   const candidate = rawCandidate
     ? { ...rawCandidate, ...getExtendedData(rawCandidate.id) }
     : null

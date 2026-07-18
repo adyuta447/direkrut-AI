@@ -2,16 +2,16 @@
 
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useApp } from "@/context/AppContext";
-import { DashboardProvider } from "@/context/DashboardContext";
+import { useDashboard } from "@/context/DashboardContext";
 
 /**
- * Gerbang alur wawancara AI (fullscreen, tanpa sidebar): auth-gate +
- * DashboardProvider. Sebelumnya halaman interview memanggil useDashboard()
- * tanpa provider -> crash saat runtime, dan bisa diakses tanpa login.
+ * Gerbang alur wawancara AI (fullscreen, tanpa sidebar): auth-gate doang --
+ * DashboardProvider udah dipasang sekali di app/providers.tsx (root),
+ * jadi useDashboard() di sini otomatis kebagian state yang sama dengan
+ * seluruh app.
  */
 export function InterviewGate({ children }: { children: ReactNode }) {
-  const { currentUser } = useApp();
+  const { currentUser } = useDashboard();
   const router = useRouter();
 
   useEffect(() => {
@@ -20,5 +20,5 @@ export function InterviewGate({ children }: { children: ReactNode }) {
 
   if (!currentUser) return null;
 
-  return <DashboardProvider>{children}</DashboardProvider>;
+  return <>{children}</>;
 }

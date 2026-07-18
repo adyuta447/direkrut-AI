@@ -1,15 +1,4 @@
-# Dependensi infra buat development lokal: Postgres+pgvector, Redis,
-# dan MinIO (object storage kompatibel S3 buat CV & rekaman audio).
-# apps/api-go dan apps/ai-engine dijalankan manual (go run / uvicorn)
-# selama development biar hot-reload cepat; compose ini cuma nyediain
-# storage layer-nya.
-#
-# Jalankan: docker compose -f infra/docker-compose.yml up -d
-#
-# Migrasi database (skema di apps/api-go/migrations) dijalankan lewat
-# service "migrate" -- gak perlu install Postgres/migrate CLI di lokal:
-#   docker compose -f infra/docker-compose.yml --profile tools run --rm migrate up
-#   docker compose -f infra/docker-compose.yml --profile tools run --rm migrate down 1
+
 name: direkrut-ai
 
 services:

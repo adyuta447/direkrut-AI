@@ -1,11 +1,12 @@
-import Image from "next/image"
-import { PenIcon } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+"use client"
+
+import * as React from "react"
+import { PenIcon, UploadCloudIcon, ImageIcon, XIcon, MapPinIcon } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MapPinIcon } from "lucide-react"
 import {
   Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
@@ -18,24 +19,88 @@ interface Profile {
   location: string
   age: string
   gender: string
+  photoUrl?: string
+  coverUrl?: string
 }
 
 interface ProfileBiodataCardProps {
   profile: Profile
   onChangeProfile: (p: Partial<Profile>) => void
+  onSaveProfile: () => void
+  onSaveField: (p: Partial<Profile>) => void
 }
 
-export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataCardProps) {
+const MAX_PHOTO_SIZE = 2 * 1024 * 1024 
+
+function readImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
+export function ProfileBiodataCard({ profile, onChangeProfile, onSaveProfile, onSaveField }: ProfileBiodataCardProps) {
+  const avatarInputRef = React.useRef<HTMLInputElement>(null)
+  const [avatarError, setAvatarError] = React.useState<string | null>(null)
+
+  const [coverOpen, setCoverOpen] = React.useState(false)
+  const [coverDraft, setCoverDraft] = React.useState<string | null>(null)
+  const [coverError, setCoverError] = React.useState<string | null>(null)
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    if (file.size > MAX_PHOTO_SIZE) {
+      setAvatarError("Ukuran foto maksimal 2MB")
+      return
+    }
+    setAvatarError(null)
+    onSaveField({ photoUrl: await readImageFile(file) })
+  }
+
+  const handleCoverFile = async (file: File | undefined) => {
+    if (!file) return
+    if (file.size > MAX_PHOTO_SIZE) {
+      setCoverError("Ukuran foto maksimal 2MB")
+      return
+    }
+    setCoverError(null)
+    setCoverDraft(await readImageFile(file))
+  }
+
+  const saveCover = () => {
+    if (coverDraft) onSaveField({ coverUrl: coverDraft })
+    setCoverOpen(false)
+  }
+
+  const coverPreview = coverDraft ?? profile.coverUrl
+
   return (
     <Card
       id="section-biodata"
       className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden scroll-mt-6"
     >
-      <div className="h-28 bg-primary relative">
-        <Dialog>
+      <div className="h-36 sm:h-44 bg-primary relative overflow-hidden">
+        {profile.coverUrl && (
+          <img src={profile.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
+        )}
+        {profile.coverUrl && <div className="absolute inset-0 bg-black/15" />}
+
+        <Dialog
+          open={coverOpen}
+          onOpenChange={(open) => {
+            setCoverOpen(open)
+            setCoverDraft(null)
+            setCoverError(null)
+          }}
+        >
           <DialogTrigger
             render={
-              <Button variant="secondary" size="sm" className="absolute top-4 right-4 bg-white/80 hover:bg-white text-black" />
+              <Button variant="secondary" size="sm" className="absolute top-4 right-4 bg-white/90 hover:bg-white text-black" />
             }
           >
             <PenIcon className="size-3 mr-2" /> Ubah Latar
@@ -43,26 +108,98 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Ubah Foto Latar</DialogTitle>
+              <DialogDescription>Tampil di bagian paling atas profil kamu — pilih yang bikin profesional.</DialogDescription>
             </DialogHeader>
-            <div className="py-10 px-6 flex flex-col items-center justify-center text-center rounded-2xl bg-muted/50 cursor-pointer transition-colors hover:bg-muted">
-              <Image src="/dashboard/add_file.svg" alt="" width={160} height={120} unoptimized className="pointer-events-none mb-5 h-24 w-auto select-none" />
-              <p className="text-[18px] font-semibold text-foreground">Unggah Foto Latar</p>
-              <p className="text-[14px] text-muted-foreground mt-1">PNG, JPG maksimal 2MB</p>
-            </div>
+
+            <label
+              htmlFor="cover-upload-input"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setIsDragging(false)
+                handleCoverFile(e.dataTransfer.files?.[0])
+              }}
+              className={`block cursor-pointer rounded-2xl border-2 border-dashed overflow-hidden transition-colors ${
+                isDragging ? "border-primary bg-primary/5" : "border-hairline hover:bg-muted/50"
+              }`}
+            >
+              {coverPreview ? (
+                <div className="group/cover relative h-44">
+                  <img src={coverPreview} alt="" className="size-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 flex items-center justify-center transition-opacity">
+                    <span className="text-white text-sm font-semibold flex items-center gap-2">
+                      <UploadCloudIcon className="size-4" /> Ganti Foto
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-10 px-6 flex flex-col items-center justify-center text-center">
+                  <div className="p-4 bg-muted rounded-full mb-4">
+                    <ImageIcon className="size-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-[15px] font-semibold text-foreground">Klik atau seret foto ke sini</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">PNG atau JPG, maksimal 2MB</p>
+                </div>
+              )}
+              <input
+                id="cover-upload-input"
+                type="file"
+                accept="image/png,image/jpeg"
+                className="sr-only"
+                onChange={(e) => handleCoverFile(e.target.files?.[0])}
+              />
+            </label>
+            {coverError && <p className="text-sm text-destructive">{coverError}</p>}
+
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
+              <Button onClick={saveCover} disabled={!coverDraft}>Simpan Foto Latar</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
       <CardContent className="px-6 pb-6 pt-0 relative">
         <div className="flex justify-between items-start">
-          <Avatar className="size-28 border-4 border-card -mt-12 bg-muted relative">
-            <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
-              {profile.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer rounded-full">
-              <PenIcon className="size-6 text-white" />
-            </div>
-          </Avatar>
+          <div className="relative -mt-12 shrink-0">
+            <Avatar
+              className="group/avatar-upload size-28 border-4 border-card bg-muted cursor-pointer"
+              onClick={() => avatarInputRef.current?.click()}
+            >
+              {profile.photoUrl ? (
+                <AvatarImage src={profile.photoUrl} alt={profile.name} />
+              ) : (
+                <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
+                  {profile.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover/avatar-upload:opacity-100 flex items-center justify-center transition-opacity">
+                <PenIcon className="size-6 text-white" />
+              </div>
+            </Avatar>
+            {profile.photoUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-xs"
+                className="absolute bottom-1 right-1 rounded-full bg-white text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSaveField({ photoUrl: undefined })
+                }}
+              >
+                <XIcon className="size-3" />
+              </Button>
+            )}
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="sr-only"
+              onChange={handleAvatarPick}
+            />
+          </div>
 
           <Dialog>
             <DialogTrigger
@@ -86,7 +223,8 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
                 </div>
                 <div className="grid gap-2">
                   <Label>Email</Label>
-                  <Input value={profile.email} onChange={(e) => onChangeProfile({ email: e.target.value })} />
+                  <Input value={profile.email} disabled />
+                  <p className="text-xs text-muted-foreground">Ubah email lewat halaman Pengaturan &gt; Akun.</p>
                 </div>
                 <div className="grid gap-2">
                   <Label>Lokasi</Label>
@@ -103,11 +241,13 @@ export function ProfileBiodataCard({ profile, onChangeProfile }: ProfileBiodataC
               </div>
               <DialogFooter>
                 <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
-                <DialogClose render={<Button />}>Simpan Perubahan</DialogClose>
+                <DialogClose render={<Button onClick={onSaveProfile} />}>Simpan Perubahan</DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
+
+        {avatarError && <p className="text-sm text-destructive mt-2">{avatarError}</p>}
 
         <div className="mt-4">
           <h3 className="font-bold text-2xl leading-[1.1] tracking-[-0.02em] text-ink">{profile.name}</h3>

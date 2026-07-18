@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { BriefcaseIcon } from "lucide-react"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
@@ -9,12 +10,18 @@ import { DataTable } from "@/components/organisms/dashboard/CandidateDataTable"
 import { ChartBarMixed } from "@/components/organisms/dashboard/ChartBarMixed"
 import { ChartPieLabelList } from "@/components/organisms/dashboard/ChartPieLabelList"
 import { Button } from "@/components/ui/button"
-import { useApp } from "@/context/AppContext"
 import { useDashboard } from "@/context/DashboardContext"
 
 export default function HrdDashboardPage() {
-  const { applications } = useDashboard()
-  const { currentUser } = useApp()
+  const { applications, currentUser, refetchApplications } = useDashboard()
+
+  // Context cuma fetch applications sekali pas login -- refetch tiap kali
+  // dashboard ini ke-mount biar lamaran yang masuk sesudah login (mis.
+  // kandidat baru aja apply) langsung kelihatan tanpa perlu reload penuh.
+  useEffect(() => {
+    void refetchApplications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const perluTinjauan = applications.filter((a) => a.status === "under-review").length
 

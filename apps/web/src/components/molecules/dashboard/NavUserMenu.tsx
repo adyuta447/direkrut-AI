@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { CircleUserRoundIcon, BellIcon, LogOutIcon } from "lucide-react"
-import { useApp } from "@/context/AppContext"
+import { useDashboard } from "@/context/DashboardContext"
 
 function initials(name: string) {
   return name
@@ -26,11 +26,11 @@ interface NavUserMenuProps {
 }
 
 export function NavUserMenu({ user, accountUrl, side }: NavUserMenuProps) {
-  const { setCurrentUser } = useApp()
+  const { logout } = useDashboard()
   const router = useRouter()
 
   const handleLogout = () => {
-    setCurrentUser(null)
+    logout()
     router.push("/auth")
   }
 
