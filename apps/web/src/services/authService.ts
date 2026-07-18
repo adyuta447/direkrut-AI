@@ -14,10 +14,14 @@ interface AuthResponse {
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   if (isApiConfigured) {
-    return apiFetch<AuthResponse>("/v1/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      return await apiFetch<AuthResponse>("/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (err) {
+      console.error("[authService] login lewat API gagal, fallback ke mock:", err);
+    }
   }
   return {
     user: { id: crypto.randomUUID(), name: email.split("@")[0], email, role: "candidate" },
@@ -32,10 +36,14 @@ export async function register(
   role: UserRole
 ): Promise<AuthResponse> {
   if (isApiConfigured) {
-    return apiFetch<AuthResponse>("/v1/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password, role }),
-    });
+    try {
+      return await apiFetch<AuthResponse>("/v1/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password, role }),
+      });
+    } catch (err) {
+      console.error("[authService] register lewat API gagal, fallback ke mock:", err);
+    }
   }
   return {
     user: { id: crypto.randomUUID(), name, email, role },

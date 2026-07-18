@@ -1,37 +1,138 @@
-# Kontrak API bersama buat ketiga layanan (apps/web, apps/api-go,
-# apps/ai-engine). Ini sumber kebenaran tunggal soal bentuk request/
-# response — kalau berubah, update di sini dulu baru sinkronkan ke
-# implementasi. Nantinya bisa dipakai buat generate TypeScript types
-# (openapi-typescript) dan Go structs (oapi-codegen).
+# Kontrak API buat kedua layanan backend (apps/api-go, apps/ai-engine).
+# Ini sumber kebenaran tunggal soal bentuk request/response, ditulis dari
+# implementasi asli (bukan aspirasi) -- kalau kode berubah, update di sini
+# juga. Bisa dipakai buat generate TypeScript types (openapi-typescript)
+# atau di-preview sbg dokumen interaktif (lihat README.md di folder ini).
 openapi: 3.0.3
 info:
   title: Direkrut AI API
-  description: >
-    Kontrak REST API buat Direkrut AI. Endpoint /v1/* dilayani oleh
-    apps/api-go (logika bisnis); endpoint /internal/* dilayani oleh
-    apps/ai-engine dan hanya dipanggil server-to-server oleh api-go.
-  version: 0.1.0
+  version: 0.2.0
+  description: |
+    Dua layanan backend independen, didokumentasikan dalam satu file ini:
+
+    - **apps/api-go** (`auth`, `jobs`, `subscriptions`, `payments`,
+      `notifications`) -- API publik yang dipanggil langsung oleh
+      `apps/web`. Endpoint listing/detail lowongan bersifat publik (gak
+      butuh login); endpoint tulis butuh JWT.
+    - **apps/ai-engine** (`cv-parser`, `assessment`, `vector-search`,
+      `chat`) -- **internal-only**, dipanggil server-to-server oleh
+      api-go, tidak pernah langsung dari browser. Trust boundary-nya
+      bukan CORS, tapi shared-secret header `X-Internal-Api-Key`.
+
+    Tiap operasi di bawah nunjukin server mana yang beneran ngelayanin
+    dia lewat override `servers` per-path.
+
+    ### Status implementasi
+    Endpoint yang belum diimplementasi ditandai eksplisit di
+    summary-nya (`[BELUM DIIMPLEMENTASI]`) dan balikin `501`. Semua yang
+    lain di dokumen ini udah beneran jalan & udah dites end-to-end
+    lawan database & object storage asli, bukan cuma spek di atas kertas.
+
+    ### Bentuk error
+    Kedua servis balikin bentuk error JSON yang SAMA di semua endpoint
+    kecuali di-catat lain (lihat catatan tiap-endpoint buat pengecualian):
+    ```json
+    { "error": { "code": "validation_failed", "message": "..." } }
+    ```
+
+    ### Autentikasi
+    - `bearerAuth` (JWT, di api-go): access token umur 15 menit. Klaim HRD
+      bawa `company_id`/`hrd_user_id` langsung di token, jadi handler gak
+      perlu query DB tambahan buat tau siapa "pemilik" resource.
+      Refresh token (7 hari) itu string acak opaque -- cuma HASH-nya
+      (SHA-256) yang disimpan di DB, dan **rotate** tiap dipakai (token
+      lama langsung di-revoke, dipakai dua kali = ditolak, indikasi
+      kebocoran/replay).
+    - `apiKeyAuth` (header `X-Internal-Api-Key`, di ai-engine): shared
+      secret antara api-go & ai-engine, dicek di semua endpoint `/v1/*`
+      ai-engine.
+
+    ### Rate limiting
+    - api-go: `/v1/auth/register` & `/v1/auth/login` dibatasi 10
+      request/menit per IP (`429 rate_limited`).
+    - ai-engine: tiap endpoint yang manggil provider AI (cv-parser,
+      assessment) dibatasi 20 request/menit per caller (`429`) --
+      ini kontrol cost-abuse selain keamanan, karena panggilannya
+      manggil API berbayar (Groq/Gemini).
+
+    ### Caching
+    `GET /v1/jobs` dan `GET /v1/jobs/{jobId}` di-cache lewat Redis
+    (server-side, cache-aside dgn invalidasi versioned) DAN nyetel
+    header `Cache-Control` (CDN/browser-side) -- dua lapis. Endpoint
+    ai-engine (`cv-parser/parse`, `assessment/*`) di-cache berdasarkan
+    hash konten payload-nya: input yang identik gak pernah manggil
+    provider AI dua kali.
 
 servers:
+  - url: https://direkrut-ai-api-go-51c4e232a2fc.herokuapp.com
+    description: apps/api-go (production, Heroku)
   - url: http://localhost:8080
     description: apps/api-go (lokal)
-  - url: http://localhost:8000
-    description: apps/ai-engine (lokal, internal only)
 
 tags:
+  - name: health
+    description: Liveness/readiness -- gak butuh auth di kedua servis.
   - name: auth
+    description: apps/api-go
   - name: jobs
-  - name: applications
+    description: apps/api-go
   - name: subscriptions
+    description: "apps/api-go -- [BELUM DIIMPLEMENTASI] kecuali GET /me (hardcoded)"
   - name: payments
+    description: "apps/api-go -- [BELUM DIIMPLEMENTASI]"
+  - name: notifications
+    description: "apps/api-go -- [BELUM DIIMPLEMENTASI] kecuali GET / (balikin array kosong)"
+  - name: cv-parser
+    description: apps/ai-engine (internal)
+  - name: assessment
+    description: apps/ai-engine (internal)
+  - name: vector-search
+    description: "apps/ai-engine (internal) -- [BELUM DIIMPLEMENTASI]"
+  - name: chat
+    description: "apps/ai-engine (internal) -- [BELUM DIIMPLEMENTASI]"
 
 paths:
+  # ===========================================================================
+  # Health -- ada identik di kedua servis
+  # ===========================================================================
   /healthz:
     get:
-      summary: Health check
+      tags: [health]
+      summary: Liveness check
+      description: >
+        Selalu 200 selama proses hidup -- gak ngecek dependency apa pun
+        (DB/Redis). Buat itu, pakai /readyz.
+      security: []
       responses:
         "200":
-          description: Layanan hidup
+          description: Proses hidup
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  service: { type: string, example: api-go }
+
+  /readyz:
+    get:
+      tags: [health]
+      summary: Readiness check
+      description: >
+        Beneran ngecek Postgres & Redis (api-go) atau Redis (ai-engine).
+        Ini yang harus dipoll load balancer, bukan /healthz.
+      security: []
+      responses:
+        "200":
+          description: Siap nerima traffic
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ready }
+        "503":
+          description: Salah satu dependency gak bisa diajak ngomong
           content:
             application/json:
               schema:
@@ -39,13 +140,23 @@ paths:
                 properties:
                   status:
                     type: string
-                  service:
-                    type: string
+                    example: redis_unavailable
+                    enum: [db_unavailable, redis_unavailable]
 
+  # ===========================================================================
+  # apps/api-go -- auth
+  # ===========================================================================
   /v1/auth/register:
     post:
       tags: [auth]
       summary: Daftar akun baru (kandidat atau HRD)
+      description: >
+        Kalau `role: hrd`, `companyName` WAJIB diisi -- `companies` dan
+        `hrd_users` diprovisikan dalam transaksi yang sama dengan `users`
+        (all-or-nothing), karena tanpa `hrd_users`, akun itu gak akan
+        punya `hrd_user_id` buat lolos ownership check di endpoint jobs
+        tulis. Rate-limited (lihat info.description).
+      security: []
       requestBody:
         required: true
         content:
@@ -54,16 +165,29 @@ paths:
               $ref: "#/components/schemas/RegisterRequest"
       responses:
         "201":
-          description: Akun berhasil dibuat
+          description: Akun (dan company/hrd_users kalau role=hrd) berhasil dibuat
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Email udah kepake
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: { code: email_taken, message: "email ini udah kepake" }
+        "429":
+          $ref: "#/components/responses/RateLimited"
 
   /v1/auth/login:
     post:
       tags: [auth]
       summary: Masuk dengan email + password
+      security: []
       requestBody:
         required: true
         content:
@@ -77,36 +201,93 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
-
-  /v1/jobs:
-    get:
-      tags: [jobs]
-      summary: List lowongan (dengan filter)
-      parameters:
-        - name: q
-          in: query
-          schema:
-            type: string
-        - name: location
-          in: query
-          schema:
-            type: string
-        - name: industry
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Daftar lowongan
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Email atau password salah
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Job"
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Tukar refresh token dengan pasangan token baru (rotation)
+      description: >
+        Refresh token lama otomatis di-revoke begitu dipakai. Refresh
+        token yang sama dipakai dua kali = ditolak (indikasi kebocoran).
+        TIDAK di-rate-limit (beda dari register/login).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Pasangan token baru
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Refresh token gak valid, udah revoked, atau expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ===========================================================================
+  # apps/api-go -- jobs
+  # ===========================================================================
+  /v1/jobs:
+    get:
+      tags: [jobs]
+      summary: List lowongan berstatus published (publik, gak butuh login)
+      description: >
+        Keyset/cursor pagination (BUKAN offset) -- tetap cepat berapa pun
+        banyaknya lowongan. Di-cache Redis (versioned invalidation) +
+        header Cache-Control (public, max-age=60).
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: cursor
+          in: query
+          description: Nilai dari `nextCursor` response sebelumnya. Opaque, jangan di-construct manual.
+          schema: { type: string }
+        - name: location
+          in: query
+          description: Exact match ke field location.
+          schema: { type: string }
+        - name: type
+          in: query
+          description: Exact match ke employmentType (mis. full-time, internship).
+          schema: { type: string }
+      responses:
+        "200":
+          description: Daftar lowongan
+          headers:
+            Cache-Control:
+              schema: { type: string, example: "public, max-age=60" }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListResponse"
     post:
       tags: [jobs]
-      summary: Buat lowongan baru (HRD, kena kuota subscription tier)
+      summary: Buat lowongan baru
+      description: Cuma role `hrd`. Membutuhkan `company_id`/`hrd_user_id` di JWT claims (lihat /v1/auth/register).
       security:
         - bearerAuth: []
       requestBody:
@@ -114,7 +295,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JobInput"
+              $ref: "#/components/schemas/JobWriteRequest"
       responses:
         "201":
           description: Lowongan dibuat
@@ -122,212 +303,589 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: Bukan role hrd, atau akun HRD ini belum terhubung ke company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v1/jobs/{jobId}:
     get:
       tags: [jobs]
-      summary: Detail satu lowongan
+      summary: Detail satu lowongan (publik, gak butuh login)
+      security: []
       parameters:
-        - name: jobId
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/JobId"
       responses:
         "200":
           description: Detail lowongan
+          headers:
+            Cache-Control:
+              schema: { type: string, example: "public, max-age=300" }
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Job"
-
-  /v1/applications:
-    post:
-      tags: [applications]
-      summary: Kirim lamaran (upload CV)
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [jobs]
+      summary: Update lowongan
+      description: Cuma HRD pemilik lowongan ini (`jobs.created_by` harus match `hrd_user_id` di JWT claims).
       security:
         - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApplicationInput"
+              $ref: "#/components/schemas/JobWriteRequest"
       responses:
-        "201":
-          description: Lamaran diterima, masuk antrean AI screening
+        "200":
+          description: Lowongan ter-update
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Application"
+                $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: Bukan lowongan milikmu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [jobs]
+      summary: Hapus lowongan
+      description: Cuma HRD pemilik. Hard delete (tabel jobs gak punya soft-delete).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "204":
+          description: Terhapus
+        "403":
+          description: Bukan lowongan milikmu
+        "404":
+          $ref: "#/components/responses/NotFound"
 
+  /v1/jobs/{jobId}/cv-upload-url:
+    post:
+      tags: [jobs]
+      summary: Minta presigned URL buat upload CV langsung ke object storage
+      description: >
+        Cuma role `candidate`. Response-nya URL yang dipakai buat PUT
+        file LANGSUNG ke object storage dari browser -- api-go gak
+        pernah nampung file bytes di memory/bandwidth-nya sendiri. URL
+        berlaku 10 menit, di-scope ke satu object key spesifik.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: URL siap dipakai
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadUrl: { type: string, format: uri }
+                  objectKey:
+                    type: string
+                    description: Simpan ini -- dipakai lagi buat manggil ai-engine cv-parser/parse.
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ===========================================================================
+  # apps/api-go -- subscriptions, payments, notifications (stub sebagian besar)
+  # ===========================================================================
   /v1/subscriptions/me:
     get:
       tags: [subscriptions]
-      summary: Tier subscription aktif + sisa kuota
+      summary: Tier subscription aktif
+      description: >
+        **Response-nya hardcoded** (`{"tier":"free"}`) -- belum baca
+        data subscription asli dari DB.
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Info subscription
+          description: Tier aktif (hardcoded ke "free" saat ini)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Subscription"
+                type: object
+                properties:
+                  tier: { type: string, enum: [free, pro, pro_plus, max] }
 
-  /internal/cv-parser/parse:
+  /v1/subscriptions/upgrade:
     post:
-      tags: [ai-engine]
-      summary: "[internal] Parsing CV jadi data terstruktur"
+      tags: [subscriptions]
+      summary: "[BELUM DIIMPLEMENTASI]"
+      security:
+        - bearerAuth: []
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedNullBody"
+
+  /v1/subscriptions/cancel:
+    post:
+      tags: [subscriptions]
+      summary: "[BELUM DIIMPLEMENTASI]"
+      security:
+        - bearerAuth: []
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedNullBody"
+
+  /v1/payments/invoices:
+    post:
+      tags: [payments]
+      summary: "[BELUM DIIMPLEMENTASI]"
+      security:
+        - bearerAuth: []
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedNullBody"
+
+  /v1/payments/webhooks/xendit:
+    post:
+      tags: [payments]
+      summary: "[BELUM DIIMPLEMENTASI] Callback Xendit"
+      description: >
+        **Peringatan keamanan**: handler ini SAAT INI menerima callback
+        apa pun tanpa verifikasi `X-Callback-Token` sama sekali, dan
+        selalu balikin 200. Payment sengaja di-defer -- jangan anggap
+        endpoint ini aman buat dipakai produksi.
+      security: []
       responses:
         "200":
-          description: Hasil parsing CV
+          description: Diterima (tanpa verifikasi signature apa pun saat ini)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: received }
 
-  /internal/vector-search/match:
-    post:
-      tags: [ai-engine]
-      summary: "[internal] Cosine similarity antara CV dan lowongan"
+  /v1/notifications:
+    get:
+      tags: [notifications]
+      summary: List notifikasi milik user
+      description: "**Selalu balikin array kosong** -- belum baca dari DB."
+      security:
+        - bearerAuth: []
       responses:
         "200":
-          description: Skor kecocokan + bukti kutipan
+          description: Array kosong (belum diimplementasi penuh)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+                example: []
+
+  /v1/notifications/{notificationId}/read:
+    post:
+      tags: [notifications]
+      summary: "[BELUM DIIMPLEMENTASI]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedNullBody"
+
+  # ===========================================================================
+  # apps/ai-engine -- internal only, X-Internal-Api-Key wajib di semua
+  # endpoint di bawah ini (termasuk yang masih [BELUM DIIMPLEMENTASI])
+  # ===========================================================================
+  /v1/cv-parser/parse:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+        description: apps/ai-engine (production, Heroku)
+      - url: http://localhost:8000
+        description: apps/ai-engine (lokal)
+    post:
+      tags: [cv-parser]
+      summary: Parsing CV jadi data terstruktur (summary, skills, pengalaman)
+      description: >
+        Dua jalur ekstraksi berdasar ekstensi `cv_object_key`: **PDF**
+        -> ekstrak teks (pypdf) -> Groq (Llama). **Gambar** (jpg/png/webp)
+        -> Gemini (vision), karena Llama gak nerima input gambar.
+        Rasterisasi PDF hasil scan (gak ada teks) SENGAJA di luar scope
+        -- balikin 422 yang jelas. Hasil di-cache 24 jam berdasar hash
+        `cv_object_key`+`application_id` -- input yang sama gak pernah
+        manggil provider AI dua kali.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cv_object_key, application_id]
+              properties:
+                cv_object_key:
+                  type: string
+                  description: Object key dari POST /v1/jobs/{jobId}/cv-upload-url.
+                application_id:
+                  type: string
+      responses:
+        "200":
+          description: CV berhasil di-parse (atau diambil dari cache)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+                  skills:
+                    type: array
+                    items: { type: string }
+                  work_experience_years:
+                    type: number
+                    nullable: true
+        "422":
+          description: Format file gak didukung, atau PDF gak punya teks yang bisa diekstrak
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/InternalKeyInvalid"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/assessment/score-validation:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+        description: apps/ai-engine (production, Heroku)
+      - url: http://localhost:8000
+        description: apps/ai-engine (lokal)
+    post:
+      tags: [assessment]
+      summary: Nilai jawaban validasi kompetensi kandidat
+      description: >
+        Skor 0-100 + breakdown deteksi keaslian jawaban (authentic vs
+        generic vs aiGenerated, totalnya 100). Kalau model AI gak nurut
+        format JSON, balikin nilai netral (0/0/0/0) bukan 500 -- tetap
+        butuh review manual di kasus itu. Di-cache berdasar hash
+        `application_id`+isi jawaban.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [application_id, responses]
+              properties:
+                application_id: { type: string }
+                responses:
+                  type: array
+                  items:
+                    type: object
+                    required: [question, answer]
+                    properties:
+                      question: { type: string }
+                      answer: { type: string }
+      responses:
+        "200":
+          description: Skor & deteksi keaslian
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendation_score: { type: number, minimum: 0, maximum: 100 }
+                  authenticity_score:
+                    type: object
+                    description: Totalnya 100.
+                    properties:
+                      authentic: { type: number }
+                      generic: { type: number }
+                      aiGenerated: { type: number }
+        "401":
+          $ref: "#/components/responses/InternalKeyInvalid"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/assessment/transcribe-interview:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+        description: apps/ai-engine (production, Heroku)
+      - url: http://localhost:8000
+        description: apps/ai-engine (lokal)
+    post:
+      tags: [assessment]
+      summary: Speech-to-text + ringkasan analisis wawancara
+      description: >
+        Audio di-download dari object storage, ditranskrip lewat Groq
+        Whisper, lalu diringkas 2-3 kalimat. Di-cache berdasar hash
+        `application_id`+`audio_object_key`.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [application_id, audio_object_key]
+              properties:
+                application_id: { type: string }
+                audio_object_key: { type: string }
+      responses:
+        "200":
+          description: Transkrip + ringkasan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transcript: { type: string }
+                  analysis_summary: { type: string }
+        "401":
+          $ref: "#/components/responses/InternalKeyInvalid"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/vector-search/embed:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+      - url: http://localhost:8000
+    post:
+      tags: [vector-search]
+      summary: "[BELUM DIIMPLEMENTASI] Generate embedding dari teks"
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedError"
+
+  /v1/vector-search/match:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+      - url: http://localhost:8000
+    post:
+      tags: [vector-search]
+      summary: "[BELUM DIIMPLEMENTASI] Cosine similarity CV <-> lowongan"
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [application_id, job_id]
+              properties:
+                application_id: { type: string }
+                job_id: { type: string }
+      responses:
+        "501":
+          $ref: "#/components/responses/NotImplementedError"
+
+  /v1/chat/stream:
+    servers:
+      - url: https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com
+      - url: http://localhost:8000
+    post:
+      tags: [chat]
+      summary: "[BELUM DIIMPLEMENTASI] Chat AI streaming (SSE)"
+      description: >
+        Endpoint & response envelope (`text/event-stream`) udah ada,
+        tapi isinya masih placeholder statis (`data: not-implemented`),
+        belum manggil provider AI beneran.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [session_id, messages]
+              properties:
+                session_id: { type: string }
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role: { type: string, enum: [user, assistant] }
+                      content: { type: string }
+      responses:
+        "200":
+          description: Placeholder SSE stream (bukan hasil AI beneran)
+          content:
+            text/event-stream:
+              schema: { type: string }
 
 components:
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Dipakai di apps/api-go. Access token umur 15 menit dari /v1/auth/login atau /v1/auth/register.
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Internal-Api-Key
+      description: Dipakai di apps/ai-engine. Shared secret server-to-server, bukan buat dipanggil browser.
+
+  responses:
+    BadRequest:
+      description: Body gak valid atau gagal validasi field
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource gak ditemukan
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Kelebihan request dalam window waktu (lihat info.description)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalKeyInvalid:
+      description: Header X-Internal-Api-Key gak ada / salah
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotImplementedNullBody:
+      description: "[apps/api-go] Belum diimplementasi -- body response-nya literal `null`, BUKAN error envelope."
+      content:
+        application/json:
+          schema: {}
+          example: null
+    NotImplementedError:
+      description: "[apps/ai-engine] Belum diimplementasi -- pakai error envelope standar."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: { code: not_implemented, message: "belum diimplementasi" }
 
   schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, example: validation_failed }
+            message: { type: string, example: "request body gak valid" }
+
     RegisterRequest:
       type: object
       required: [name, email, password, role]
       properties:
-        name:
+        name: { type: string, minLength: 2, maxLength: 120 }
+        email: { type: string, format: email }
+        password: { type: string, format: password, minLength: 8, maxLength: 72 }
+        role: { type: string, enum: [candidate, hrd] }
+        companyName:
           type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-        role:
-          type: string
-          enum: [applicant, hrd]
+          minLength: 2
+          maxLength: 160
+          description: WAJIB kalau role=hrd, diabaikan kalau role=candidate.
 
     LoginRequest:
       type: object
       required: [email, password]
       properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
+        email: { type: string, format: email }
+        password: { type: string, format: password }
 
     AuthResponse:
       type: object
       properties:
-        accessToken:
-          type: string
-        refreshToken:
-          type: string
+        accessToken: { type: string, description: "JWT, umur 15 menit." }
+        refreshToken: { type: string, description: "String acak opaque, umur 7 hari, rotate tiap dipakai." }
 
     Job:
       type: object
+      description: Bentuk response GET/POST/PUT jobs. companyName/companyIndustry ikut hasil JOIN ke companies.
       properties:
-        id:
-          type: string
-        title:
-          type: string
-        company:
-          type: string
-        location:
-          type: string
-        type:
-          type: string
-        description:
-          type: string
-        department:
-          type: string
+        id: { type: string, format: uuid }
+        companyId: { type: string, format: uuid }
+        companyName: { type: string }
+        companyIndustry: { type: string }
+        title: { type: string }
+        description: { type: string }
         requirements:
-          type: array
-          items:
-            type: string
-        detailedQualifications:
-          type: array
-          items:
-            type: string
-        salaryRange:
           type: string
-        industry:
-          type: string
-        questions:
-          type: array
-          items:
-            type: string
-        posted:
-          type: string
-        applicantCount:
-          type: integer
+          description: Teks bebas, biasanya dipisah baris baru per poin.
+        location: { type: string }
+        employmentType: { type: string, example: full-time }
+        salaryMin: { type: integer, nullable: true }
+        salaryMax: { type: integer, nullable: true }
+        status: { type: string, enum: [draft, published, closed] }
+        publishedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
 
-    JobInput:
-      allOf:
-        - $ref: "#/components/schemas/Job"
-      description: Sama seperti Job, tanpa field id dan applicantCount.
+    JobWriteRequest:
+      type: object
+      required: [title, description, employmentType, status]
+      properties:
+        title: { type: string, minLength: 3, maxLength: 200 }
+        description: { type: string, minLength: 10 }
+        requirements: { type: string }
+        location: { type: string }
+        employmentType: { type: string }
+        salaryMin: { type: integer, nullable: true }
+        salaryMax: { type: integer, nullable: true }
+        status: { type: string, enum: [draft, published, closed] }
 
-    Application:
+    JobListResponse:
       type: object
       properties:
-        id:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+        nextCursor:
           type: string
-        applicantId:
-          type: string
-        applicantName:
-          type: string
-        jobId:
-          type: string
-        jobTitle:
-          type: string
-        validationStatus:
-          type: string
-          enum: [pending, in-progress, completed]
-        status:
-          type: string
-          enum: [submitted, under-review, interview, rejected]
-        recommendationScore:
-          type: number
-        appliedDate:
-          type: string
-          format: date-time
-
-    ApplicationInput:
-      type: object
-      required: [jobId]
-      properties:
-        jobId:
-          type: string
-        resumeLink:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-
-    Subscription:
-      type: object
-      properties:
-        tier:
-          type: string
-          enum: [free, pro, pro_plus, max]
-        jobPostingsUsed:
-          type: integer
-        jobPostingsLimit:
-          type: integer
-          nullable: true
-        cvStorageUsedMb:
-          type: number
-        cvStorageLimitMb:
-          type: number
-          nullable: true
+          description: Kirim balik sbg query param `cursor` buat halaman berikutnya. Kosong kalau udah halaman terakhir.

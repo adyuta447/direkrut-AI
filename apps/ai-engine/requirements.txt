@@ -9,8 +9,20 @@ google-generativeai==0.8.2
 groq==0.11.0
 
 # Database & vector search
-asyncpg==0.29.0
+asyncpg==0.30.0
 pgvector==0.3.4
+
+# Cache & rate limiting (Redis)
+redis==5.1.1
+
+# Config typed dari env (pydantic-settings, bukan os.getenv() manual)
+pydantic-settings==2.6.1
+
+# Object storage (MinIO lokal / S3-compatible di prod)
+boto3==1.35.61
+
+# Ekstraksi teks PDF buat CV parsing -- pure Python, gak butuh system dep
+pypdf==5.1.0
 
 # Utilitas
 python-dotenv==1.0.1
