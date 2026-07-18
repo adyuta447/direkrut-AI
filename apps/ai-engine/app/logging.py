@@ -25,10 +25,6 @@ from starlette.requests import Request
 from starlette.types import ASGIApp
 
 _request_id_ctx: ContextVar[str] = ContextVar("request_id", default="-")
-
-# Placeholder kasar, BUKAN harga resmi provider -- cukup buat kasih gambaran
-# order-of-magnitude biaya di log. Update kalau udah ada angka pasti per
-# model yang benar-benar dipakai.
 _PRICE_PER_1K_TOKENS_USD: dict[str, float] = {
     "groq": 0.0,
     "gemini": 0.0,

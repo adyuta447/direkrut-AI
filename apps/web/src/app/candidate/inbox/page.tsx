@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { formatDistanceToNow } from "date-fns"
+import { id } from "date-fns/locale"
 import { InboxSidebar } from "@/components/molecules/dashboard/InboxSidebar"
 import { InboxMessageView } from "@/components/molecules/dashboard/InboxMessageView"
+import { listNotifications, markAsRead } from "@/services/notificationService"
 
 type Message = {
   id: string
@@ -16,53 +19,47 @@ type Message = {
   type: "invitation" | "offer" | "rejection" | "update"
 }
 
-const MOCK_MESSAGES: Message[] = [
-  {
-    id: "msg-1",
-    company: "TechNova Solutions",
-    subject: "Undangan Wawancara Teknis - Frontend Developer",
-    snippet: "Selamat! Profil dan hasil wawancara AI Anda sangat mengesankan tim kami...",
-    date: "Hari ini, 09:42",
-    read: false,
-    starred: true,
-    type: "invitation",
-    content: `Halo Kandidat,\n\nSelamat! Kami telah meninjau profil, CV, dan hasil wawancara AI awal Anda. Tim engineering kami sangat terkesan dengan pendekatan Anda terhadap studi kasus yang diberikan.\n\nKami ingin mengundang Anda untuk mengikuti tahap Wawancara Teknis secara langsung (online) dengan Lead Frontend Engineer kami.\n\nJadwal: Kamis, 18 Juli 2026, Pukul 14:00 WIB\nPlatform: Google Meet (Tautan terlampir)\n\nHarap balas email ini untuk mengonfirmasi kehadiran Anda.\n\nSalam hangat,\nTim Rekrutmen TechNova Solutions`,
-  },
-  {
-    id: "msg-2",
-    company: "DataCorp Indonesia",
-    subject: "Surat Penawaran - Data Analyst",
-    snippet: "Kami dengan senang hati menawarkan posisi Data Analyst kepada Anda...",
-    date: "Kemarin",
-    read: true,
-    starred: true,
-    type: "offer",
-    content: `Halo Kandidat,\n\nBerdasarkan seluruh rangkaian proses seleksi yang telah Anda lalui, kami dengan senang hati menawarkan Anda posisi sebagai Data Analyst di DataCorp Indonesia.\n\nTerlampir adalah dokumen Surat Penawaran (offering letter) resmi.\n\nSilakan pelajari dan berikan tanda tangan Anda paling lambat tanggal 17 Juli 2026.\n\nSalam,\nHR Manager\nDataCorp Indonesia`,
-  },
-  {
-    id: "msg-3",
-    company: "Nexus Creative",
-    subject: "Pembaruan Status Lamaran - UI/UX Designer",
-    snippet: "Terima kasih atas waktu yang Anda luangkan. Saat ini kami belum dapat melanjutkan...",
-    date: "10 Jul",
-    read: true,
+// Backend cuma punya satu jenis notifikasi in-app sejauh ini (perubahan
+// status lamaran) -- nama perusahaan/lowongan udah ditulis langsung di
+// title/body-nya server-side, jadi "company" di sini sengaja generik.
+// "starred" gak ada konsep-nya di backend, tetap lokal-only (dekoratif).
+function toMessage(n: Awaited<ReturnType<typeof listNotifications>>[number]): Message {
+  return {
+    id: n.id,
+    company: "Direkrut AI",
+    subject: n.title,
+    snippet: n.body.length > 140 ? n.body.slice(0, 140) + "…" : n.body,
+    date: formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: id }),
+    read: n.isRead,
     starred: false,
-    type: "rejection",
-    content: `Halo Kandidat,\n\nTerima kasih banyak atas ketertarikan Anda untuk bergabung sebagai UI/UX Designer di Nexus Creative.\n\nSaat ini persaingan sangat ketat dan dengan menyesal kami sampaikan bahwa kami memutuskan untuk melanjutkan dengan kandidat lain.\n\nSemoga sukses selalu.\n\nSalam,\nTim Rekrutmen\nNexus Creative`,
-  },
-]
+    content: n.body,
+    type: "update",
+  }
+}
 
 export default function CandidateInboxPage() {
-  const [messages, setMessages] = React.useState<Message[]>(MOCK_MESSAGES)
-  const [selectedMessageId, setSelectedMessageId] = React.useState<string | null>(
-    MOCK_MESSAGES[0].id
-  )
+  const [messages, setMessages] = React.useState<Message[]>([])
+  const [selectedMessageId, setSelectedMessageId] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let cancelled = false
+    listNotifications().then((items) => {
+      if (cancelled) return
+      const mapped = items.map(toMessage)
+      setMessages(mapped)
+      setSelectedMessageId((prev) => prev ?? mapped[0]?.id ?? null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const selectedMessage = messages.find((m) => m.id === selectedMessageId)
 
-  const handleSelect = (id: string) => {
-    setMessages((msgs) => msgs.map((m) => (m.id === id ? { ...m, read: true } : m)))
-    setSelectedMessageId(id)
+  const handleSelect = (msgId: string) => {
+    setMessages((msgs) => msgs.map((m) => (m.id === msgId ? { ...m, read: true } : m)))
+    setSelectedMessageId(msgId)
+    void markAsRead(msgId)
   }
 
   return (

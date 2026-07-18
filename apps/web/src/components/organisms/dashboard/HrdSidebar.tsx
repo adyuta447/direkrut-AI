@@ -30,7 +30,7 @@ import {
   SparklesIcon,
   Building2Icon,
 } from "lucide-react"
-import { useApp } from "@/context/AppContext"
+import { useDashboard } from "@/context/DashboardContext"
 
 const navMain = [
   { title: "Dasbor", url: "/hrd", icon: <LayoutDashboardIcon /> },
@@ -52,7 +52,7 @@ const documents = [
 ]
 
 export function HrdSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentUser } = useApp()
+  const { currentUser } = useDashboard()
   const user = {
     name: currentUser?.name ?? "Pengguna HRD",
     email: currentUser?.email ?? "",

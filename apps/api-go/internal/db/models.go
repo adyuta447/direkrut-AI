@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"time"
 
 	"gorm.io/gorm"
@@ -75,6 +76,130 @@ func (HrdUser) TableName() string { return "hrd_users" }
 func (h *HrdUser) BeforeCreate(tx *gorm.DB) error {
 	if h.ID == "" {
 		h.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type Candidate struct {
+	ID        string  `gorm:"column:id;primaryKey"`
+	UserID    string  `gorm:"column:user_id"`
+	FullName  string  `gorm:"column:full_name"`
+	Phone     *string `gorm:"column:phone"`
+	Headline  *string `gorm:"column:headline"`
+	Location  *string `gorm:"column:location"`
+	CvFileURL *string `gorm:"column:cv_file_url"`
+
+	Age      *int    `gorm:"column:age"`
+	Gender   *string `gorm:"column:gender"`
+	About    *string `gorm:"column:about"`
+	PhotoURL *string `gorm:"column:photo_url"`
+	CoverURL *string `gorm:"column:cover_url"`
+	// Riwayat kerja/pendidikan/tautan sosial disimpan sebagai JSONB, bukan
+	// tabel relasional terpisah -- data ini murni buat ditampilin di profil,
+	// gak pernah di-query/di-filter lintas kandidat (beda sama skills yang
+	// emang butuh dicari, makanya skills tetap pakai candidate_skills/skills
+	// yang udah ada). Upgrade ke tabel sendiri kalau nanti butuh search by
+	// pengalaman/pendidikan.
+	// default:'[]' bukan cuma dokumentasi -- ini yang bikin GORM OMIT kolom
+	// ini dari INSERT pas value Go-nya nil (bukan nulis literal NULL, yang
+	// bakal ditolak kolom NOT NULL), jadi DEFAULT '[]'::jsonb di Postgres
+	// yang kepake. Tanpa tag ini, register kandidat gagal 500 (kejadian
+	// nyata pas verifikasi).
+	Experience json.RawMessage `gorm:"column:experience;type:jsonb;default:'[]'"`
+	Education  json.RawMessage `gorm:"column:education;type:jsonb;default:'[]'"`
+	Links      json.RawMessage `gorm:"column:links;type:jsonb;default:'[]'"`
+
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (Candidate) TableName() string { return "candidates" }
+
+func (c *Candidate) BeforeCreate(tx *gorm.DB) error {
+	if c.ID == "" {
+		c.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type Skill struct {
+	ID       string  `gorm:"column:id;primaryKey"`
+	Name     string  `gorm:"column:name"`
+	Category *string `gorm:"column:category"`
+}
+
+func (Skill) TableName() string { return "skills" }
+
+func (s *Skill) BeforeCreate(tx *gorm.DB) error {
+	if s.ID == "" {
+		s.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type CandidateSkill struct {
+	CandidateID string `gorm:"column:candidate_id;primaryKey"`
+	SkillID     string `gorm:"column:skill_id;primaryKey"`
+	Proficiency string `gorm:"column:proficiency"`
+}
+
+func (CandidateSkill) TableName() string { return "candidate_skills" }
+
+type Notification struct {
+	ID        string    `gorm:"column:id;primaryKey"`
+	UserID    string    `gorm:"column:user_id"`
+	Type      string    `gorm:"column:type"`
+	Title     string    `gorm:"column:title"`
+	Body      *string   `gorm:"column:body"`
+	IsRead    bool      `gorm:"column:is_read"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+}
+
+func (Notification) TableName() string { return "notifications" }
+
+func (n *Notification) BeforeCreate(tx *gorm.DB) error {
+	if n.ID == "" {
+		n.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type Application struct {
+	ID          string    `gorm:"column:id;primaryKey"`
+	JobID       string    `gorm:"column:job_id"`
+	CandidateID string    `gorm:"column:candidate_id"`
+	Status      string    `gorm:"column:status"`
+	AppliedAt   time.Time `gorm:"column:applied_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+
+	Job       *Job       `gorm:"foreignKey:JobID;references:ID"`
+	Candidate *Candidate `gorm:"foreignKey:CandidateID;references:ID"`
+}
+
+func (Application) TableName() string { return "applications" }
+
+func (a *Application) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type ApplicationStatusHistory struct {
+	ID            string    `gorm:"column:id;primaryKey"`
+	ApplicationID string    `gorm:"column:application_id"`
+	ChangedBy     *string   `gorm:"column:changed_by"`
+	FromStatus    *string   `gorm:"column:from_status"`
+	ToStatus      string    `gorm:"column:to_status"`
+	Note          *string   `gorm:"column:note"`
+	CreatedAt     time.Time `gorm:"column:created_at"`
+}
+
+func (ApplicationStatusHistory) TableName() string { return "application_status_history" }
+
+func (a *ApplicationStatusHistory) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = newUUIDv4()
 	}
 	return nil
 }

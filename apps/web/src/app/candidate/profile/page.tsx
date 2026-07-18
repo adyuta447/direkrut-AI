@@ -13,6 +13,7 @@ import { ProfileExperienceCard, ProfileEducationCard } from "@/components/molecu
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useDashboard } from "@/context/DashboardContext"
+import { getMyProfile, updateMyProfile, type CandidateProfile } from "@/services/candidateService"
 
 const SECTION_LINKS = [
   { id: "section-biodata", label: "Biodata" },
@@ -23,19 +24,20 @@ const SECTION_LINKS = [
   { id: "section-skills", label: "Keahlian & Sertifikasi" },
 ]
 
-const INITIAL_PROFILE = {
+const INITIAL_PROFILE: CandidateProfile & { aboutStatus?: "draft" | "saved" } = {
   name: "Kandidat Demo",
-  email: "kandidat@example.com",
   phone: "+6283434343434",
   location: "Indonesia",
   age: "",
   gender: "",
+  photoUrl: undefined,
+  coverUrl: undefined,
   about: "",
-  aboutStatus: undefined as "draft" | "saved" | undefined,
-  experience: [] as any[],
-  education: [] as any[],
-  skills: [] as string[],
-  links: [] as any[],
+  aboutStatus: undefined,
+  experience: [],
+  education: [],
+  skills: [],
+  links: [],
 }
 
 const AI_FILLED_PROFILE = {
@@ -64,7 +66,7 @@ const AI_FILLED_PROFILE = {
 const genId = () => Math.random().toString(36).slice(2, 10)
 
 export default function CandidateProfilePage() {
-  const { isProfileComplete, setIsProfileComplete } = useDashboard()
+  const { isProfileComplete, setIsProfileComplete, currentUser } = useDashboard()
   const [isUploading, setIsUploading] = React.useState(false)
   const [isSimulatingAI, setIsSimulatingAI] = React.useState(false)
   const [hasAutoFilled, setHasAutoFilled] = React.useState(isProfileComplete)
@@ -72,9 +74,47 @@ export default function CandidateProfilePage() {
   const [newSkill, setNewSkill] = React.useState("")
   const [notice, setNotice] = React.useState<string | null>(null)
 
+  // Tarik profil asli begitu halaman ke-mount -- kalau belum pernah diisi
+  // (akun baru), backend balikin field kosong dan INITIAL_PROFILE tetap
+  // dipakai buat sisanya (mis. placeholder nama demo).
+  React.useEffect(() => {
+    let cancelled = false
+    getMyProfile().then((fetched) => {
+      if (!cancelled && fetched) {
+        setProfile((prev) => ({ ...prev, ...fetched, aboutStatus: fetched.about ? "saved" : prev.aboutStatus }))
+        if (fetched.experience.length || fetched.education.length || fetched.skills.length) {
+          setHasAutoFilled(true)
+        }
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const notify = (message: string) => setNotice(message)
   const notifyStatus = (status: "draft" | "saved") =>
     notify(status === "draft" ? "Draft disimpan" : "Perubahan disimpan")
+
+  // Simpan lokal (langsung kelihatan) + kirim ke backend di belakang layar
+  // (fire-and-forget, sama kayak pola addJob/applyToJob) -- satu fungsi
+  // dipakai semua aksi save di halaman ini, termasuk tombol "Simpan
+  // Perubahan" di sidebar.
+  const persistProfile = (next: typeof profile) => {
+    setProfile(next)
+    void updateMyProfile(next)
+  }
+
+  // Sama kayak persistProfile, tapi pakai functional updater -- dipanggil
+  // langsung setelah onChangeProfile tanpa nunggu render (mis. foto avatar),
+  // jadi gak boleh ngandelin closure `profile` yang mungkin masih basi.
+  const persistProfilePatch = (partial: Partial<typeof profile>) => {
+    setProfile((prev) => {
+      const next = { ...prev, ...partial }
+      void updateMyProfile(next)
+      return next
+    })
+  }
 
   const simulateAIFill = () => {
     setIsUploading(true)
@@ -85,7 +125,7 @@ export default function CandidateProfilePage() {
         setIsSimulatingAI(false)
         setHasAutoFilled(true)
         setIsProfileComplete(true)
-        setProfile({ ...profile, ...AI_FILLED_PROFILE })
+        persistProfile({ ...profile, ...AI_FILLED_PROFILE })
         notify("Profil berhasil dilengkapi oleh AI")
       }, 2500)
     }, 1500)
@@ -94,57 +134,57 @@ export default function CandidateProfilePage() {
   const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && newSkill.trim() !== "") {
       if (!profile.skills.includes(newSkill.trim())) {
-        setProfile({ ...profile, skills: [...profile.skills, newSkill.trim()] })
+        persistProfile({ ...profile, skills: [...profile.skills, newSkill.trim()] })
       }
       setNewSkill("")
     }
   }
 
   const handleRemoveSkill = (skillToRemove: string) => {
-    setProfile({ ...profile, skills: profile.skills.filter((s) => s !== skillToRemove) })
+    persistProfile({ ...profile, skills: profile.skills.filter((s) => s !== skillToRemove) })
   }
 
   const saveAbout = (value: string, status: "draft" | "saved") => {
-    setProfile({ ...profile, about: value, aboutStatus: status })
+    persistProfile({ ...profile, about: value, aboutStatus: status })
     notifyStatus(status)
   }
 
   const addLink = (data: { platform: string; url: string }, status: "draft" | "saved") => {
-    setProfile({ ...profile, links: [{ id: genId(), ...data, status }, ...profile.links] })
+    persistProfile({ ...profile, links: [{ id: genId(), ...data, status }, ...profile.links] })
     notifyStatus(status)
   }
   const updateLink = (id: string, data: { platform: string; url: string }, status: "draft" | "saved") => {
-    setProfile({ ...profile, links: profile.links.map((l: any) => (l.id === id ? { ...l, ...data, status } : l)) })
+    persistProfile({ ...profile, links: profile.links.map((l) => (l.id === id ? { ...l, ...data, status } : l)) })
     notifyStatus(status)
   }
   const removeLink = (id: string) => {
-    setProfile({ ...profile, links: profile.links.filter((l: any) => l.id !== id) })
+    persistProfile({ ...profile, links: profile.links.filter((l) => l.id !== id) })
     notify("Tautan dihapus")
   }
 
-  const addExperience = (data: Record<string, string>, status: "draft" | "saved") => {
-    setProfile({ ...profile, experience: [{ id: genId(), ...data, status }, ...profile.experience] })
+  const addExperience = (data: Omit<(typeof profile.experience)[number], "id" | "status">, status: "draft" | "saved") => {
+    persistProfile({ ...profile, experience: [{ id: genId(), ...data, status }, ...profile.experience] })
     notifyStatus(status)
   }
-  const updateExperience = (id: string, data: Record<string, string>, status: "draft" | "saved") => {
-    setProfile({ ...profile, experience: profile.experience.map((x: any) => (x.id === id ? { ...x, ...data, status } : x)) })
+  const updateExperience = (id: string, data: Omit<(typeof profile.experience)[number], "id" | "status">, status: "draft" | "saved") => {
+    persistProfile({ ...profile, experience: profile.experience.map((x) => (x.id === id ? { ...x, ...data, status } : x)) })
     notifyStatus(status)
   }
   const removeExperience = (id: string) => {
-    setProfile({ ...profile, experience: profile.experience.filter((x: any) => x.id !== id) })
+    persistProfile({ ...profile, experience: profile.experience.filter((x) => x.id !== id) })
     notify("Pengalaman dihapus")
   }
 
-  const addEducation = (data: Record<string, string>, status: "draft" | "saved") => {
-    setProfile({ ...profile, education: [{ id: genId(), ...data, status }, ...profile.education] })
+  const addEducation = (data: Omit<(typeof profile.education)[number], "id" | "status">, status: "draft" | "saved") => {
+    persistProfile({ ...profile, education: [{ id: genId(), ...data, status }, ...profile.education] })
     notifyStatus(status)
   }
-  const updateEducation = (id: string, data: Record<string, string>, status: "draft" | "saved") => {
-    setProfile({ ...profile, education: profile.education.map((x: any) => (x.id === id ? { ...x, ...data, status } : x)) })
+  const updateEducation = (id: string, data: Omit<(typeof profile.education)[number], "id" | "status">, status: "draft" | "saved") => {
+    persistProfile({ ...profile, education: profile.education.map((x) => (x.id === id ? { ...x, ...data, status } : x)) })
     notifyStatus(status)
   }
   const removeEducation = (id: string) => {
-    setProfile({ ...profile, education: profile.education.filter((x: any) => x.id !== id) })
+    persistProfile({ ...profile, education: profile.education.filter((x) => x.id !== id) })
     notify("Pendidikan dihapus")
   }
 
@@ -222,7 +262,9 @@ export default function CandidateProfilePage() {
                   </Button>
                 ))}
                 <div className="p-4 bg-muted/30 border-t">
-                  <Button className="w-full">Simpan Perubahan</Button>
+                  <Button className="w-full" onClick={() => { persistProfile(profile); notify("Perubahan disimpan") }}>
+                    Simpan Perubahan
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -231,8 +273,10 @@ export default function CandidateProfilePage() {
 
         <div className="space-y-6 lg:col-span-3">
           <ProfileBiodataCard
-            profile={profile}
+            profile={{ ...profile, email: currentUser?.email ?? "" }}
             onChangeProfile={(partial) => setProfile({ ...profile, ...partial })}
+            onSaveProfile={() => persistProfile(profile)}
+            onSaveField={persistProfilePatch}
           />
           <ProfileAboutCard about={profile.about} aboutStatus={profile.aboutStatus} onSave={saveAbout} />
           <ProfileLinksCard links={profile.links} onAdd={addLink} onUpdate={updateLink} onRemove={removeLink} />

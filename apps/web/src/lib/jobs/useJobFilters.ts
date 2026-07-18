@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Job } from "../../types";
+import { Job } from "../types";
 
 interface UseJobFiltersInitial {
   search?: string;

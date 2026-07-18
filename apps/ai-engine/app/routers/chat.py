@@ -29,6 +29,4 @@ async def _stream_placeholder():
 
 @router.post("/stream")
 async def stream_chat(payload: ChatRequest) -> StreamingResponse:
-    # TODO: susun prompt dari riwayat pesan + context (job/candidate),
-    # panggil AIProvider secara streaming, kirim tiap chunk sebagai SSE.
     return StreamingResponse(_stream_placeholder(), media_type="text/event-stream")

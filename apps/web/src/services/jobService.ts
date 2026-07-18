@@ -4,18 +4,6 @@ import type { Job } from "../lib/types";
 import { mockJobs } from "../lib/mockData";
 import { apiFetch, isApiConfigured } from "./apiClient";
 
-/**
- * Layer data buat lowongan. listJobs/getJobById baca dari apps/api-go
- * beneran kalau NEXT_PUBLIC_API_BASE_URL diset (lihat mapApiJobToJob buat
- * adapter bentuk response Go -> tipe Job di FE, dua-duanya beda bentuk).
- * createJob TETAP di atas mock -- apps/web belum punya alur login yang
- * beneran ngobrol ke backend, jadi lowongan baru dari dashboard HRD masih
- * disimpan lokal aja buat sekarang.
- *
- * Setiap panggilan API di sini dibungkus try/catch yang fallback ke mock:
- * kalau backend lagi mati atau errornya apa pun, halaman tetap jalan
- * dengan data mock daripada nge-crash.
- */
 
 interface ApiJob {
   id: string;
@@ -46,10 +34,29 @@ const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
   internship: "Magang",
 };
 
+// ponytail: tipe pekerjaan custom (form "Lainnya...") gak punya padanan di
+// enum employmentType backend -- default ke full-time. Upgrade: backend
+// terima free-text employmentType kalau tipe custom jadi kebutuhan nyata.
+const LABEL_TO_EMPLOYMENT_TYPE: Record<string, string> = {
+  "Penuh Waktu": "full-time",
+  "Paruh Waktu": "part-time",
+  Kontrak: "contract",
+  Magang: "internship",
+};
+
 const STATUS_FROM_API: Record<string, NonNullable<Job["status"]>> = {
   published: "active",
   draft: "draft",
   closed: "inactive",
+};
+
+// "review" gak ada padanan di backend (cuma draft/published/closed) --
+// diperlakukan sebagai draft, paling deket secara makna (belum tayang).
+const STATUS_TO_API: Record<NonNullable<Job["status"]>, string> = {
+  active: "published",
+  draft: "draft",
+  inactive: "closed",
+  review: "draft",
 };
 
 function formatSalaryRange(min?: number, max?: number): string {
@@ -58,6 +65,40 @@ function formatSalaryRange(min?: number, max?: number): string {
   if (min) return `Mulai ${fmt(min)}`;
   if (max) return `Sampai ${fmt(max)}`;
   return "Nego";
+}
+
+// ponytail: parsing best-effort dari string bebas ("Rp 5.000.000 - Rp
+// 10.000.000") ke dua angka -- bukan currency parser beneran. Kalau gagal
+// (mis. "Nego"), salaryMin/Max dikirim undefined (opsional di backend).
+// Upgrade: ganti form salaryRange jadi dua input number salaryMin/salaryMax.
+function parseSalaryRange(range: string): { salaryMin?: number; salaryMax?: number } {
+  const numbers = range.match(/[\d.,]+/g)?.map((n) => parseInt(n.replace(/[.,]/g, ""), 10)).filter((n) => !isNaN(n) && n > 0);
+  if (!numbers || numbers.length === 0) return {};
+  if (numbers.length === 1) return { salaryMin: numbers[0] };
+  return { salaryMin: numbers[0], salaryMax: numbers[1] };
+}
+
+interface JobWriteRequestBody {
+  title: string;
+  description: string;
+  requirements: string;
+  location: string;
+  employmentType: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  status: string;
+}
+
+function buildJobWriteRequest(job: Omit<Job, "id" | "applicantCount">): JobWriteRequestBody {
+  return {
+    title: job.title,
+    description: job.description,
+    requirements: job.requirements.join("\n"),
+    location: job.location,
+    employmentType: LABEL_TO_EMPLOYMENT_TYPE[job.type] ?? "full-time",
+    ...parseSalaryRange(job.salaryRange),
+    status: STATUS_TO_API[job.status ?? "draft"],
+  };
 }
 
 /** Adapter: bentuk response apps/api-go (companyId, employmentType,
@@ -118,13 +159,40 @@ export async function getJobById(id: string): Promise<Job | null> {
 export async function createJob(job: Omit<Job, "id" | "applicantCount">): Promise<Job> {
   if (isApiConfigured) {
     try {
-      return await apiFetch<Job>("/v1/jobs", {
+      const apiJob = await apiFetch<ApiJob>("/v1/jobs", {
         method: "POST",
-        body: JSON.stringify(job),
+        body: JSON.stringify(buildJobWriteRequest(job)),
       });
+      return mapApiJobToJob(apiJob);
     } catch (err) {
-      console.error("[jobService] gagal buat lowongan lewat API (belum ada alur login asli), fallback ke mock:", err);
+      console.error("[jobService] gagal buat lowongan lewat API, fallback ke mock:", err);
     }
   }
   return { ...job, id: `job-${Date.now()}`, applicantCount: 0 };
+}
+
+export async function updateJob(id: string, job: Omit<Job, "id" | "applicantCount">): Promise<Job> {
+  if (isApiConfigured) {
+    try {
+      const apiJob = await apiFetch<ApiJob>(`/v1/jobs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(buildJobWriteRequest(job)),
+      });
+      return mapApiJobToJob(apiJob);
+    } catch (err) {
+      console.error("[jobService] gagal update lowongan lewat API, fallback ke mock:", err);
+    }
+  }
+  return { ...job, id, applicantCount: 0 };
+}
+
+export async function deleteJob(id: string): Promise<void> {
+  if (isApiConfigured) {
+    try {
+      await apiFetch<void>(`/v1/jobs/${id}`, { method: "DELETE" });
+      return;
+    } catch (err) {
+      console.error("[jobService] gagal hapus lowongan lewat API, cuma dihapus di state lokal:", err);
+    }
+  }
 }

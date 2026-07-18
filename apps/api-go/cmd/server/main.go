@@ -13,8 +13,10 @@ import (
 	"github.com/go-chi/cors"
 	"gorm.io/gorm"
 
+	"github.com/adyuta447/direkrut-ai/api-go/internal/application"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/auth"
 	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/candidate"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/config"
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
@@ -53,8 +55,11 @@ func main() {
 	requireAuth := appmw.RequireAuth(issuer)
 	authRateLimit := appmw.RateLimit(redisCache, "ratelimit:auth", 10, time.Minute)
 
-	authHandler := auth.NewHandler(gdb, issuer, authRateLimit)
+	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth)
 	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
+	applicationHandler := application.NewHandler(gdb, requireAuth)
+	candidateHandler := candidate.NewHandler(gdb, requireAuth)
+	notificationHandler := notification.NewHandler(gdb, requireAuth)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -79,9 +84,11 @@ func main() {
 	r.Route("/v1", func(v1 chi.Router) {
 		v1.Mount("/auth", authHandler.Router())
 		v1.Mount("/jobs", jobHandler.Router())
+		v1.Mount("/applications", applicationHandler.Router())
+		v1.Mount("/candidates", candidateHandler.Router())
 		v1.Mount("/subscriptions", subscription.Router())
 		v1.Mount("/payments", payment.Router())
-		v1.Mount("/notifications", notification.Router())
+		v1.Mount("/notifications", notificationHandler.Router())
 	})
 
 	srv := &http.Server{

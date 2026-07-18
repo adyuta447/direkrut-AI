@@ -1,8 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { AppProvider } from "../context/AppContext";
+import { DashboardProvider } from "../context/DashboardContext";
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <AppProvider>{children}</AppProvider>;
+  return <DashboardProvider>{children}</DashboardProvider>;
 }

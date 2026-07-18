@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 import { JobListItem } from "../../molecules/jobs/JobListItem";
 
 interface JobListProps {
