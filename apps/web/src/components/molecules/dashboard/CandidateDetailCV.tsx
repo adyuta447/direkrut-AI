@@ -1,9 +1,11 @@
 import { IconVideo } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Application } from "@/lib/types"
+import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 
 interface CandidateDetailCVProps {
-  candidate: any
+  candidate: Application & ExtendedCandidateData
 }
 
 export function CandidateDetailCV({ candidate }: CandidateDetailCVProps) {

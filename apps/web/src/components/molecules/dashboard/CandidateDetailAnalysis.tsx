@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { Application } from "@/lib/types"
+import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 
 interface CandidateDetailAnalysisProps {
-  candidate: any
+  candidate: Application & ExtendedCandidateData
   baseScore: number
   isFreshGrad: boolean
   expandedCards: Record<string, boolean>

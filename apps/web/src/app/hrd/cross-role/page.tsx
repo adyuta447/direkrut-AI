@@ -71,7 +71,7 @@ export default function CrossRoleRecommendationPage() {
           emailed: getExtendedData(app.applicantName).crossRoleEmailed,
         };
       })
-      .filter(Boolean) as any[];
+      .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [applications, jobs]);
 
   const uniqueLabels = useMemo(
