@@ -22,12 +22,7 @@ def get_client():  # type: ignore[no-untyped-def]
         endpoint_url=settings.object_storage_endpoint,
         aws_access_key_id=settings.object_storage_access_key,
         aws_secret_access_key=settings.object_storage_secret_key,
-        region_name="us-east-1",  # diabaikan MinIO, tapi boto3 butuh nilai non-kosong
-        # boto3 defaultnya bisa jatuh ke SigV2 (ditolak 403 sama S3 asli buat
-        # bucket baru) tanpa signature_version eksplisit -- ke-tangkep pas tes
-        # langsung ke bucket Heroku/Bucketeer. addressing_style "auto" pilih
-        # virtual-hosted buat S3 asli, path-style buat endpoint custom kayak
-        # MinIO -- satu config yang bener buat dua-duanya.
+        region_name="us-east-1",
         config=Config(signature_version="s3v4", s3={"addressing_style": "auto"}),
     )
 

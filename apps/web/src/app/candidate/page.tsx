@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useDashboard } from "@/context/DashboardContext"
-import { useApp } from "@/context/AppContext"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { StatCard, StatCardGrid } from "@/components/molecules/dashboard/StatCard"
 import { Button } from "@/components/ui/button"
@@ -14,8 +13,7 @@ import { CandidateAIBanner } from "@/components/molecules/dashboard/CandidateAIB
 import { BriefcaseIcon } from "lucide-react"
 
 export default function CandidateDashboardPage() {
-  const { myApplications } = useDashboard()
-  const { currentUser } = useApp()
+  const { myApplications, currentUser } = useDashboard()
 
   const total = myApplications.length
   const administrasi = myApplications.filter((a) => a.status === "under-review").length

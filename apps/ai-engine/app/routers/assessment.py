@@ -19,9 +19,6 @@ from app.providers import GroqProvider
 from app.rate_limit import limit
 from app.storage import download_object
 
-# X-Internal-Api-Key dicek satu kali secara global di main.py buat semua
-# router /v1/* -- di sini cuma nambahin rate limit yang spesifik buat
-# endpoint yang beneran manggil provider AI berbayar.
 router = APIRouter(dependencies=[Depends(limit("assessment"))])
 
 
@@ -37,7 +34,7 @@ class ScoreValidationRequest(BaseModel):
 
 class ScoreValidationResponse(BaseModel):
     recommendation_score: float
-    authenticity_score: dict[str, float]  # authentic / generic / aiGenerated
+    authenticity_score: dict[str, float]
 
 
 class TranscribeInterviewRequest(BaseModel):
@@ -71,8 +68,6 @@ def _parse_scoring_json(raw: str) -> ScoreValidationResponse:
             authenticity_score={k: float(v) for k, v in data["authenticity_score"].items()},
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
-        # Fallback netral kalau model gak nurut format -- mending nilai
-        # netral yang jelas butuh review manual daripada 500.
         return ScoreValidationResponse(
             recommendation_score=0.0,
             authenticity_score={"authentic": 0.0, "generic": 0.0, "aiGenerated": 0.0},

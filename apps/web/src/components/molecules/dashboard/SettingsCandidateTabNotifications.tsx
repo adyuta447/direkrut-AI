@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 
 const NOTIFICATION_ITEMS = [
   {
@@ -21,17 +22,23 @@ export function SettingsCandidateTabNotifications() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Preferensi Notifikasi</CardTitle>
-        <CardDescription>Atur kapan dan gimana kamu mau dikabarin.</CardDescription>
+        <div className="flex items-center gap-2">
+          <CardTitle>Preferensi Notifikasi</CardTitle>
+          <Badge variant="secondary">Segera hadir</Badge>
+        </div>
+        <CardDescription>
+          Notifikasi in-app (kotak masuk) udah jalan -- pengaturan pengiriman lewat email masih dalam
+          pengembangan, jadi toggle di bawah belum ngaruh apa-apa dulu.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {NOTIFICATION_ITEMS.map((item) => (
-          <div key={item.label} className="flex items-center justify-between space-x-2">
+          <div key={item.label} className="flex items-center justify-between space-x-2 opacity-60">
             <div className="flex flex-col space-y-1">
               <Label>{item.label}</Label>
               <span className="text-sm text-muted-foreground">{item.description}</span>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
         ))}
       </CardContent>

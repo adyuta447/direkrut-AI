@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useApp } from "../../../context/AppContext";
+import { useDashboard } from "@/context/DashboardContext";
+import { ApiError } from "@/services/apiClient";
 import { AuthMarketingPanel } from "./AuthMarketingPanel";
 import { AuthMobileNav } from "../../molecules/auth/AuthMobileNav";
 import { RoleToggle } from "../../molecules/auth/RoleToggle";
@@ -28,7 +29,7 @@ const COPY = {
 
 export function AuthScreen({ mode }: AuthScreenProps) {
   const isLogin = mode === "login";
-  const { setCurrentUser } = useApp();
+  const { login, register } = useDashboard();
   const router = useRouter();
   const [role, setRole] = useState<Role>("candidate");
   const [formData, setFormData] = useState<AuthFormData>({
@@ -37,28 +38,41 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     password: "",
     company: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const goToDashboard = () => router.push(role === "candidate" ? "/candidate" : "/hrd");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentUser({
-      id: Math.random().toString(36).substr(2, 9),
-      name: formData.name || formData.email.split("@")[0],
-      email: formData.email,
-      role,
-    });
-    goToDashboard();
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      if (isLogin) {
+        await login(formData.email, formData.password);
+      } else {
+        await register(formData.name, formData.email, formData.password, role, formData.company);
+      }
+      goToDashboard();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Gagal masuk. Coba lagi sebentar lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleQuickAccess = () => {
-    setCurrentUser({
-      id: Math.random().toString(36).substr(2, 9),
-      name: "Pengguna Demo",
-      email: "demo@example.com",
-      role,
-    });
-    goToDashboard();
+  const handleQuickAccess = async () => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const demoEmail = `demo-${role}-${Date.now()}@direkrut.ai`;
+      await register("Pengguna Demo", demoEmail, "demo12345", role, "Perusahaan Demo");
+      goToDashboard();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Gagal masuk demo, coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const copy = COPY[mode];
@@ -81,14 +95,25 @@ export function AuthScreen({ mode }: AuthScreenProps) {
             </div>
 
             <RoleToggle role={role} onChange={setRole} />
+            {error && (
+              <p className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <AuthCredentialsForm
               isLogin={isLogin}
               role={role}
               formData={formData}
               onFieldChange={(field, value) => setFormData({ ...formData, [field]: value })}
               onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
             />
-            <AuthFormFooter isLogin={isLogin} role={role} onQuickAccess={handleQuickAccess} />
+            <AuthFormFooter
+              isLogin={isLogin}
+              role={role}
+              onQuickAccess={handleQuickAccess}
+              isSubmitting={isSubmitting}
+            />
           </div>
         </div>
       </div>

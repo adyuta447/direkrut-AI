@@ -19,17 +19,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
-
-interface Job {
-  id: string
-  title: string
-  department: string
-  status: string
-  description: string
-  location: string
-  type: string
-  timeline?: { from: string; to: string }
-}
+import type { Job } from "@/lib/types"
 
 interface JobCardProps {
   job: Job
@@ -44,11 +34,11 @@ const JOB_STATUS_META: Record<string, { label: string; band: string }> = {
 }
 
 export function JobCard({ job, onEdit }: JobCardProps) {
-  const { updateJob } = useDashboard()
+  const { updateJob, deleteJob } = useDashboard()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
 
-  const statusMeta = JOB_STATUS_META[job.status] ?? JOB_STATUS_META.inactive
+  const statusMeta = JOB_STATUS_META[job.status ?? "inactive"] ?? JOB_STATUS_META.inactive
 
   const handleToggleStatus = (checked: boolean) => {
     updateJob(job.id, { status: checked ? "active" : "inactive" })
@@ -127,7 +117,10 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             title="Yakin mau hapus lowongan ini?"
             description={`Lowongan "${job.title}" bakal hilang permanen. Nggak bisa di-undo lho.`}
             confirmLabel="Ya, Hapus"
-            onConfirm={() => setNotice("Lowongan udah dihapus")}
+            onConfirm={async () => {
+              await deleteJob(job.id)
+              setNotice("Lowongan udah dihapus")
+            }}
           />
           <NoticeDialog message={notice} onClose={() => setNotice(null)} />
         </div>

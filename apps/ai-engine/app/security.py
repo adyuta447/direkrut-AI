@@ -15,8 +15,6 @@ from app.config import get_settings
 async def require_internal_key(x_internal_api_key: str = Header(default="")) -> None:
     settings = get_settings()
     if not settings.internal_api_key:
-        # Prototype tanpa INTERNAL_API_KEY di-set gak boleh diam-diam
-        # jalan "terbuka" -- gagal cepat daripada kelewat pas deploy.
         raise HTTPException(status_code=500, detail="INTERNAL_API_KEY belum dikonfigurasi di server ini")
     if x_internal_api_key != settings.internal_api_key:
         raise HTTPException(status_code=401, detail="internal API key gak valid")

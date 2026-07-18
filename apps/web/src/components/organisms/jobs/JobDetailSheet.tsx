@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 import { JobDetailHeader } from "../../molecules/jobs/JobDetailHeader";
 import { JobRequirements } from "../../molecules/jobs/JobRequirements";
 import { JobQualifications } from "../../molecules/jobs/JobQualifications";

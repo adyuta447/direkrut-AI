@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Search } from "lucide-react";
-import { useApp } from "../../context/AppContext";
+import { useDashboard } from "../../context/DashboardContext";
 import { SiteHeader } from "../../components/organisms/shared/SiteHeader";
 import { SiteFooter } from "../../components/organisms/shared/SiteFooter";
 import { CtaBanner } from "../../components/organisms/landing/CtaBanner";
@@ -11,7 +11,7 @@ import { CompanyCard, CompanySummary } from "../../components/molecules/companie
 import { FooterRevealBody } from "../../components/atoms/shared/FooterRevealBody";
 
 export default function CompaniesPage() {
-  const { jobs } = useApp();
+  const { jobs } = useDashboard();
   const [searchTerm, setSearchTerm] = useState("");
 
   const companies = useMemo<CompanySummary[]>(() => {

@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useApp } from "../../context/AppContext";
+import { useDashboard } from "../../context/DashboardContext";
 import { useJobFilters } from "../../lib/jobs/useJobFilters";
 import { SiteHeader } from "../../components/organisms/shared/SiteHeader";
 import { SiteFooter } from "../../components/organisms/shared/SiteFooter";
@@ -22,7 +22,7 @@ export default function JobsPage() {
 }
 
 function JobsPageContent() {
-  const { jobs } = useApp();
+  const { jobs } = useDashboard();
   const searchParams = useSearchParams();
   const filters = useJobFilters(jobs, {
     search: searchParams.get("q") ?? undefined,

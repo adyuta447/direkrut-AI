@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 import { FeaturedJobCard } from "../../molecules/landing/FeaturedJobCard";
 import { TiltCard } from "../../atoms/shared/TiltCard";
 

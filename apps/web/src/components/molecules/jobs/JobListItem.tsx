@@ -1,4 +1,4 @@
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 
 interface JobListItemProps {
   job: Job;

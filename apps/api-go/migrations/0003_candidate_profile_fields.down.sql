@@ -1,0 +1,9 @@
+ALTER TABLE candidates
+    DROP COLUMN age,
+    DROP COLUMN gender,
+    DROP COLUMN about,
+    DROP COLUMN photo_url,
+    DROP COLUMN cover_url,
+    DROP COLUMN experience,
+    DROP COLUMN education,
+    DROP COLUMN links;

@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import { useDashboard } from "@/context/DashboardContext";
@@ -30,7 +30,15 @@ const COLORS = [
 ];
 
 export default function CrossRoleRecommendationPage() {
-  const { applications, jobs } = useDashboard();
+  const { applications, jobs, refetchApplications } = useDashboard();
+
+  // Sama kayak hrd/page.tsx -- context cuma fetch sekali pas login, refetch
+  // di sini biar lamaran baru kelihatan tanpa reload penuh.
+  useEffect(() => {
+    void refetchApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLabel, setFilterLabel] = useState("Semua Kategori");
   const [filterRole, setFilterRole] = useState("Semua Posisi Usulan");

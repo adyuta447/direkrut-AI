@@ -25,7 +25,7 @@ import {
   UploadCloudIcon,
   HelpCircleIcon,
 } from "lucide-react"
-import { useApp } from "@/context/AppContext"
+import { useDashboard } from "@/context/DashboardContext"
 
 const navMain = [
   { title: "Dasbor Lamaran", url: "/candidate", icon: <LayoutDashboardIcon /> },
@@ -40,7 +40,7 @@ const navSecondary = [
 ]
 
 export function CandidateSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentUser } = useApp()
+  const { currentUser } = useDashboard()
   const user = {
     name: currentUser?.name ?? "Kandidat",
     email: currentUser?.email ?? "",

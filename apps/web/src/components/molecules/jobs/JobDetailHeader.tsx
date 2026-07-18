@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { Job } from "../../../types";
+import { Job } from "@/lib/types";
 
 interface JobDetailHeaderProps {
   job: Job;
