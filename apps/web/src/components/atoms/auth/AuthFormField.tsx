@@ -1,9 +1,14 @@
+import { useId } from "react";
+import type { HTMLInputTypeAttribute } from "react";
+
 interface AuthFormFieldProps {
   label: string;
-  type: string;
+  type: HTMLInputTypeAttribute;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  name?: string;
+  autoComplete?: string;
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -15,15 +20,24 @@ export function AuthFormField({
   value,
   onChange,
   placeholder,
+  name,
+  autoComplete,
   required,
   minLength,
   maxLength,
 }: AuthFormFieldProps) {
+  const inputId = useId();
+
   return (
     <div>
-      <label className="text-[13px] font-medium text-ink block mb-2">{label}</label>
+      <label htmlFor={inputId} className="text-[13px] font-medium text-ink block mb-2">
+        {label}
+      </label>
       <input
+        id={inputId}
+        name={name}
         type={type}
+        autoComplete={autoComplete}
         required={required}
         minLength={minLength}
         maxLength={maxLength}

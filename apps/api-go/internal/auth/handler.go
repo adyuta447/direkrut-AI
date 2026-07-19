@@ -23,14 +23,30 @@ import (
 var validate = validator.New()
 
 type Handler struct {
-	db          *gorm.DB
-	issuer      *jwtutil.Issuer
-	rateLimiter func(http.Handler) http.Handler
-	requireAuth func(http.Handler) http.Handler
+	db                     *gorm.DB
+	issuer                 *jwtutil.Issuer
+	rateLimiter            func(http.Handler) http.Handler
+	requireAuth            func(http.Handler) http.Handler
+	sendPasswordResetEmail func(context.Context, string, string) error
+	webOrigin              string
 }
 
-func NewHandler(gdb *gorm.DB, issuer *jwtutil.Issuer, rateLimiter, requireAuth func(http.Handler) http.Handler) *Handler {
-	return &Handler{db: gdb, issuer: issuer, rateLimiter: rateLimiter, requireAuth: requireAuth}
+func NewHandler(
+	gdb *gorm.DB,
+	issuer *jwtutil.Issuer,
+	rateLimiter func(http.Handler) http.Handler,
+	requireAuth func(http.Handler) http.Handler,
+	sendPasswordResetEmail func(context.Context, string, string) error,
+	webOrigin string,
+) *Handler {
+	return &Handler{
+		db:                     gdb,
+		issuer:                 issuer,
+		rateLimiter:            rateLimiter,
+		requireAuth:            requireAuth,
+		sendPasswordResetEmail: sendPasswordResetEmail,
+		webOrigin:              webOrigin,
+	}
 }
 
 // Router mendaftarkan seluruh endpoint auth di bawah /v1/auth. register &
@@ -41,6 +57,8 @@ func (h *Handler) Router() chi.Router {
 	r := chi.NewRouter()
 	r.With(h.rateLimiter).Post("/register", h.handleRegister)
 	r.With(h.rateLimiter).Post("/login", h.handleLogin)
+	r.With(h.rateLimiter).Post("/forgot-password", h.handleForgotPassword)
+	r.With(h.rateLimiter).Post("/reset-password", h.handleResetPassword)
 	r.Post("/refresh", h.handleRefreshToken)
 	r.Group(func(pr chi.Router) {
 		pr.Use(h.requireAuth)

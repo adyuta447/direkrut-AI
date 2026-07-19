@@ -104,6 +104,8 @@ kecuali dicatat lain di tabel:
 |---|---|---|---|
 | POST | `/v1/auth/register` | — | Daftar akun. `role: hrd` wajib bawa `companyName`. |
 | POST | `/v1/auth/login` | — | Masuk, dapet token pair. |
+| POST | `/v1/auth/forgot-password` | — | Kirim tautan ganti password ke email. Response sukses generik, token TTL 1 jam, cooldown 5 menit per akun. |
+| POST | `/v1/auth/reset-password` | — | Ganti password pakai token email sekali pakai, lalu revoke semua refresh token user. |
 | POST | `/v1/auth/refresh` | — | Tukar refresh token (rotate, sekali pakai). |
 | GET | `/v1/jobs` | — | List lowongan published. Cursor pagination, di-cache. |
 | GET | `/v1/jobs/{jobId}` | — | Detail satu lowongan. Di-cache. |
@@ -171,6 +173,33 @@ length, enum, dst) ada di `openapi.yaml`.
 ```jsonc
 // Response 200 (bentuknya sama utk keduanya)
 { "accessToken": "eyJhbGciOiJIUzI1NiIs...", "refreshToken": "010f3fbd8ccaf966..." }
+```
+</details>
+
+<details>
+<summary><code>POST /v1/auth/forgot-password</code> / <code>POST /v1/auth/reset-password</code></summary>
+
+```jsonc
+// POST /v1/auth/forgot-password request
+{ "email": "user@contoh.com" }
+```
+```jsonc
+// Response 200, selalu generik agar tidak membocorkan email terdaftar
+{ "status": "ok" }
+```
+Token reset disimpan sebagai hash, berlaku 1 jam, dan request ulang dalam 5 menit
+tidak membuat token baru supaya email user tidak bisa dibanjiri.
+
+```jsonc
+// POST /v1/auth/reset-password request
+{
+  "token": "token-dari-email",
+  "newPassword": "passwordbaru123"
+}
+```
+```jsonc
+// Response 200
+{ "status": "ok" }
 ```
 </details>
 
@@ -325,6 +354,7 @@ yarn dev              # http://localhost:3000
 # 3. Golang API (di terminal terpisah)
 cd apps/api-go
 cp .env.example .env
+# Untuk forgot/reset password, isi RESEND_API_KEY dan EMAIL_FROM_ADDRESS.
 go run ./cmd/server   # http://localhost:8080
 
 # 4. AI Engine (di terminal terpisah)
@@ -339,17 +369,17 @@ uvicorn app.main:app --reload   # http://localhost:8000
 `apps/web/src/services/`), TAPI kalau `NEXT_PUBLIC_API_BASE_URL` diset (lihat
 `apps/web/.env.local` — udah nunjuk ke `apps/api-go` yang live di Heroku),
 lowongan yang ditampilkan `/candidate/jobs` dan `/hrd/jobs` beneran dari
-database asli. Tiap panggilan API di service layer dibungkus try/catch yang
-fallback ke mock kalau errornya apa pun, jadi halaman gak pernah nge-crash
-walau backend lagi mati atau endpoint-nya belum diimplementasi (auth &
-applications, misalnya, masih fallback ke mock — cuma jobs read yang beneran
-tersambung sejauh ini).
+database asli. Beberapa service layer masih punya fallback mock saat backend
+benar-benar tidak terjangkau, tetapi mutasi keamanan seperti ganti email,
+ganti password, hapus akun, forgot password, dan reset password wajib bicara
+ke backend asli supaya state akun tidak palsu di browser.
 
 ## Status
 
 **Bukan lagi murni boilerplate.** `apps/api-go`: auth (register dengan
-provisioning company buat HRD, login, refresh-token rotation) dan jobs (CRUD
-+ cursor pagination + Redis cache + presigned CV upload) udah beneran jalan,
+provisioning company buat HRD, login, refresh-token rotation, forgot/reset
+password via mailer server) dan jobs (CRUD + cursor pagination + Redis cache +
+presigned CV upload) udah beneran jalan,
 dites lawan Postgres+pgvector & object storage asli, dan live di Heroku.
 `apps/ai-engine`: CV parsing (Groq buat teks, Gemini buat gambar) dan
 assessment (scoring + transkripsi wawancara lewat Groq Whisper) juga beneran

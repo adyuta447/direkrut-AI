@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AuthFormField } from "../../atoms/auth/AuthFormField";
 
@@ -33,6 +34,8 @@ export function AuthCredentialsForm({
         <AuthFormField
           label="Nama Lengkap"
           type="text"
+          name="name"
+          autoComplete="name"
           required={!isLogin}
           minLength={2}
           maxLength={120}
@@ -45,6 +48,8 @@ export function AuthCredentialsForm({
         <AuthFormField
           label="Perusahaan"
           type="text"
+          name="company"
+          autoComplete="organization"
           required={!isLogin && role === "hrd"}
           minLength={2}
           maxLength={160}
@@ -56,6 +61,8 @@ export function AuthCredentialsForm({
       <AuthFormField
         label="Email"
         type="email"
+        name="email"
+        autoComplete="email"
         required
         value={formData.email}
         onChange={(v) => onFieldChange("email", v)}
@@ -64,6 +71,8 @@ export function AuthCredentialsForm({
       <AuthFormField
         label="Kata Sandi"
         type="password"
+        name="password"
+        autoComplete={isLogin ? "current-password" : "new-password"}
         required
         minLength={isLogin ? undefined : 8}
         maxLength={isLogin ? undefined : 72}
@@ -71,6 +80,13 @@ export function AuthCredentialsForm({
         onChange={(v) => onFieldChange("password", v)}
         placeholder="••••••••"
       />
+      {isLogin && (
+        <div className="-mt-1 text-right">
+          <Link href="/auth/forgot-password" className="text-[13px] font-medium text-primary hover:underline">
+            Lupa password?
+          </Link>
+        </div>
+      )}
       <button
         type="submit"
         disabled={isSubmitting}

@@ -16,6 +16,7 @@ var fieldLabels = map[string]string{
 	"NewPassword":     "Kata sandi baru",
 	"CurrentPassword": "Kata sandi saat ini",
 	"NewEmail":        "Email baru",
+	"Token":           "Token",
 	"Role":            "Role",
 	"CompanyName":     "Nama perusahaan",
 	"RefreshToken":    "Refresh token",

@@ -57,8 +57,12 @@ func main() {
 	authRateLimit := appmw.RateLimit(redisCache, "ratelimit:auth", 10, time.Minute)
 
 	mailerClient := mailer.New(cfg.ResendAPIKey, cfg.EmailFromAddress)
+	var sendPasswordResetEmail func(context.Context, string, string) error
+	if cfg.ResendAPIKey != "" && cfg.EmailFromAddress != "" {
+		sendPasswordResetEmail = mailerClient.SendPasswordReset
+	}
 
-	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth)
+	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth, sendPasswordResetEmail, cfg.WebOrigin)
 	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
 	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, requireAuth)
 	candidateHandler := candidate.NewHandler(gdb, requireAuth)
@@ -122,7 +126,6 @@ func main() {
 		log.Printf("graceful shutdown failed: %v", err)
 	}
 }
-
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "api-go"})

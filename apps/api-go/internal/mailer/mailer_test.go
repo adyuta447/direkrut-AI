@@ -55,6 +55,33 @@ func TestSend_StripsHeaderInjectionAttempt(t *testing.T) {
 	}
 }
 
+func TestSendPasswordReset(t *testing.T) {
+	var captured sendRequest
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&captured)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	m := New("test-key", "no-reply@direkrut.ai")
+	m.baseURL = server.URL
+
+	err := m.SendPasswordReset(context.Background(), "user@example.com", "https://app.example/auth/reset-password?token=abc")
+	if err != nil {
+		t.Fatalf("SendPasswordReset() error = %v", err)
+	}
+
+	if captured.Subject != "Ganti kata sandi Direkrut AI" {
+		t.Fatalf("captured.Subject = %q", captured.Subject)
+	}
+	if len(captured.To) != 1 || captured.To[0] != "user@example.com" {
+		t.Fatalf("captured.To = %v", captured.To)
+	}
+	if !strings.Contains(captured.Text, "https://app.example/auth/reset-password?token=abc") {
+		t.Fatalf("captured.Text missing reset URL: %q", captured.Text)
+	}
+}
+
 func TestTruncate(t *testing.T) {
 	if got := truncate("hello", 10); got != "hello" {
 		t.Errorf("truncate() = %q, want unchanged", got)
