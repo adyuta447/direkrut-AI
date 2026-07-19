@@ -46,6 +46,7 @@ interface DashboardContextType {
     id: string,
     status: Application["status"],
     note?: string,
+    email?: { subject: string; body: string },
   ) => Promise<void>;
   completeInterview: (applicationId: string) => Promise<void>;
   jobs: Job[];
@@ -205,8 +206,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     id: string,
     status: Application["status"],
     note?: string,
+    email?: { subject: string; body: string },
   ) => {
-    const result = await applicationService.updateApplicationStatus(id, status, note);
+    const result = await applicationService.updateApplicationStatus(id, status, note, email);
     updateApplication(id, result ?? { status });
   };
 

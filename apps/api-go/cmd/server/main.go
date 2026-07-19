@@ -22,6 +22,7 @@ import (
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/job"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/jwtutil"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/mailer"
 	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/notification"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/payment"
@@ -55,9 +56,11 @@ func main() {
 	requireAuth := appmw.RequireAuth(issuer)
 	authRateLimit := appmw.RateLimit(redisCache, "ratelimit:auth", 10, time.Minute)
 
+	mailerClient := mailer.New(cfg.ResendAPIKey, cfg.EmailFromAddress)
+
 	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth)
 	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
-	applicationHandler := application.NewHandler(gdb, requireAuth)
+	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, requireAuth)
 	candidateHandler := candidate.NewHandler(gdb, requireAuth)
 	notificationHandler := notification.NewHandler(gdb, requireAuth)
 
