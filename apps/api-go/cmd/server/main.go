@@ -17,6 +17,7 @@ import (
 	"github.com/adyuta447/direkrut-ai/api-go/internal/auth"
 	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/candidate"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/company"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/config"
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
@@ -67,6 +68,7 @@ func main() {
 	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, requireAuth)
 	candidateHandler := candidate.NewHandler(gdb, requireAuth)
 	notificationHandler := notification.NewHandler(gdb, requireAuth)
+	companyHandler := company.NewHandler(gdb, storageClient, requireAuth)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -93,6 +95,7 @@ func main() {
 		v1.Mount("/jobs", jobHandler.Router())
 		v1.Mount("/applications", applicationHandler.Router())
 		v1.Mount("/candidates", candidateHandler.Router())
+		v1.Mount("/companies", companyHandler.Router())
 		v1.Mount("/subscriptions", subscription.Router())
 		v1.Mount("/payments", payment.Router())
 		v1.Mount("/notifications", notificationHandler.Router())

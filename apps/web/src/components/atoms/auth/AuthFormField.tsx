@@ -30,7 +30,7 @@ export function AuthFormField({
 
   return (
     <div>
-      <label htmlFor={inputId} className="text-[13px] font-medium text-ink block mb-2">
+      <label htmlFor={inputId} className="text-[14px] font-semibold text-ink block mb-2">
         {label}
       </label>
       <input
@@ -44,7 +44,7 @@ export function AuthFormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-5 py-3.5 bg-surface-1 border border-transparent rounded-2xl text-[15px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary focus:bg-canvas transition-none"
+        className="w-full px-5 py-4 bg-surface-1 border-2 border-transparent rounded-2xl text-[16px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary focus:bg-canvas transition-none"
       />
     </div>
   );
