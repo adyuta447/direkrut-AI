@@ -179,7 +179,7 @@ func (h *Handler) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := validate.Struct(req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
 		return
 	}
 	if req.Experience == nil {

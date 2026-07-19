@@ -68,8 +68,6 @@ def _parse_ai_json(raw: str) -> ParsedCV:
             work_experience_years=data.get("work_experience_years"),
         )
     except (json.JSONDecodeError, TypeError, AttributeError):
-        # Model kadang gak strictly nurut instruksi format JSON -- daripada
-        # 500, balikin teks mentah sbg summary biar tetap ada yang berguna.
         return ParsedCV(summary=raw.strip(), skills=[], work_experience_years=None)
 
 
