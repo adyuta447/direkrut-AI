@@ -34,6 +34,8 @@ export function AuthCredentialsForm({
           label="Nama Lengkap"
           type="text"
           required={!isLogin}
+          minLength={2}
+          maxLength={120}
           value={formData.name}
           onChange={(v) => onFieldChange("name", v)}
           placeholder="Masukkan nama lengkap"
@@ -44,6 +46,8 @@ export function AuthCredentialsForm({
           label="Perusahaan"
           type="text"
           required={!isLogin && role === "hrd"}
+          minLength={2}
+          maxLength={160}
           value={formData.company}
           onChange={(v) => onFieldChange("company", v)}
           placeholder="Nama perusahaan Anda"
@@ -61,6 +65,8 @@ export function AuthCredentialsForm({
         label="Kata Sandi"
         type="password"
         required
+        minLength={isLogin ? undefined : 8}
+        maxLength={isLogin ? undefined : 72}
         value={formData.password}
         onChange={(v) => onFieldChange("password", v)}
         placeholder="••••••••"
