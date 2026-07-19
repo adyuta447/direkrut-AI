@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { ApiError } from "@/services/apiClient";
 import { AuthMarketingPanel } from "./AuthMarketingPanel";
@@ -96,9 +97,10 @@ export function AuthScreen({ mode }: AuthScreenProps) {
 
             <RoleToggle role={role} onChange={setRole} />
             {error && (
-              <p className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                {error}
-              </p>
+              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-destructive px-5 py-4 text-white">
+                <AlertCircle className="size-5 shrink-0" />
+                <p className="text-[15px] font-semibold leading-snug">{error}</p>
+              </div>
             )}
             <AuthCredentialsForm
               isLogin={isLogin}

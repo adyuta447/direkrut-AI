@@ -61,6 +61,7 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
     <div className="flex items-center gap-1.5">
       <CandidateTableCellViewer
         item={row.original}
+        triggerIsButton
         triggerNode={
           <Button
             size="icon"

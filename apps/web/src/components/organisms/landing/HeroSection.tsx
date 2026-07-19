@@ -13,19 +13,25 @@ const popularSearches = [
 export function HeroSection() {
   return (
     <section className="sticky top-0 z-0 overflow-hidden">
-      <Image
-        src="/hero-section.jpg"
-        alt=""
-        aria-hidden="true"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/30"
-      />
+      {/* Image `fill` butuh ancestor position: absolute/fixed/relative --
+          `sticky` di <section> gak masuk allowlist Next.js meski secara CSS
+          sticky juga bikin containing block yang sama. Wrapper ini nge-skip
+          warning-nya tanpa ngubah layout (posisinya tetap ngisi section). */}
+      <div className="absolute inset-0">
+        <Image
+          src="/hero-section.jpg"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/30"
+        />
+      </div>
 
       <div className="hero-pin-content relative min-h-[calc(100svh-3.5rem)] flex flex-col justify-center pt-16 pb-28 px-6 lg:px-10 max-w-[1584px] mx-auto">
         <p className="hero-kicker text-[12px] font-medium text-white/70 uppercase tracking-[0.2em] mb-8">
