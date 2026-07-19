@@ -54,6 +54,29 @@ export class ApiError extends Error {
   }
 }
 
+// Dedupe concurrent refresh attempts -- refresh token di-rotate tiap dipakai
+// (lihat internal/auth handleRefreshToken), jadi kalau beberapa request
+// yang expired barengan masing-masing nyoba refresh sendiri-sendiri,
+// cuma yang pertama berhasil dan sisanya bakal gagal pakai refresh token
+// yang udah kepake.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = typeof window !== "undefined" ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+  if (!refreshToken) return null;
+
+  const res = await fetch(`${API_BASE_URL}/v1/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  setAuthTokens(data.accessToken, data.refreshToken);
+  return data.accessToken as string;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},
@@ -67,14 +90,33 @@ export async function apiFetch<T>(
   const { authToken, headers, ...rest } = options;
   const token = authToken ?? getAuthToken();
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
+  const doFetch = (bearerToken: string | null) =>
+    fetch(`${API_BASE_URL}${path}`, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+        ...headers,
+      },
+    });
+
+  let res = await doFetch(token);
+
+  // Access token biasanya expired (bukan session beneran gak valid) --
+  // sebelumnya ini langsung ke-treat sebagai error dan diam-diam jatuh ke
+  // mock data, jadi user yang lagi login kelihatan "kehilangan" data
+  // asli tanpa pemberitahuan. Coba refresh sekali dan ulang request-nya.
+  if (res.status === 401 && token && !authToken) {
+    refreshPromise ??= refreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+    const newToken = await refreshPromise;
+    if (newToken) {
+      res = await doFetch(newToken);
+    } else {
+      clearAuthTokens();
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);

@@ -5,15 +5,28 @@ interface AuthFormFieldProps {
   onChange: (value: string) => void;
   placeholder: string;
   required?: boolean;
+  minLength?: number;
+  maxLength?: number;
 }
 
-export function AuthFormField({ label, type, value, onChange, placeholder, required }: AuthFormFieldProps) {
+export function AuthFormField({
+  label,
+  type,
+  value,
+  onChange,
+  placeholder,
+  required,
+  minLength,
+  maxLength,
+}: AuthFormFieldProps) {
   return (
     <div>
       <label className="text-[13px] font-medium text-ink block mb-2">{label}</label>
       <input
         type={type}
         required={required}
+        minLength={minLength}
+        maxLength={maxLength}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
