@@ -24,6 +24,8 @@ import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 interface CandidateTableCellViewerProps {
   item: Candidate
   triggerNode?: React.ReactNode
+  /** Set true kalau triggerNode adalah elemen <button> beneran (mis. komponen Button). */
+  triggerIsButton?: boolean
 }
 
 function DrawerInfoGrid({ item }: { item: Candidate }) {
@@ -109,13 +111,14 @@ function DrawerQuickActions({ item }: { item: Candidate }) {
 export function CandidateTableCellViewer({
   item,
   triggerNode,
+  triggerIsButton,
 }: CandidateTableCellViewerProps) {
   const isMobile = useIsMobile()
 
   return (
     <Drawer swipeDirection={isMobile ? "down" : "right"}>
       <DrawerTrigger
-        nativeButton={false}
+        nativeButton={!!triggerIsButton}
         render={
           (triggerNode as React.ReactElement) || (
             <div className="flex items-center gap-3 cursor-pointer group" />
