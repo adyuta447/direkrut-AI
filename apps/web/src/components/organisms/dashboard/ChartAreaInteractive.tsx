@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useDashboard } from "@/context/DashboardContext"
 import {
   Card,
   CardAction,
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
-  CHART_DATA,
+  buildAreaChartData,
   AREA_CHART_CONFIG,
   filterByTimeRange,
 } from "@/components/molecules/dashboard/ChartAreaData"
@@ -41,11 +42,13 @@ function formatDate(value: string) {
 
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile()
+  const { applications } = useDashboard()
   // Default range depends on viewport (mobile = 7d) until the user picks one manually.
   const [manualRange, setManualRange] = React.useState<string | null>(null)
   const timeRange = manualRange ?? (isMobile ? "7d" : "90d")
 
-  const filteredData = filterByTimeRange(CHART_DATA, timeRange)
+  const chartData = React.useMemo(() => buildAreaChartData(applications), [applications])
+  const filteredData = filterByTimeRange(chartData, timeRange)
 
   return (
     <Card className="@container/card">

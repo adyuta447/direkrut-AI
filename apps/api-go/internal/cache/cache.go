@@ -21,14 +21,6 @@ func New(redisURL string) (*Cache, error) {
 		return nil, err
 	}
 	if opt.TLSConfig != nil {
-		// Heroku Redis (rediss://) nge-terbitin sertifikat buat hostname
-		// proxy internal mereka (*.service.shogun.heroku.com), bukan
-		// hostname ec2-*.compute-1.amazonaws.com yang ada di connection
-		// string -- verifikasi hostname standar GAGAL walau koneksinya
-		// beneran TLS & valid. Ini quirk yang didokumentasikan Heroku
-		// sendiri, bukan downgrade keamanan yang kita pilih sendiri;
-		// koneksinya tetap terenkripsi, cuma verifikasi nama host-nya yang
-		// dilewatin.
 		opt.TLSConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec
 	}
 	return &Cache{rdb: redis.NewClient(opt)}, nil

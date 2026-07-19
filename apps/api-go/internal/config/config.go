@@ -83,6 +83,17 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+func (c *Config) WebOrigins() []string {
+	parts := strings.Split(c.WebOrigin, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	return origins
+}
+
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
