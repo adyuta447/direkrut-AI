@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import {
   IconArrowUp,
   IconArrowDown,
@@ -19,11 +20,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 import { CandidateTableCellViewer } from "@/components/molecules/dashboard/CandidateDrawerContent"
+import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
 
 function SortableHeader({
   label,
@@ -55,21 +56,33 @@ function SortableHeader({
 }
 
 function ActionsCell({ row }: { row: { original: Candidate } }) {
+  const router = useRouter()
   return (
     <div className="flex items-center gap-1.5">
-      <Button
-        size="icon"
-        className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
-      >
-        <IconMessageCircle className="size-4" />
-      </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive border-hairline"
-      >
-        <IconX className="size-4" />
-      </Button>
+      <CandidateTableCellViewer
+        item={row.original}
+        triggerNode={
+          <Button
+            size="icon"
+            className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <IconMessageCircle className="size-4" />
+          </Button>
+        }
+      />
+      <DecisionDialog
+        candidate={row.original}
+        decision="reject"
+        trigger={
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive border-hairline"
+          >
+            <IconX className="size-4" />
+          </Button>
+        }
+      />
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -84,7 +97,9 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
           <span className="sr-only">Buka menu</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push(`/hrd/candidates/${row.original.id}`)}
+          >
             <IconEye className="mr-2 size-4 text-muted-foreground" />
             Lihat Detail Penuh
           </DropdownMenuItem>
@@ -96,10 +111,6 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
               Buka CV
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive">
-            Tolak Kandidat
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

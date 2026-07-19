@@ -15,9 +15,6 @@ def limit(key_prefix: str, max_requests: int = 20, window_seconds: int = 60):
     async def dependency(request: Request) -> None:
         client_id = request.headers.get("X-Internal-Api-Key", "unknown")[:16]
         key = f"ratelimit:{key_prefix}:{client_id}"
-        # Referensi lewat modul (bukan `from app.cache import get_redis`)
-        # sengaja, biar gampang di-monkeypatch di test tanpa perlu patch
-        # dua tempat terpisah.
         redis_client = cache.get_redis()
 
         count = await redis_client.incr(key)
