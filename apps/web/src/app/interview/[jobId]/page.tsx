@@ -16,12 +16,15 @@ type InterviewState = "setup" | "interview" | "feedback"
 
 export default function InterviewPage({ params }: { params: Promise<{ jobId: string }> }) {
   const unwrappedParams = React.use(params)
-  const { jobs, applications, currentUser, completeInterview } = useDashboard()
+  const { jobs, applications, completeInterview } = useDashboard()
   const router = useRouter()
   const job = jobs.find(j => j.id === unwrappedParams.jobId)
-  const application = applications.find(
-    (a) => a.jobId === unwrappedParams.jobId && a.applicantId === currentUser?.id
-  )
+  // Context's `applications` buat role candidate udah di-scope ke kandidat
+  // ini doang server-side (lihat GET /v1/applications), jadi cukup match
+  // jobId -- gak perlu (dan gak bisa) cocokin ke currentUser.id, soalnya itu
+  // user id sedangkan applicantId di sini sebenernya candidate id (beda
+  // tabel, beda UUID).
+  const application = applications.find((a) => a.jobId === unwrappedParams.jobId)
   const hasReportedCompletion = React.useRef(false)
 
   const [interviewState, setInterviewState] = React.useState<InterviewState>("setup")
