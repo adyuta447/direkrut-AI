@@ -83,7 +83,7 @@ func decodeAndValidate(r *http.Request, dst any) error {
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
@@ -165,7 +165,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req refreshRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
@@ -279,7 +279,7 @@ func (h *Handler) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	var req changePasswordRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
@@ -324,7 +324,7 @@ func (h *Handler) handleChangeEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	var req changeEmailRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
@@ -353,7 +353,7 @@ func (h *Handler) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	var req deleteAccountRequest
 	if err := decodeAndValidate(r, &req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
 
