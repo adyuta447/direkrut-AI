@@ -96,6 +96,19 @@ func (m *Mailer) Send(ctx context.Context, to, subject, body string) error {
 	return nil
 }
 
+func (m *Mailer) SendPasswordReset(ctx context.Context, to, resetURL string) error {
+	body := strings.Join([]string{
+		"Halo,",
+		"",
+		"Kami menerima permintaan untuk mengganti kata sandi akun Direkrut AI kamu.",
+		"Buka tautan ini untuk membuat kata sandi baru:",
+		resetURL,
+		"",
+		"Tautan ini berlaku selama 1 jam. Abaikan email ini kalau kamu tidak meminta reset kata sandi.",
+	}, "\n")
+	return m.Send(ctx, to, "Ganti kata sandi Direkrut AI", body)
+}
+
 // sanitizeSingleLine ngebuang CR/LF (pertahanan lapis kedua terhadap header
 // injection walau JSON body ke Resend udah aman by design) dan motong
 // panjangnya biar gak dipakai buat flood/abuse.

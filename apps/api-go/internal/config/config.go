@@ -54,10 +54,10 @@ func Load() (*Config, error) {
 		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
 		EmailFromAddress: getEnv("EMAIL_FROM_ADDRESS", "notifikasi@direkrut.ai"),
 
-		ObjectStorageEndpoint:  os.Getenv("OBJECT_STORAGE_ENDPOINT"),
-		ObjectStorageAccessKey: os.Getenv("OBJECT_STORAGE_ACCESS_KEY"),
-		ObjectStorageSecretKey: os.Getenv("OBJECT_STORAGE_SECRET_KEY"),
-		ObjectStorageBucket:    os.Getenv("OBJECT_STORAGE_BUCKET"),
+		ObjectStorageEndpoint:     os.Getenv("OBJECT_STORAGE_ENDPOINT"),
+		ObjectStorageAccessKey:    os.Getenv("OBJECT_STORAGE_ACCESS_KEY"),
+		ObjectStorageSecretKey:    os.Getenv("OBJECT_STORAGE_SECRET_KEY"),
+		ObjectStorageBucket:       os.Getenv("OBJECT_STORAGE_BUCKET"),
 		ObjectStorageUsePathStyle: os.Getenv("OBJECT_STORAGE_USE_PATH_STYLE") == "true",
 	}
 

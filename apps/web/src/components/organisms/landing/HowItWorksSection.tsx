@@ -48,21 +48,24 @@ export function HowItWorksSection() {
           Prosesnya jelas, kamu selalu tau ada di tahap mana
         </h2>
       </div>
-      <div className="space-y-8">
+      <div>
         {steps.map((step, i) => {
           const tone = i % 2 === 0 ? "bg-primary" : "bg-brand-accent";
           return (
             <div
               key={step.number}
               className="folder-step sticky"
-              style={{ top: `${120 + i * STACK_OFFSET}px` }}
+              style={{
+                top: `${120 + i * STACK_OFFSET}px`,
+                marginTop: i === 0 ? 100 : 10,
+              }}
             >
               <div className="folder-inner">
                 <div
                   className={`${tone} h-12 w-fit min-w-[200px] sm:min-w-[240px] rounded-tl-2xl flex items-center gap-3 pl-6 pr-14 text-white`}
                   style={{
                     clipPath:
-                      "polygon(0 0, calc(100% - 32px) 0, 100% 100%, 0 100%)",
+                      "polygon(0 0, calc(100% - 46px) 0, 100% 100%, 0 100%)",
                   }}
                 >
                   <span className="text-[13px] text-white/70 tabular-nums">

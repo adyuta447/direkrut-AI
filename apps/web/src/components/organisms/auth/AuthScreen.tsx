@@ -5,11 +5,26 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { ApiError } from "@/services/apiClient";
+import {
+  uploadCompanyDocument,
+  saveCompanyDocumentKeys,
+} from "@/services/companyService";
 import { AuthMarketingPanel } from "./AuthMarketingPanel";
 import { AuthMobileNav } from "../../molecules/auth/AuthMobileNav";
 import { RoleToggle } from "../../molecules/auth/RoleToggle";
-import { AuthCredentialsForm, AuthFormData } from "../../molecules/auth/AuthCredentialsForm";
+import {
+  AuthCredentialsForm,
+  AuthFormData,
+  CompanyDocs,
+} from "../../molecules/auth/AuthCredentialsForm";
 import { AuthFormFooter } from "../../molecules/auth/AuthFormFooter";
+
+const EMPTY_COMPANY_DOCS: CompanyDocs = {
+  aktaPendirian: null,
+  nib: null,
+  npwp: null,
+  suratKuasa: null,
+};
 
 type Role = "candidate" | "hrd";
 
@@ -39,10 +54,31 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     password: "",
     company: "",
   });
+  const [companyDocs, setCompanyDocs] =
+    useState<CompanyDocs>(EMPTY_COMPANY_DOCS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const goToDashboard = () => router.push(role === "candidate" ? "/candidate" : "/hrd");
+  const goToDashboard = () =>
+    router.push(role === "candidate" ? "/candidate" : "/hrd");
+  const uploadCompanyDocsIfAny = async () => {
+    const entries: [keyof CompanyDocs, string][] = [
+      ["aktaPendirian", "aktaPendirianKey"],
+      ["nib", "nibKey"],
+      ["npwp", "npwpKey"],
+      ["suratKuasa", "suratKuasaKey"],
+    ];
+    const keys: Record<string, string> = {};
+    for (const [docType, keyName] of entries) {
+      const file = companyDocs[docType];
+      if (!file) continue;
+      const objectKey = await uploadCompanyDocument(docType, file);
+      if (objectKey) keys[keyName] = objectKey;
+    }
+    if (Object.keys(keys).length > 0) {
+      await saveCompanyDocumentKeys(keys);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,25 +88,20 @@ export function AuthScreen({ mode }: AuthScreenProps) {
       if (isLogin) {
         await login(formData.email, formData.password);
       } else {
-        await register(formData.name, formData.email, formData.password, role, formData.company);
+        await register(
+          formData.name,
+          formData.email,
+          formData.password,
+          role,
+          formData.company,
+        );
+        if (role === "hrd") await uploadCompanyDocsIfAny();
       }
       goToDashboard();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal masuk. Coba lagi sebentar lagi.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickAccess = async () => {
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      const demoEmail = `demo-${role}-${Date.now()}@direkrut.ai`;
-      await register("Pengguna Demo", demoEmail, "demo12345", role, "Perusahaan Demo");
-      goToDashboard();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal masuk demo, coba lagi.");
+      setError(
+        err instanceof ApiError ? err.message : "Gagal masuk. Coba lagi nanti.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -87,10 +118,7 @@ export function AuthScreen({ mode }: AuthScreenProps) {
         <div className="flex-1 flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-[420px]">
             <div className="mb-8">
-              <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-ink-muted mb-4">
-                {copy.kicker}
-              </p>
-              <h1 className="text-[clamp(30px,3vw,40px)] font-bold leading-[1.15] tracking-[-0.01em] text-ink">
+              <h1 className="text-[clamp(34px,3.4vw,46px)] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
                 {copy.title}
               </h1>
             </div>
@@ -99,23 +127,26 @@ export function AuthScreen({ mode }: AuthScreenProps) {
             {error && (
               <div className="mt-4 flex items-center gap-3 rounded-2xl bg-destructive px-5 py-4 text-white">
                 <AlertCircle className="size-5 shrink-0" />
-                <p className="text-[15px] font-semibold leading-snug">{error}</p>
+                <p className="text-[15px] font-semibold leading-snug">
+                  {error}
+                </p>
               </div>
             )}
             <AuthCredentialsForm
               isLogin={isLogin}
               role={role}
               formData={formData}
-              onFieldChange={(field, value) => setFormData({ ...formData, [field]: value })}
+              onFieldChange={(field, value) =>
+                setFormData({ ...formData, [field]: value })
+              }
+              companyDocs={companyDocs}
+              onDocChange={(doc, file) =>
+                setCompanyDocs({ ...companyDocs, [doc]: file })
+              }
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
             />
-            <AuthFormFooter
-              isLogin={isLogin}
-              role={role}
-              onQuickAccess={handleQuickAccess}
-              isSubmitting={isSubmitting}
-            />
+            <AuthFormFooter isLogin={isLogin} role={role} />
           </div>
         </div>
       </div>

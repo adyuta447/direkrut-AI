@@ -145,6 +145,20 @@ export async function deleteAccount(password: string): Promise<void> {
   });
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiFetch<{ status: string }>("/v1/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await apiFetch<{ status: string }>("/v1/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
 /** Dipanggil sekali pas app mount: kalau ada token + user yang di-cache dari
  * login/register sebelumnya, kembalikan biar currentUser ke-restore tanpa
  * user harus login ulang tiap refresh halaman. */

@@ -48,8 +48,9 @@ info:
       ai-engine.
 
     ### Rate limiting
-    - api-go: `/v1/auth/register` & `/v1/auth/login` dibatasi 10
-      request/menit per IP (`429 rate_limited`).
+    - api-go: `/v1/auth/register`, `/v1/auth/login`,
+      `/v1/auth/forgot-password`, dan `/v1/auth/reset-password` dibatasi
+      10 request/menit per IP (`429 rate_limited`).
     - ai-engine: tiap endpoint yang manggil provider AI (cv-parser,
       assessment) dibatasi 20 request/menit per caller (`429`) --
       ini kontrol cost-abuse selain keamanan, karena panggilannya
@@ -205,6 +206,68 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           description: Email atau password salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Kirim tautan reset password ke email user
+      description: >
+        Butuh email valid. Response sukses selalu generik supaya tidak
+        membocorkan apakah email terdaftar. Kalau email terdaftar, server
+        menyimpan hash token reset di database dan mengirim tautan
+        `/auth/reset-password?token=...` lewat mailer server. Token berlaku
+        1 jam. Request baru dalam 5 menit tidak membuat token baru agar
+        tidak bisa dipakai untuk membanjiri email atau mematikan link yang
+        baru dikirim.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: Request diterima dengan response generik
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /v1/auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Ganti password memakai token dari email
+      description: >
+        Token reset hanya diterima sekali, disimpan sebagai hash SHA-256 di
+        database, dan diproses dalam transaksi dengan row lock. Setelah
+        password berhasil diganti, semua refresh token user direvoke.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password berhasil diganti
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+        "400":
+          description: Body tidak valid, token salah, token sudah dipakai, atau token kedaluwarsa
           content:
             application/json:
               schema:
@@ -838,6 +901,29 @@ components:
       properties:
         email: { type: string, format: email }
         password: { type: string, format: password }
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    ResetPasswordRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string, minLength: 32 }
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 72
+          description: Maksimal 72 byte agar sesuai batas aman bcrypt.
+
+    StatusResponse:
+      type: object
+      properties:
+        status: { type: string, example: ok }
 
     AuthResponse:
       type: object

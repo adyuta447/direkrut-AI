@@ -45,6 +45,24 @@ func (r *RefreshToken) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+type PasswordResetToken struct {
+	ID        string     `gorm:"column:id;primaryKey"`
+	UserID    string     `gorm:"column:user_id"`
+	TokenHash string     `gorm:"column:token_hash"`
+	ExpiresAt time.Time  `gorm:"column:expires_at"`
+	UsedAt    *time.Time `gorm:"column:used_at"`
+	CreatedAt time.Time  `gorm:"column:created_at"`
+}
+
+func (PasswordResetToken) TableName() string { return "password_reset_tokens" }
+
+func (p *PasswordResetToken) BeforeCreate(tx *gorm.DB) error {
+	if p.ID == "" {
+		p.ID = newUUIDv4()
+	}
+	return nil
+}
+
 type Company struct {
 	ID        string    `gorm:"column:id;primaryKey"`
 	Name      string    `gorm:"column:name"`
@@ -52,6 +70,18 @@ type Company struct {
 	LogoURL   *string   `gorm:"column:logo_url"`
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
+
+	// Dokumen legalitas perusahaan, dikumpulin pas registrasi HRD buat
+	// nyaring perusahaan bodong (bukan cuma nama yang bisa diisi bebas).
+	// Gak ada role admin di app ini buat proses review manual, jadi
+	// VerificationStatus nyangkut di "pending" sebagai jejak audit --
+	// upgrade path: role admin + endpoint approve/reject kalau nanti
+	// review manual dibutuhin.
+	AktaPendirianURL   *string `gorm:"column:akta_pendirian_url"`
+	NIBURL             *string `gorm:"column:nib_url"`
+	NPWPURL            *string `gorm:"column:npwp_url"`
+	SuratKuasaURL      *string `gorm:"column:surat_kuasa_url"`
+	VerificationStatus string  `gorm:"column:verification_status;default:pending"`
 }
 
 func (Company) TableName() string { return "companies" }
