@@ -99,13 +99,18 @@ export async function completeInterview(id: string): Promise<Application | null>
 export async function updateApplicationStatus(
   id: string,
   status: Application["status"],
-  note?: string
+  note?: string,
+  email?: { subject: string; body: string }
 ): Promise<Application | null> {
   if (isApiConfigured) {
     try {
       const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status, note }),
+        body: JSON.stringify({
+          status,
+          note,
+          ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
+        }),
       });
       return mapApiApplicationToApplication(apiApp);
     } catch (err) {
