@@ -4,8 +4,10 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -13,8 +15,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
+	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/mailer"
 	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/notification"
 )
@@ -23,24 +27,33 @@ var validate = validator.New()
 
 type Handler struct {
 	db          *gorm.DB
+	redisCache  *appcache.Cache
 	requireAuth func(http.Handler) http.Handler
+	mailer      *mailer.Mailer
 }
 
-// ponytail: no cache-aside di domain ini -- data privat per-user, bukan
-// listing publik bertrafik tinggi kayak jobs. Tambahin cache-aside kalau
-// profiling nunjukin perlu.
-func NewHandler(gdb *gorm.DB, requireAuth func(http.Handler) http.Handler) *Handler {
-	return &Handler{db: gdb, requireAuth: requireAuth}
+// ponytail: no cache-aside buat data lamaran itu sendiri -- data privat
+// per-user, bukan listing publik bertrafik tinggi kayak jobs. redisCache di
+// sini cuma dipakai buat rate-limit endpoint yang ngirim email (lihat
+// Router()).
+func NewHandler(gdb *gorm.DB, redisCache *appcache.Cache, m *mailer.Mailer, requireAuth func(http.Handler) http.Handler) *Handler {
+	return &Handler{db: gdb, redisCache: redisCache, requireAuth: requireAuth, mailer: m}
 }
 
 func (h *Handler) Router() chi.Router {
+	// Endpoint status-update sekarang bisa ngirim email beneran (lihat
+	// handleUpdateStatus) -- rate-limit per IP biar akun HRD yang
+	// kekompromi (atau iseng) gak bisa dipakai buat nge-flood/nge-spam
+	// lewat akun pengirim transaksional kita.
+	decisionRateLimit := appmw.RateLimit(h.redisCache, "ratelimit:decision", 30, time.Minute)
+
 	r := chi.NewRouter()
 	r.Group(func(pr chi.Router) {
 		pr.Use(h.requireAuth)
 		pr.With(appmw.RequireRole("candidate")).Post("/", h.handleSubmitApplication)
 		pr.Get("/", h.handleListApplications)
 		pr.Get("/{applicationID}", h.handleGetApplication)
-		pr.With(appmw.RequireRole("hrd")).Patch("/{applicationID}/status", h.handleUpdateStatus)
+		pr.With(appmw.RequireRole("hrd"), decisionRateLimit).Patch("/{applicationID}/status", h.handleUpdateStatus)
 		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/complete-interview", h.handleCompleteInterview)
 	})
 	return r
@@ -206,7 +219,7 @@ func (h *Handler) loadVisibleApplication(w http.ResponseWriter, r *http.Request)
 	appID := chi.URLParam(r, "applicationID")
 
 	var appRow appdb.Application
-	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate").First(&appRow, "id = ?", appID).Error; err != nil {
+	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").First(&appRow, "id = ?", appID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran gak ditemukan")
 		return nil, false
 	}
@@ -240,6 +253,12 @@ func (h *Handler) handleGetApplication(w http.ResponseWriter, r *http.Request) {
 type updateStatusRequest struct {
 	Status string `json:"status" validate:"required,oneof=submitted under-review interview rejected"`
 	Note   string `json:"note"`
+	// EmailSubject/EmailBody opsional -- kalau diisi (HRD ngirim lewat
+	// EmailPreviewPanel di dashboard), dipakai apa adanya buat email ke
+	// kandidat. Dibatesin panjangnya biar gak disalahgunain buat flood
+	// lewat akun pengirim transaksional kita.
+	EmailSubject string `json:"emailSubject" validate:"omitempty,max=200"`
+	EmailBody    string `json:"emailBody" validate:"omitempty,max=10000"`
 }
 
 func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
@@ -282,9 +301,8 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appRow.Status = req.Status
-	// Notifikasi kandidat -- gagal nulis notifikasi gak boleh gagalin update
-	// status-nya sendiri (udah kepake), jadi errornya cuma di-log via
-	// httpx nanti kalau ada logger; di sini sengaja diabaikan (best-effort).
+	// Notifikasi + email kandidat -- keduanya best-effort, gagal ngirim gak
+	// boleh gagalin update status-nya sendiri (udah kepake duluan).
 	if appRow.Candidate != nil && appRow.Job != nil {
 		companyName := ""
 		if appRow.Job.Company != nil {
@@ -293,6 +311,18 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		title := "Status lamaran diperbarui"
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_status", title, body)
+
+		// Recipient SELALU dari data server-side (email kandidat pemilik
+		// lamaran ini, udah lolos ownership check di loadVisibleApplication)
+		// -- jangan pernah dari request body, biar akun pengirim ini gak
+		// bisa disalahgunain kirim ke sembarang alamat.
+		if req.EmailSubject != "" && req.EmailBody != "" && appRow.Candidate.User != nil {
+			go func(to, subject, emailBody string) {
+				if err := h.mailer.Send(context.Background(), to, subject, emailBody); err != nil {
+					log.Printf("[application] gagal kirim email keputusan HRD ke %s: %v", to, err)
+				}
+			}(appRow.Candidate.User.Email, req.EmailSubject, req.EmailBody)
+		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
 }

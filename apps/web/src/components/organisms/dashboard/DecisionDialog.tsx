@@ -83,7 +83,12 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
       return
     }
     setIsSending(true)
-    await changeApplicationStatus(candidate.id, decision === "invite" ? "interview" : "rejected")
+    await changeApplicationStatus(
+      candidate.id,
+      decision === "invite" ? "interview" : "rejected",
+      undefined,
+      { subject: emailSubject, body: emailBody },
+    )
     setIsSending(false)
     setShowConfirmation(true)
     setTimeout(() => setOpen(false), 2500)

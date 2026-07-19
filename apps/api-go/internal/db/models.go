@@ -111,6 +111,11 @@ type Candidate struct {
 
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
+
+	// Belongs-to buat Preload("Candidate.User") pas butuh email kandidat
+	// (mis. kirim notifikasi keputusan HRD) -- cuma dibaca, gak pernah
+	// di-set saat Create/Update Candidate.
+	User *User `gorm:"foreignKey:UserID;references:ID"`
 }
 
 func (Candidate) TableName() string { return "candidates" }
