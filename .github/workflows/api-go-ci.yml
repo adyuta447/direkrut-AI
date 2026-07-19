@@ -1,0 +1,62 @@
+name: api-go-ci
+
+on:
+  pull_request:
+    paths:
+      - "apps/api-go/**"
+      - ".github/workflows/api-go-ci.yml"
+  push:
+    branches: [main, prod]
+    paths:
+      - "apps/api-go/**"
+
+defaults:
+  run:
+    working-directory: apps/api-go
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: apps/api-go/go.sum
+
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./... -v
+
+  deploy:
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/prod' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      HEROKU_APP: direkrut-ai-api-go
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Push straight to Heroku's Docker registry + release via the
+      # Platform API -- no Heroku CLI needed (its curl|sh installer is a
+      # flaky third-party download on top of not even logging in before
+      # `container:push`, which is what broke every prior deploy here).
+      - name: Log in to Heroku Container Registry
+        run: echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
+
+      - name: Build & push container image
+        working-directory: apps/api-go
+        run: |
+          docker build -t registry.heroku.com/$HEROKU_APP/web .
+          docker push registry.heroku.com/$HEROKU_APP/web
+
+      - name: Release
+        run: |
+          IMAGE_ID=$(docker inspect registry.heroku.com/$HEROKU_APP/web --format={{.Id}})
+          curl -sf -X PATCH "https://api.heroku.com/apps/$HEROKU_APP/formation" \
+            -d "{\"updates\":[{\"type\":\"web\",\"docker_image\":\"$IMAGE_ID\"}]}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/vnd.heroku+json; version=3.docker-releases" \
+            -H "Authorization: Bearer $HEROKU_API_KEY"

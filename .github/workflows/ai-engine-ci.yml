@@ -1,0 +1,62 @@
+name: ai-engine-ci
+
+on:
+  pull_request:
+    paths:
+      - "apps/ai-engine/**"
+      - ".github/workflows/ai-engine-ci.yml"
+  push:
+    branches: [main, prod]
+    paths:
+      - "apps/ai-engine/**"
+
+defaults:
+  run:
+    working-directory: apps/ai-engine
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/ai-engine/requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: mypy app
+      - run: pytest
+
+  deploy:
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/prod' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      HEROKU_APP: direkrut-ai-ai-engine
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sama kayak api-go-ci.yml -- push langsung ke registry Heroku +
+      # release lewat Platform API, tanpa Heroku CLI.
+      - name: Log in to Heroku Container Registry
+        run: echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
+
+      - name: Build & push container image
+        working-directory: apps/ai-engine
+        run: |
+          docker build -t registry.heroku.com/$HEROKU_APP/web .
+          docker push registry.heroku.com/$HEROKU_APP/web
+
+      - name: Release
+        run: |
+          IMAGE_ID=$(docker inspect registry.heroku.com/$HEROKU_APP/web --format={{.Id}})
+          curl -sf -X PATCH "https://api.heroku.com/apps/$HEROKU_APP/formation" \
+            -d "{\"updates\":[{\"type\":\"web\",\"docker_image\":\"$IMAGE_ID\"}]}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/vnd.heroku+json; version=3.docker-releases" \
+            -H "Authorization: Bearer $HEROKU_API_KEY"
