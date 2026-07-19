@@ -25,6 +25,9 @@ type Config struct {
 	XenditSecretKey     string
 	XenditCallbackToken string
 
+	ResendAPIKey     string
+	EmailFromAddress string
+
 	ObjectStorageEndpoint     string
 	ObjectStorageAccessKey    string
 	ObjectStorageSecretKey    string
@@ -48,6 +51,9 @@ func Load() (*Config, error) {
 		XenditSecretKey:     os.Getenv("XENDIT_SECRET_KEY"),
 		XenditCallbackToken: os.Getenv("XENDIT_CALLBACK_TOKEN"),
 
+		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
+		EmailFromAddress: getEnv("EMAIL_FROM_ADDRESS", "notifikasi@direkrut.ai"),
+
 		ObjectStorageEndpoint:  os.Getenv("OBJECT_STORAGE_ENDPOINT"),
 		ObjectStorageAccessKey: os.Getenv("OBJECT_STORAGE_ACCESS_KEY"),
 		ObjectStorageSecretKey: os.Getenv("OBJECT_STORAGE_SECRET_KEY"),
@@ -55,8 +61,9 @@ func Load() (*Config, error) {
 		ObjectStorageUsePathStyle: os.Getenv("OBJECT_STORAGE_USE_PATH_STYLE") == "true",
 	}
 
-	// Xendit vars sengaja gak wajib -- payment masih di-defer, belum ada
-	// jalur kode yang benar-benar butuh nilainya sekarang.
+	// Xendit & Resend vars sengaja gak wajib -- payment masih di-defer, dan
+	// mailer (lihat internal/mailer) no-op + log kalau RESEND_API_KEY kosong
+	// daripada gagalin startup buat fitur yang emang belum wajib di semua env.
 	required := map[string]string{
 		"WEB_ORIGIN":                cfg.WebOrigin,
 		"DATABASE_URL":              cfg.DatabaseURL,

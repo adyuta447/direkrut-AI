@@ -29,9 +29,6 @@ from app.providers import AIProvider, GeminiProvider, GroqProvider
 from app.rate_limit import limit
 from app.storage import download_object
 
-# X-Internal-Api-Key dicek satu kali secara global di main.py buat semua
-# router /v1/* -- di sini cuma nambahin rate limit yang spesifik buat
-# endpoint yang beneran manggil provider AI berbayar.
 router = APIRouter(dependencies=[Depends(limit("cv_parser"))])
 
 _IMAGE_MIME_BY_EXTENSION = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
