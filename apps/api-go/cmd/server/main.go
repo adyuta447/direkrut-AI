@@ -71,7 +71,7 @@ func main() {
 	r.Use(appmw.SecurityHeaders)
 	r.Use(appmw.MaxBodyBytes(1 << 20)) // 1MB -- cukup buat JSON, upload file lewat presigned URL langsung ke storage
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{cfg.WebOrigin},
+		AllowedOrigins:   cfg.WebOrigins(),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -125,9 +125,6 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "api-go"})
 }
 
-// readyCheck beneran nge-ping Postgres & Redis -- ini yang harus dipoll
-// load balancer/orchestrator buat tau instance ini siap nerima traffic
-// atau nggak, bukan /healthz.
 func readyCheck(gdb *gorm.DB, redisCache *appcache.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
