@@ -65,19 +65,11 @@ export function NavLinks() {
       {NAV_ITEMS.map((item) => {
         const active = isActive(item.href);
         const itemClass =
-          "relative flex items-center px-3 text-[14px] text-ink outline-none " +
+          "relative flex items-center px-3 text-[14px] font-sans font-bold text-ink outline-none " +
           "transition-opacity duration-300 group-hover/nav:opacity-40 hover:!opacity-100 focus-visible:!opacity-100";
         const label = (
-          <span className="grid">
-            {/* Ghost bold: reserve lebar teks semibold agar tidak ada layout shift */}
-            <span aria-hidden="true" className="col-start-1 row-start-1 font-semibold invisible">
-              {item.label}
-            </span>
-            <span
-              className={`col-start-1 row-start-1 ${active ? "font-semibold" : "font-normal"}`}
-            >
-              {item.label}
-            </span>
+          <span className={active ? "opacity-100" : "opacity-85"}>
+            {item.label}
           </span>
         );
 

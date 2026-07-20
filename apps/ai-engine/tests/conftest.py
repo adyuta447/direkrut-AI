@@ -21,10 +21,8 @@ class FakeRedis:
     async def incr(self, key: str) -> int:
         self._counters[key] = self._counters.get(key, 0) + 1
         return self._counters[key]
-
     async def expire(self, key: str, seconds: int) -> bool:
         return True
-
     async def ping(self) -> bool:
         return True
 

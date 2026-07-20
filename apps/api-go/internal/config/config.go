@@ -21,6 +21,7 @@ type Config struct {
 	JWTRefreshSecret string
 
 	AIEngineBaseURL string
+	InternalAPIKey  string
 
 	XenditSecretKey     string
 	XenditCallbackToken string
@@ -47,6 +48,7 @@ func Load() (*Config, error) {
 		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 
 		AIEngineBaseURL: os.Getenv("AI_ENGINE_BASE_URL"),
+		InternalAPIKey:  os.Getenv("INTERNAL_API_KEY"),
 
 		XenditSecretKey:     os.Getenv("XENDIT_SECRET_KEY"),
 		XenditCallbackToken: os.Getenv("XENDIT_CALLBACK_TOKEN"),

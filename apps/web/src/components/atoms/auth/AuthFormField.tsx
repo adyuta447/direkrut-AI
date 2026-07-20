@@ -44,7 +44,9 @@ export function AuthFormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-5 py-4 bg-surface-1 border-2 border-transparent rounded-2xl text-[16px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary focus:bg-canvas transition-none"
+        className={`w-full px-5 py-4 border-2 rounded-2xl text-[16px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary focus:bg-canvas transition-none ${
+          value ? "bg-canvas border-hairline" : "bg-surface-1 border-transparent"
+        }`}
       />
     </div>
   );

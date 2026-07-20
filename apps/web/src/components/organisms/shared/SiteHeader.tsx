@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu } from "lucide-react";
 import { UtilityBar } from "../../molecules/shared/UtilityBar";
 import { NavLinks } from "../../molecules/shared/NavLinks";
@@ -44,19 +45,20 @@ export function SiteHeader({
           <div className="flex items-center gap-8 h-full">
             <Link
               href="/"
-              className="text-[20px] font-semibold tracking-tight text-ink hover:text-ink transition-none uppercase"
+              className="flex items-center hover:opacity-90 transition-opacity"
             >
-              Direkrut AI
+              <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+              <Image src="/logo/Direkrut%20AI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
             </Link>
             <NavLinks />
           </div>
 
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-6">
-              <Link href="/auth/login" className="text-[14px] font-normal hover:text-primary transition-none">
+              <Link href="/auth/login" className="text-[14px] font-sans font-bold hover:text-primary transition-none">
                 Masuk
               </Link>
-              <Link href="/auth/register" className="btn-primary">
+              <Link href="/auth/register" className="btn-primary font-sans font-bold">
                 {registerLabel}
               </Link>
             </div>

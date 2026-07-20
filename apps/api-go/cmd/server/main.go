@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 	"gorm.io/gorm"
 
+	"github.com/adyuta447/direkrut-ai/api-go/internal/aiengine"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/application"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/auth"
 	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
@@ -70,6 +71,9 @@ func main() {
 	notificationHandler := notification.NewHandler(gdb, requireAuth)
 	companyHandler := company.NewHandler(gdb, storageClient, requireAuth)
 
+	aiClient := aiengine.NewClient(cfg.AIEngineBaseURL, cfg.InternalAPIKey)
+	aiHandler := aiengine.NewHandler(aiClient, requireAuth)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -99,6 +103,7 @@ func main() {
 		v1.Mount("/subscriptions", subscription.Router())
 		v1.Mount("/payments", payment.Router())
 		v1.Mount("/notifications", notificationHandler.Router())
+		v1.Mount("/ai", aiHandler.Router())
 	})
 
 	srv := &http.Server{

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { X, ArrowRight, Briefcase, Building2, BookOpen, Tag, Sparkles, LucideIcon } from "lucide-react";
 import gsap from "gsap";
@@ -79,9 +80,10 @@ export function MobileMenu({ isOpen, onClose, registerLabel, contactLabel }: Mob
           <Link
             href="/"
             onClick={onClose}
-            className="text-[20px] font-semibold tracking-tight text-ink uppercase"
+            className="flex items-center hover:opacity-90 transition-opacity"
           >
-            Direkrut AI
+            <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+            <Image src="/logo/Direkrut%20AI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
           </Link>
           <button
             type="button"
