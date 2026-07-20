@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 
 import { NavDocuments } from "@/components/organisms/dashboard/NavDocuments"
 import { NavMain } from "@/components/organisms/dashboard/NavMain"
@@ -20,7 +21,6 @@ import {
   LayoutDashboardIcon,
   UsersIcon,
   Settings2Icon,
-  CommandIcon,
   SearchIcon,
   FileTextIcon,
   CirclePlusIcon,
@@ -64,11 +64,11 @@ export function HrdSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              className="data-[slot=sidebar-menu-button]:p-1.5! flex items-center"
               render={<Link href="/hrd" />}
             >
-              <CommandIcon className="size-5!" />
-              <span className="text-base font-semibold">Direkrut AI</span>
+              <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+              <Image src="/logo/Direkrut%20AI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

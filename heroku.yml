@@ -1,0 +1,5 @@
+build:
+  docker:
+    web:
+      dockerfile: apps/ai-engine/Dockerfile
+      context: apps/ai-engine

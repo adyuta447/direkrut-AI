@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect, Suspense } from "react"
+import { useState, useRef, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useDashboard } from "@/context/DashboardContext"
 import { AIAssistantHeader } from "@/components/molecules/dashboard/AIAssistantHeader"
 import { AIAssistantMessages } from "@/components/molecules/dashboard/AIAssistantMessages"
 import { AIAssistantInput } from "@/components/molecules/dashboard/AIAssistantInput"
+import * as aiService from "@/services/aiService"
 
 type Message = {
   id: string
@@ -22,6 +23,7 @@ function AIAssistantChat() {
   const [isTyping, setIsTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasAutoSubmitted = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
 
   const searchParams = useSearchParams()
   const [initialContext, setInitialContext] = useState<{ q: string; candidate: string } | null>(
@@ -50,13 +52,79 @@ function AIAssistantChat() {
     return candidate ? `[Konteks Kandidat: ${candidate.applicantName}] ` : null
   }, [candidateId, applications])
 
-  const addAiReply = (content: string) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: (Date.now() + 1).toString(), role: "assistant", content, timestamp: new Date() },
-    ])
-    setIsTyping(false)
-  }
+  // Kirim pesan ke AI dan handle streaming response
+  const sendToAI = useCallback(
+    async (allMessages: Message[]) => {
+      setIsTyping(true)
+
+      // Buat placeholder message buat assistant
+      const assistantMsgId = (Date.now() + 1).toString()
+      setMessages((prev) => [
+        ...prev,
+        { id: assistantMsgId, role: "assistant", content: "", timestamp: new Date() },
+      ])
+
+      // Abort request sebelumnya kalau ada
+      if (abortRef.current) {
+        abortRef.current.abort()
+      }
+      abortRef.current = new AbortController()
+
+      // Konversi messages ke format yang diharapkan AI service
+      const chatMessages: aiService.ChatMessage[] = allMessages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role, content: m.content }))
+
+      try {
+        await aiService.streamChat(
+          `session-${currentUser?.id || "anon"}`,
+          chatMessages,
+          (chunk) => {
+            if (chunk.error) {
+              // Tampilkan error di chat
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, content: `⚠️ ${chunk.error}` }
+                    : m
+                )
+              )
+              setIsTyping(false)
+              return
+            }
+
+            if (chunk.content) {
+              // Append content ke message yang sedang di-stream
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, content: m.content + chunk.content }
+                    : m
+                )
+              )
+            }
+
+            if (chunk.done) {
+              setIsTyping(false)
+            }
+          },
+          abortRef.current.signal,
+        )
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? { ...m, content: "⚠️ Gagal terhubung ke AI. Coba lagi nanti." }
+                : m
+            )
+          )
+        }
+        setIsTyping(false)
+      }
+    },
+    [currentUser?.id]
+  )
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- seeds the welcome message post-hydration to keep SSR/client output matching
@@ -73,19 +141,21 @@ function AIAssistantChat() {
       hasAutoSubmitted.current = true
       const fullContent = candidateContext ? `${candidateContext}${initialQuery}` : initialQuery
       setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now().toString(), role: "user", content: fullContent, timestamp: new Date() },
-        ])
-        setIsTyping(true)
-        setTimeout(() => {
-          addAiReply(
-            `Dari ${candidateContext ? "konteks kandidat" : "data"} itu, profilnya emang relevan sama posisinya. Ada detail lain yang mau digali lebih dalam?`
-          )
-        }, 1500)
+        const userMsg: Message = {
+          id: Date.now().toString(),
+          role: "user",
+          content: fullContent,
+          timestamp: new Date(),
+        }
+        setMessages((prev) => {
+          const updated = [...prev, userMsg]
+          // Trigger AI setelah state update
+          sendToAI(updated)
+          return updated
+        })
       }, 500)
     }
-  }, [initialQuery, candidateContext])
+  }, [initialQuery, candidateContext, sendToAI])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -93,20 +163,32 @@ function AIAssistantChat() {
     }
   }, [messages, isTyping])
 
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) {
+        abortRef.current.abort()
+      }
+    }
+  }, [])
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim()) return
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), role: "user", content: inputValue, timestamp: new Date() },
-    ])
+    if (!inputValue.trim() || isTyping) return
+
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: inputValue,
+      timestamp: new Date(),
+    }
+
     setInputValue("")
-    setIsTyping(true)
-    setTimeout(() => {
-      addAiReply(
-        "Dari data yang ada, ada beberapa kandidat yang cocok banget buat posisi Software Engineer. Mau aku tampilin?"
-      )
-    }, 1500)
+    setMessages((prev) => {
+      const updated = [...prev, userMsg]
+      sendToAI(updated)
+      return updated
+    })
   }
 
   return (

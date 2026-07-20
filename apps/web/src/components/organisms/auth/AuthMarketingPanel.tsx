@@ -21,8 +21,8 @@ export function AuthMarketingPanel() {
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
 
-      <Link href="/" className="relative text-[16px] font-semibold text-white tracking-tight uppercase drop-shadow-sm">
-        Direkrut AI
+      <Link href="/" className="relative flex items-center hover:opacity-90 transition-opacity">
+        <Image src="/logo/Direkrut%20AI_DarkMode.png" className="h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
       </Link>
 
       <div className="relative">

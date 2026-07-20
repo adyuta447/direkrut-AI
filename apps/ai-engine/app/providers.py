@@ -17,14 +17,14 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from typing import Any, Awaitable, Callable, TypeVar
 
 from app.config import get_settings
 
 T = TypeVar("T")
 
-# "Legitimately slow" (respons LLM/Whisper emang bisa makan waktu) dan
-# "hung selamanya makan slot worker" harus jadi dua hal yang beda.
+
 _TIMEOUT_SECONDS = 20.0
 _MAX_RETRIES = 1
 _RETRY_BACKOFF_SECONDS = 1.5
@@ -61,6 +61,15 @@ class AIProvider(ABC):
         """Generate teks dari prompt. Dipakai buat CV parsing, assessment,
         dan Chat AI thinking partner."""
         raise NotImplementedError
+
+    async def complete_stream(
+        self, prompt: str, *, system: str | None = None
+    ) -> AsyncIterator[str]:
+        """Streaming versi complete() -- yield token per chunk. Default
+        fallback: panggil complete() biasa lalu yield hasilnya sekaligus.
+        Provider yang support streaming bisa override method ini."""
+        result = await self.complete(prompt, system=system)
+        yield result
 
     @abstractmethod
     async def embed(self, text: str) -> list[float]:
@@ -126,6 +135,16 @@ class GeminiProvider(AIProvider):
 
         return await _with_timeout_and_retry(_call)
 
+    async def complete_stream(
+        self, prompt: str, *, system: str | None = None
+    ) -> AsyncIterator[str]:
+        """Streaming pakai Gemini generate_content_async dengan stream=True."""
+        model = self._genai.GenerativeModel(self.COMPLETE_MODEL, system_instruction=system)
+        response = await model.generate_content_async(prompt, stream=True)
+        async for chunk in response:
+            if chunk.text:
+                yield chunk.text
+
     async def transcribe(self, audio_bytes: bytes, *, filename: str = "audio.wav") -> str:
         raise NotImplementedError("Gemini provider belum handle audio di prototype ini -- pakai GroqProvider.transcribe()")
 
@@ -156,6 +175,26 @@ class GroqProvider(AIProvider):
 
         return await _with_timeout_and_retry(_call)
 
+    async def complete_stream(
+        self, prompt: str, *, system: str | None = None
+    ) -> AsyncIterator[str]:
+        """Streaming pakai Groq chat.completions.create dengan stream=True."""
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        stream = await self._client.chat.completions.create(
+            model=self.COMPLETE_MODEL,
+            messages=messages,  # type: ignore[arg-type]
+            temperature=0.2,
+            stream=True,
+        )
+        async for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta.content:
+                yield delta.content
+
     async def embed(self, text: str) -> list[float]:
         raise NotImplementedError("Groq belum sediakan embeddings API -- pakai GeminiProvider.embed()")
 
@@ -185,3 +224,22 @@ def get_provider(name: str | None = None) -> AIProvider:
     if provider_cls is None:
         raise ValueError(f"Provider AI '{provider_name}' belum didukung.")
     return provider_cls()
+
+
+
+_TASK_PROVIDER_MAP: dict[str, str] = {
+    "complete": "groq",       # Llama 3.3 70B -- cepat, gratis
+    "stream": "groq",         # Streaming chat -- low latency
+    "embed": "gemini",        # text-embedding-004 -- Groq gak punya
+    "vision": "gemini",       # Flash Lite -- Groq gak support vision
+    "transcribe": "groq",     # Whisper large v3
+}
+
+
+def get_provider_for_task(task: str) -> AIProvider:
+    """Ambil provider terbaik buat task tertentu. Fallback ke default
+    provider kalau task gak dikenal."""
+    provider_name = _TASK_PROVIDER_MAP.get(task)
+    if provider_name is None:
+        return get_provider()
+    return get_provider(provider_name)
