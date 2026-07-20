@@ -35,7 +35,7 @@ export function SiteFooter() {
       <div className="max-w-[1584px] mx-auto flex flex-col md:flex-row justify-between items-start gap-10 border-b border-[#393939] pb-10 mb-10">
         <div className="max-w-sm">
           <span className="flex items-center">
-            <Image src="/logo/Direkrut%20AI_DarkMode.png" className="h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+            <Image src="/logo/DirekrutAI_DarkMode.png" className="h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
           </span>
           <p className="text-[#8d8d8d] text-[14px] leading-[1.6] mt-4">
             Platform cari kerja bertenaga AI. Cepat, relevan, dan transparan di

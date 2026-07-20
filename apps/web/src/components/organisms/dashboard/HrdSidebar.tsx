@@ -68,7 +68,7 @@ export function HrdSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               render={<Link href="/hrd" />}
             >
               <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
-              <Image src="/logo/Direkrut%20AI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+              <Image src="/logo/DirekrutAI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
