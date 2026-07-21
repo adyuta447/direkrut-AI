@@ -1,67 +1,126 @@
-import { IconVideo } from "@tabler/icons-react"
+import * as React from "react"
+import { IconVideo, IconPlayerPlay, IconAlertTriangle, IconSparkles } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
+import { getInterviewResult, getInterviewAudioUrl, type InterviewResult } from "@/services/aiService"
 
 interface CandidateDetailCVProps {
   candidate: Application & ExtendedCandidateData
 }
 
+function AnswerAudioPlayer({ applicationId, questionIndex }: { applicationId: string; questionIndex: number }) {
+  const [url, setUrl] = React.useState<string | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
+
+  const handlePlay = async () => {
+    if (url) return
+    setIsLoading(true)
+    try {
+      const audioUrl = await getInterviewAudioUrl(applicationId, questionIndex)
+      setUrl(audioUrl)
+    } catch {
+      // ponytail: gagal ambil URL playback -- biarin tombolnya tetap ada, HRD bisa coba lagi.
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (url) return <audio controls autoPlay src={url} className="h-8 w-full max-w-[240px]" />
+  return (
+    <Button variant="ghost" size="sm" onClick={handlePlay} disabled={isLoading} className="h-7 px-2 text-xs text-primary">
+      <IconPlayerPlay className="size-3.5 mr-1" /> {isLoading ? "Memuat..." : "Putar Jawaban"}
+    </Button>
+  )
+}
+
+function InterviewLogCard({ candidate }: { candidate: Application & ExtendedCandidateData }) {
+  const [interview, setInterview] = React.useState<InterviewResult | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    let cancelled = false
+    getInterviewResult(candidate.id)
+      .then((result) => { if (!cancelled) setInterview(result) })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
+  }, [candidate.id])
+
+  return (
+    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
+      <CardHeader className="rounded-t-3xl bg-info py-5 text-white">
+        <CardTitle className="text-[20px] font-semibold text-white">Rekaman &amp; Transkrip Wawancara AI</CardTitle>
+        <CardDescription className="text-white/80">Sesi wawancara asinkron yang udah dijalani kandidat, kamera wajib nyala buat proctoring</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {isLoading ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface-1 p-6 text-ink-muted">
+            <TypingDots /> Ngecek hasil wawancara...
+          </div>
+        ) : !interview ? (
+          <div className="rounded-2xl border border-dashed border-hairline bg-surface-1 p-6 text-center space-y-2">
+            <IconVideo className="size-8 text-muted-foreground/50 mx-auto" />
+            <p className="text-[15px] font-semibold text-ink">Kandidat belum menyelesaikan wawancara AI</p>
+            <p className="text-sm text-ink-muted">Transkrip &amp; skor bakal muncul di sini begitu kandidat selesai wawancara.</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
+              {interview.recommendationScore != null && (
+                <div className="rounded-2xl border border-hairline bg-surface-1 px-4 py-3">
+                  <p className="text-xs text-ink-muted">Skor Rekomendasi AI</p>
+                  <p className="text-2xl font-bold text-primary tabular-nums">{Math.round(interview.recommendationScore)}</p>
+                </div>
+              )}
+              {interview.proctoringFlags.length > 0 && (
+                <div className="flex items-center gap-2 rounded-2xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-ink">
+                  <IconAlertTriangle className="size-5 text-warning shrink-0" />
+                  <span>{interview.proctoringFlags.length} peringatan integritas selama sesi ini</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2">Transkrip Tanya Jawab</h4>
+              <div className="space-y-4 bg-surface-1 p-4 rounded-2xl border border-hairline max-h-[400px] overflow-y-auto">
+                {interview.items.map((item) => (
+                  <React.Fragment key={item.questionIndex}>
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className="text-xs font-semibold text-primary px-2">AI Interviewer</span>
+                      <div className="bg-background border p-3 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
+                        <p className="text-sm">{item.question}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 items-end">
+                      <span className="text-xs font-semibold text-muted-foreground px-2">{candidate.applicantName}</span>
+                      <div className="bg-primary text-primary-foreground p-3 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm text-right">
+                        <p className="text-sm">{item.answer || "(gak ada transkrip)"}</p>
+                      </div>
+                      <AnswerAudioPlayer applicationId={candidate.id} questionIndex={item.questionIndex} />
+                    </div>
+                    {item.aiFeedback && (
+                      <div className="flex items-start gap-2 max-w-[85%] rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-ink-muted">
+                        <IconSparkles className="size-3.5 text-primary shrink-0 mt-0.5" />
+                        <span>{item.aiFeedback}</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function CandidateDetailCV({ candidate }: CandidateDetailCVProps) {
   return (
     <div className="space-y-6">
-      <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
-        <CardHeader className="rounded-t-3xl bg-info py-5 text-white">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle className="text-[20px] font-semibold text-white">Rekaman &amp; Transkrip Wawancara AI</CardTitle>
-              <CardDescription className="text-white/80">Sesi wawancara asinkron yang udah dijalani kandidat</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" className="w-fit rounded-full bg-white/95 text-ink font-semibold hover:bg-white">
-              <IconVideo className="size-4 mr-2" /> Putar Ulang Rekaman
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="aspect-video w-full max-w-2xl bg-surface-1 rounded-2xl border border-hairline flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-              <span className="text-white text-sm font-medium">12:04 / 15:30</span>
-            </div>
-            <IconVideo className="size-12 text-muted-foreground/50" />
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2">Transkrip Tanya Jawab</h4>
-            <div className="space-y-4 bg-surface-1 p-4 rounded-2xl border border-hairline max-h-[400px] overflow-y-auto">
-              <div className="flex flex-col gap-1 items-start">
-                <span className="text-xs font-semibold text-primary px-2">AI Interviewer</span>
-                <div className="bg-background border p-3 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <p className="text-sm">Halo {candidate.applicantName}, mari kita mulai. Bisa ceritakan pengalaman terbesar Anda di bidang ini?</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1 items-end">
-                <span className="text-xs font-semibold text-muted-foreground px-2">{candidate.applicantName}</span>
-                <div className="bg-primary text-primary-foreground p-3 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm text-right">
-                  <p className="text-sm">Saya telah bekerja di bidang ini selama lebih dari 3 tahun, fokus utamanya pada analisis dan manajemen. Pencapaian terbesar saya adalah berhasil meningkatkan efisiensi operasional tim sebesar 20% dalam waktu kurang dari 6 bulan.</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1 items-start">
-                <span className="text-xs font-semibold text-primary px-2">AI Interviewer</span>
-                <div className="bg-background border p-3 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <p className="text-sm">Tantangan tersulit apa yang pernah Anda hadapi saat memimpin inisiatif peningkatan efisiensi tersebut?</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1 items-end">
-                <span className="text-xs font-semibold text-muted-foreground px-2">{candidate.applicantName}</span>
-                <div className="bg-primary text-primary-foreground p-3 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm text-right">
-                  <p className="text-sm">Tantangan terbesarnya adalah koordinasi lintas departemen. Saya menyelesaikannya dengan metode agile dan sesi daily standup agar komunikasi tetap transparan.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <InterviewLogCard candidate={candidate} />
 
       <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
         <CardHeader className="rounded-t-3xl bg-brand-accent-strong py-5 text-white">

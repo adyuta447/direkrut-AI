@@ -64,15 +64,15 @@ func main() {
 		sendPasswordResetEmail = mailerClient.SendPasswordReset
 	}
 
-	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth, sendPasswordResetEmail, cfg.WebOrigin)
-	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
-	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, requireAuth)
-	candidateHandler := candidate.NewHandler(gdb, requireAuth)
-	notificationHandler := notification.NewHandler(gdb, requireAuth)
-	companyHandler := company.NewHandler(gdb, storageClient, requireAuth)
-
 	aiClient := aiengine.NewClient(cfg.AIEngineBaseURL, cfg.InternalAPIKey)
 	aiHandler := aiengine.NewHandler(aiClient, requireAuth)
+
+	authHandler := auth.NewHandler(gdb, issuer, authRateLimit, requireAuth, sendPasswordResetEmail, cfg.WebOrigin)
+	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
+	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, aiClient, storageClient, requireAuth)
+	candidateHandler := candidate.NewHandler(gdb, storageClient, requireAuth)
+	notificationHandler := notification.NewHandler(gdb, requireAuth)
+	companyHandler := company.NewHandler(gdb, storageClient, requireAuth)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

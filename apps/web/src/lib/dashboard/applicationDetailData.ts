@@ -2,9 +2,10 @@ import { getExtendedData } from "@/lib/dashboard/extended-data";
 import type { Application, Job } from "@/lib/types";
 
 /** Semua data turunan buat halaman detail lamaran kandidat: funnel lamaran
- * posisi ini, distribusi posisi lain di perusahaan yang sama, transkrip
- * wawancara (atau contoh statis kalau belum ada), dan langkah-langkah
- * timeline berdasarkan status lamaran. Murni kalkulasi, gak ada JSX. */
+ * posisi ini, distribusi posisi lain di perusahaan yang sama, dan
+ * langkah-langkah timeline berdasarkan status lamaran. Murni kalkulasi, gak
+ * ada JSX. Transkrip wawancara AI diambil terpisah lewat aiService.getInterviewResult
+ * (butuh fetch async, gak cocok di helper sinkron ini). */
 export function getApplicationDetailData(application: Application, job: Job, applications: Application[], jobs: Job[]) {
   const ext = getExtendedData(application.applicantName);
   const isFreshGrad = application.category === "fresh-graduate" || ext.category === "fresh-graduate";
@@ -25,11 +26,6 @@ export function getApplicationDetailData(application: Application, job: Job, app
     value: applications.filter((a) => a.jobId === j.id).length,
   }));
 
-  const transcriptData = application.validationResponses || [
-    { question: "Ceritakan tentang pengalaman Anda yang paling relevan dengan posisi ini.", answer: "Saya memiliki pengalaman selama 3 tahun dalam bidang yang relevan." },
-    { question: "Bagaimana Anda menangani tekanan dan deadline yang ketat?", answer: "Saya menggunakan metode prioritisasi dengan membagi tugas berdasarkan urgensi dan dampaknya." },
-  ];
-
   const timelineSteps = [
     { label: "Lamaran Dikirim", date: application.appliedDate, done: true, active: false, description: `Lamaranmu buat posisi ${job.title} udah masuk sistem.` },
     { label: "Wawancara AI", date: application.status !== "submitted" ? "Selesai" : "Menunggu", done: application.status !== "submitted", active: false, description: "Sesi tanya-jawab bareng AI Direkrut." },
@@ -37,5 +33,5 @@ export function getApplicationDetailData(application: Application, job: Job, app
     { label: application.status === "rejected" ? "Lamaran Ditolak" : "Keputusan Final", date: application.status === "rejected" ? "Selesai" : "Menunggu", done: application.status === "rejected", active: application.status === "interview", description: application.status === "rejected" ? "Makasih udah melamar. Tetap semangat, ya!" : "Nunggu keputusan akhir dari tim HRD." },
   ];
 
-  return { ext, isFreshGrad, jobApplications, companyJobs, applicationFlowData, positionDistribution, transcriptData, timelineSteps };
+  return { ext, isFreshGrad, jobApplications, companyJobs, applicationFlowData, positionDistribution, timelineSteps };
 }

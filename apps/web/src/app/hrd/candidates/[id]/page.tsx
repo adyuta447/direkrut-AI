@@ -25,11 +25,6 @@ export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>()
   const { applications } = useDashboard()
   const [showChart, setShowChart] = React.useState(false)
-  const [expandedCards, setExpandedCards] = React.useState<Record<string, boolean>>({})
-
-  const toggleCard = (id: string) => {
-    setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
 
   // Diambil langsung by-id (bukan cuma applications.find dari context) --
   // context butuh waktu buat fetch lamaran asli pas mount, jadi deep-link
@@ -154,7 +149,7 @@ export default function CandidateDetailPage() {
             ))}
           </TabsList>
           <TabsContent value="analisis" className="py-6 space-y-6">
-            <CandidateDetailAnalysis candidate={candidate} baseScore={baseScore} isFreshGrad={isFreshGrad} expandedCards={expandedCards} onToggleCard={toggleCard} />
+            <CandidateDetailAnalysis candidate={candidate} />
           </TabsContent>
           <TabsContent value="transkrip" className="py-6">
             <CandidateDetailCV candidate={candidate} />

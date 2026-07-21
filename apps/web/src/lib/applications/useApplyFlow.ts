@@ -3,11 +3,16 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useDashboard } from "@/context/DashboardContext"
+import { getMyProfile, uploadCV } from "@/services/candidateService"
 import type { Job } from "@/lib/types"
 
 /** State & handler buat alur 3-langkah lamar kerja kandidat (data diri ->
- * upload CV -> tinjauan -> submit). Submit beneran manggil applyToJob dari
- * DashboardContext (real API + fallback), bukan lagi fabrikasi lokal. */
+ * upload/cek CV -> tinjauan -> submit). Submit beneran manggil applyToJob
+ * dari DashboardContext (real API + fallback), bukan lagi fabrikasi lokal.
+ * CV bisa diupload langsung di sini (dikirim ke HRD & dipakai buat AI
+ * screening) -- gak wajib pindah ke halaman profil dulu, walaupun secara
+ * teknis tetap kesimpen di CV kandidat yang sama (satu CV per kandidat,
+ * dipakai lintas lamaran). */
 export function useApplyFlow(job: Job | undefined) {
   const router = useRouter()
   const { applyToJob, isProfileComplete, currentUser } = useDashboard()
@@ -21,9 +26,36 @@ export function useApplyFlow(job: Job | undefined) {
     linkedin: "",
     portfolio: "",
   })
-  const [file, setFile] = React.useState<File | null>(null)
-  const [isParsing, setIsParsing] = React.useState(false)
+  const [hasCv, setHasCv] = React.useState(false)
+  const [isLoadingCv, setIsLoadingCv] = React.useState(true)
+  const [isUploadingCv, setIsUploadingCv] = React.useState(false)
+  const [cvUploadError, setCvUploadError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+  React.useEffect(() => {
+    let cancelled = false
+    getMyProfile().then((profile) => {
+      if (!cancelled) {
+        setHasCv(Boolean(profile?.cvFileUrl))
+        setIsLoadingCv(false)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleUploadCv = async (file: File) => {
+    setIsUploadingCv(true)
+    setCvUploadError(null)
+    const objectKey = await uploadCV(file)
+    setIsUploadingCv(false)
+    if (objectKey) {
+      setHasCv(true)
+    } else {
+      setCvUploadError("Gagal upload CV. Coba lagi ya.")
+    }
+  }
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1)
@@ -31,14 +63,6 @@ export function useApplyFlow(job: Job | undefined) {
   const handleBack = () => {
     if (step > 1) setStep(step - 1)
     else router.back()
-  }
-
-  const handleUpload = () => {
-    setIsParsing(true)
-    setTimeout(() => {
-      setFile(new File([""], "CV_Kandidat.pdf", { type: "application/pdf" }))
-      setIsParsing(false)
-    }, 1500)
   }
 
   const handleSubmit = async () => {
@@ -56,14 +80,15 @@ export function useApplyFlow(job: Job | undefined) {
     step,
     formData,
     onFormDataChange: (partial: Partial<typeof formData>) => setFormData((prev) => ({ ...prev, ...partial })),
-    file,
-    isParsing,
+    hasCv,
+    isLoadingCv,
+    isUploadingCv,
+    cvUploadError,
     isSubmitting,
     isProfileComplete,
     handleNext,
     handleBack,
-    handleUpload,
-    handleRemoveFile: () => setFile(null),
+    handleUploadCv,
     handleSubmit,
   }
 }

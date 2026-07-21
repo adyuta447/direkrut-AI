@@ -13,7 +13,8 @@ import { ProfileExperienceCard, ProfileEducationCard } from "@/components/molecu
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useDashboard } from "@/context/DashboardContext"
-import { getMyProfile, updateMyProfile, type CandidateProfile } from "@/services/candidateService"
+import { getMyProfile, updateMyProfile, uploadCV, type CandidateProfile } from "@/services/candidateService"
+import { parseCV } from "@/services/aiService"
 
 const SECTION_LINKS = [
   { id: "section-biodata", label: "Biodata" },
@@ -38,29 +39,6 @@ const INITIAL_PROFILE: CandidateProfile & { aboutStatus?: "draft" | "saved" } = 
   education: [],
   skills: [],
   links: [],
-}
-
-const AI_FILLED_PROFILE = {
-  name: "Budi Santoso",
-  age: "24",
-  gender: "Laki-laki",
-  location: "Jakarta Selatan, DKI Jakarta",
-  email: "budi.santoso@email.com",
-  phone: "+6281234567890",
-  about: "Saya adalah seorang Software Engineer dengan pengalaman dalam membangun aplikasi web modern dan scalable. Sangat antusias terhadap teknologi terbaru dan senang berkolaborasi dalam tim.",
-  aboutStatus: "saved" as const,
-  experience: [
-    { id: "1", role: "Software Engineer", company: "TechStart", startDate: "Agt 2022", endDate: "Sekarang", description: "Mengembangkan backend microservices menggunakan Node.js dan Go.", status: "saved" as const },
-    { id: "2", role: "Intern Backend Developer", company: "DataCorp", startDate: "Jan 2021", endDate: "Des 2021", description: "Merancang API dan optimasi database PostgreSQL.", status: "saved" as const },
-  ],
-  education: [
-    { id: "1", school: "Universitas Indonesia", degree: "S1 Ilmu Komputer", startYear: "2018", endYear: "2022", status: "saved" as const },
-  ],
-  skills: ["React", "Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS", "Go"],
-  links: [
-    { id: "1", platform: "LinkedIn", url: "linkedin.com/in/budisantoso", status: "saved" as const },
-    { id: "2", platform: "Portofolio", url: "budisantoso.dev", status: "saved" as const },
-  ],
 }
 
 const genId = () => Math.random().toString(36).slice(2, 10)
@@ -116,19 +94,33 @@ export default function CandidateProfilePage() {
     })
   }
 
-  const simulateAIFill = () => {
+  const handleCVUpload = async (file: File) => {
     setIsUploading(true)
-    setTimeout(() => {
-      setIsUploading(false)
-      setIsSimulatingAI(true)
-      setTimeout(() => {
-        setIsSimulatingAI(false)
-        setHasAutoFilled(true)
-        setIsProfileComplete(true)
-        persistProfile({ ...profile, ...AI_FILLED_PROFILE })
-        notify("Profil berhasil dilengkapi oleh AI")
-      }, 2500)
-    }, 1500)
+    const objectKey = await uploadCV(file)
+    setIsUploading(false)
+    if (!objectKey) {
+      notify("Gagal upload CV. Coba lagi ya.")
+      return
+    }
+
+    setIsSimulatingAI(true)
+    try {
+      const parsed = await parseCV(currentUser?.id ?? "profile", objectKey)
+      setIsSimulatingAI(false)
+      setHasAutoFilled(true)
+      setIsProfileComplete(true)
+      const mergedSkills = Array.from(new Set([...profile.skills, ...parsed.skills]))
+      persistProfile({
+        ...profile,
+        about: profile.about.trim() ? profile.about : parsed.summary,
+        aboutStatus: profile.about.trim() ? profile.aboutStatus : "saved",
+        skills: mergedSkills,
+      })
+      notify("CV kamu berhasil dibaca AI -- ringkasan & skill udah keisi otomatis.")
+    } catch {
+      setIsSimulatingAI(false)
+      notify("Gagal baca CV. Coba lagi ya.")
+    }
   }
 
   const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -216,7 +208,7 @@ export default function CandidateProfilePage() {
       <PageHeader className="mb-6" eyebrow="Personal Branding" title="Profil Saya" description="Profil yang lengkap bikin peluang dilirik HRD makin gede." />
 
       {!hasAutoFilled && (
-        <ProfileAIBanner isUploading={isUploading} isSimulatingAI={isSimulatingAI} onUploadClick={simulateAIFill} />
+        <ProfileAIBanner isUploading={isUploading} isSimulatingAI={isSimulatingAI} onFileSelected={handleCVUpload} />
       )}
 
       {hasAutoFilled && (

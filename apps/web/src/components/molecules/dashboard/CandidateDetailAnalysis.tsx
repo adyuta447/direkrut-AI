@@ -1,150 +1,139 @@
+import * as React from "react"
 import {
-  IconSparkles,
-  IconBriefcase, IconSchool, IconChevronDown, IconChevronUp, IconVideo,
+  IconSparkles, IconBriefcase, IconRefresh,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
+import { getScreeningResult, screenApplication, type ScreeningResult } from "@/services/aiService"
+import { getScoreLevel } from "@/lib/dashboard/status"
 
 interface CandidateDetailAnalysisProps {
   candidate: Application & ExtendedCandidateData
-  baseScore: number
-  isFreshGrad: boolean
-  expandedCards: Record<string, boolean>
-  onToggleCard: (id: string) => void
 }
 
-export function CandidateDetailAnalysis({ candidate, baseScore, isFreshGrad, expandedCards, onToggleCard }: CandidateDetailAnalysisProps) {
-  const scoreCards = [
-    {
-      id: "wawancara",
-      pct: "40%",
-      color: "text-info",
-      hoverBorder: "hover:border-info/50",
-      icon: <IconVideo className="size-16" />,
-      title: "Performa Wawancara",
-      desc: "Analisis semantik dari jawaban teknis dan soft skill selama wawancara asinkron.",
-      details: [
-        { label: "Kesesuaian Jawaban Teknis", val: "15%" },
-        { label: "Pemecahan Masalah (Studi Kasus)", val: "15%" },
-        { label: "Kejelasan Komunikasi", val: "10%" },
-      ],
-    },
-    {
-      id: "pengalaman",
-      pct: isFreshGrad ? "35%" : "50%",
-      color: "text-success",
-      hoverBorder: "hover:border-success/50",
-      icon: <IconBriefcase className="size-16" />,
-      title: isFreshGrad ? "Magang & Proyek" : "Relevansi Pengalaman",
-      desc: isFreshGrad ? "Relevansi pengalaman magang, organisasi, dan proyek perkuliahan." : "Kecocokan kata kunci, level, dan durasi pengalaman kerja nyata di CV.",
-      details: isFreshGrad
-        ? [{ label: "Kesesuaian Bidang Magang", val: "15%" }, { label: "Proyek Relevan", val: "15%" }, { label: "Aktif Berorganisasi", val: "5%" }]
-        : [{ label: "Kesamaan Role Sebelumnya", val: "20%" }, { label: "Jenjang Posisi (Senioritas)", val: "15%" }, { label: "Durasi Masa Kerja Terkait", val: "15%" }],
-    },
-    {
-      id: "akademik",
-      pct: isFreshGrad ? "25%" : "10%",
-      color: "text-warning",
-      hoverBorder: "hover:border-warning/50",
-      icon: <IconSchool className="size-16" />,
-      title: isFreshGrad ? "Pendidikan Akademik" : "Pendidikan & Sertifikasi",
-      desc: isFreshGrad ? "Kesesuaian jurusan, IPK, dan prestasi akademik lainnya." : "Validasi gelar dan sertifikasi profesional untuk role ini.",
-      details: isFreshGrad
-        ? [{ label: "Kesesuaian Jurusan/Fakultas", val: "15%" }, { label: "IPK Akademik", val: "10%" }]
-        : [{ label: "Sertifikasi Profesional (Mis. PMP)", val: "5%" }, { label: "Kesesuaian Gelar/Fakultas", val: "5%" }],
-    },
-  ]
+export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisProps) {
+  const [screening, setScreening] = React.useState<ScreeningResult | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [isScreening, setIsScreening] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let cancelled = false
+    getScreeningResult(candidate.id)
+      .then((result) => { if (!cancelled) setScreening(result) })
+      .catch(() => { if (!cancelled) setError("Gagal ambil hasil screening.") })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
+  }, [candidate.id])
+
+  const runScreening = async () => {
+    setIsScreening(true)
+    setError(null)
+    try {
+      const result = await screenApplication(candidate.id)
+      setScreening(result)
+    } catch {
+      setError("Gagal jalanin screening AI. Pastikan kandidat udah upload CV di profilnya.")
+    } finally {
+      setIsScreening(false)
+    }
+  }
 
   return (
     <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
       <CardHeader className="rounded-t-3xl bg-primary py-5 text-white">
-        <CardTitle className="text-[20px] font-semibold text-white">Cocok-cocokan CV &amp; Wawancara</CardTitle>
-        <CardDescription className="text-white/80">Gini cara AI ngasih nilai buat {candidate.applicantName}</CardDescription>
+        <CardTitle className="text-[20px] font-semibold text-white">Screening AI</CardTitle>
+        <CardDescription className="text-white/80">Cocok-cocokan CV {candidate.applicantName} sama kualifikasi lowongan ini</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2 pb-4">
-          <h4 className="text-[17px] font-semibold text-ink">Transparansi Penilaian (Explainable AI)</h4>
-          <p className="text-sm text-ink-muted mb-4">
-            Ini metodologi &amp; bobot yang dipakai AI buat ngasih skor akhir {baseScore}% ke kandidat ini.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {scoreCards.map((card) => (
-              <div
-                key={card.id}
-                className={`rounded-2xl border border-hairline bg-surface-1 p-5 relative overflow-hidden cursor-pointer transition-all ${card.hoverBorder}`}
-                onClick={() => onToggleCard(card.id)}
-              >
-                <div className="absolute top-0 right-0 p-2 opacity-5">{card.icon}</div>
-                <div className="flex justify-between items-start mb-1">
-                  <div className={`font-bold text-3xl tracking-[-0.02em] ${card.color}`}>{card.pct}</div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 relative z-10">
-                    {expandedCards[card.id] ? <IconChevronUp className="h-4 w-4" /> : <IconChevronDown className="h-4 w-4" />}
-                  </Button>
+        {isLoading ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface-1 p-6 text-ink-muted">
+            <TypingDots /> Ngecek hasil screening...
+          </div>
+        ) : !screening ? (
+          <div className="rounded-2xl border border-dashed border-hairline bg-surface-1 p-6 text-center space-y-3">
+            <IconSparkles className="size-8 text-primary mx-auto" />
+            <p className="text-[15px] font-semibold text-ink">Kandidat ini belum discreen AI</p>
+            <p className="text-sm text-ink-muted">Jalankan buat lihat skor kecocokan CV vs lowongan ini.</p>
+            <Button onClick={runScreening} disabled={isScreening} className="mt-2">
+              {isScreening ? "Lagi discreen..." : "Jalankan Screening AI"}
+            </Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2 pb-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[17px] font-semibold text-ink">Skor Kecocokan</h4>
+                <Button variant="ghost" size="sm" onClick={runScreening} disabled={isScreening} className="text-ink-muted">
+                  <IconRefresh className="size-4 mr-1.5" /> {isScreening ? "Screening ulang..." : "Screening ulang"}
+                </Button>
+              </div>
+              <div className="rounded-2xl border border-hairline bg-surface-1 p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-4xl font-bold tracking-[-0.02em] text-primary tabular-nums">{Math.round(screening.overallScore)}%</p>
+                  <p className="text-sm text-ink-muted mt-1">{getScoreLevel(screening.overallScore).label}</p>
                 </div>
-                <h5 className="font-semibold text-[15px] mb-1 text-ink">{card.title}</h5>
-                <p className="text-xs text-ink-muted relative z-10">{card.desc}</p>
-                {expandedCards[card.id] && (
-                  <div className="mt-3 pt-3 border-t border-hairline animate-in fade-in slide-in-from-top-2 text-xs space-y-2 relative z-10">
-                    {card.details.map((d, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span className="text-ink-muted">{d.label}</span>
-                        <span className={`font-medium ${card.color}`}>{d.val}</span>
-                      </div>
-                    ))}
+                {screening.workExperienceYears != null && (
+                  <div className="text-right">
+                    <p className="text-2xl font-semibold text-ink tabular-nums">{screening.workExperienceYears}</p>
+                    <p className="text-xs text-ink-muted">tahun pengalaman (est. AI)</p>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+
+            {screening.matchedEvidence && screening.matchedEvidence.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-[17px] font-semibold text-ink">Bukti Kecocokan</h4>
+                <div className="space-y-2">
+                  {screening.matchedEvidence.map((evidence, i) => (
+                    <div key={i} className="rounded-2xl border border-hairline bg-surface-1 p-4 text-[14px] text-ink flex gap-3">
+                      <IconSparkles className="size-4 text-primary shrink-0 mt-0.5" />
+                      <span>{evidence}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {screening.skills.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <IconBriefcase className="size-5 text-primary" />
+                  <h4 className="text-[17px] font-semibold text-ink">Skill Terdeteksi dari CV</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {screening.skills.map((skill) => (
+                    <span key={skill} className="rounded-full bg-surface-1 border border-hairline px-3 py-1 text-xs font-medium text-ink">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {screening.cvSummary && (
+              <div className="space-y-2">
+                <h4 className="text-[17px] font-semibold text-ink">Ringkasan CV (AI)</h4>
+                <div className="rounded-2xl border border-hairline bg-surface-1 p-5">
+                  <p className="text-[15px] leading-relaxed text-ink">{screening.cvSummary}</p>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </>
+        )}
 
         <Separator className="bg-hairline" />
 
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <IconBriefcase className="size-5 text-primary" />
-            <h4 className="text-[17px] font-semibold text-ink">Relevansi Pengalaman (Tinggi)</h4>
-          </div>
-          <div className="rounded-2xl border border-hairline bg-surface-1 p-5">
-            <p className="text-sm italic text-ink-muted mb-2">Kutipan dari CV-nya:</p>
-            <p className="text-[15px] leading-relaxed text-ink">
-              &quot;Bertanggung jawab penuh atas{" "}
-              <mark className="bg-warning/20 px-1 rounded font-medium">strategi manajemen di 3 proyek berskala nasional</mark>{" "}
-              yang menghasilkan peningkatan efisiensi sebesar 20% dalam waktu 6 bulan.&quot;
-            </p>
-            <div className="mt-3 w-fit rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
-              Analisis AI: Disebut 3x di CV, nyambung sama pengalaman langsung di proyek serupa.
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <IconSchool className="size-5 text-primary" />
-            <h4 className="text-[17px] font-semibold text-ink">Pendidikan &amp; Sertifikasi (Menengah)</h4>
-          </div>
-          <div className="rounded-2xl border border-hairline bg-surface-1 p-5">
-            <p className="text-sm italic text-ink-muted mb-2">Kutipan dari CV-nya:</p>
-            <p className="text-[15px] leading-relaxed text-ink">&quot;Sarjana Ilmu Komputer, Universitas XYZ. Aktif dalam organisasi kemahasiswaan.&quot;</p>
-            <div className="mt-3 w-fit rounded-full bg-[color-mix(in_oklch,var(--warning),black_20%)] px-3 py-1 text-xs font-medium text-white">
-              Analisis AI: Gelarnya relevan, tapi sertifikasi profesional spesifik belum ketemu.
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-primary p-6 text-white">
-          <h4 className="text-[17px] font-semibold mb-1">Kesimpulan Akhir AI</h4>
-          <p className="text-[15px] leading-relaxed text-white/90">
-            CV dan jawaban wawancara teknisnya nyambung banget. Probabilitas kecocokan tinggi banget
-            ({baseScore}%) — gaskeun ke tahap berikutnya.
-          </p>
-        </div>
-
-        <div className="mt-8 mb-4 border-t border-hairline pt-6">
+        <div className="mt-2 mb-4">
           <h4 className="text-[17px] font-semibold text-ink mb-1 flex items-center gap-2">
             <IconSparkles className="size-4 text-primary" /> Asisten AI Interaktif
           </h4>

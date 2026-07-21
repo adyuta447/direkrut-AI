@@ -209,6 +209,10 @@ type Application struct {
 
 	Job       *Job       `gorm:"foreignKey:JobID;references:ID"`
 	Candidate *Candidate `gorm:"foreignKey:CandidateID;references:ID"`
+	// Belongs-to buat Preload("ScoringResult") di listing HRD -- biar tabel
+	// kandidat nampilin skor screening AI langsung tanpa fetch per-baris.
+	// Cuma dibaca, gak pernah di-set saat Create/Update Application.
+	ScoringResult *ScoringResult `gorm:"foreignKey:ApplicationID;references:ID"`
 }
 
 func (Application) TableName() string { return "applications" }
@@ -267,6 +271,90 @@ func (Job) TableName() string { return "jobs" }
 func (j *Job) BeforeCreate(tx *gorm.DB) error {
 	if j.ID == "" {
 		j.ID = newUUIDv4()
+	}
+	return nil
+}
+
+// CVParseResult, ScoringResult, Assessment, dan AssessmentItem memetakan ke
+// tabel yang udah ada dari migrasi 0001 tapi belum pernah disentuh kode Go --
+// ai-engine (Python) yang ngitung, api-go yang nyimpen hasilnya di sini.
+
+type CVParseResult struct {
+	ID                       string    `gorm:"column:id;primaryKey"`
+	ApplicationID            string    `gorm:"column:application_id"`
+	ParsedJSON               string    `gorm:"column:parsed_json"`
+	ExtractedYearsExperience *float64  `gorm:"column:extracted_years_experience"`
+	ParsedAt                 time.Time `gorm:"column:parsed_at"`
+}
+
+func (CVParseResult) TableName() string { return "cv_parse_results" }
+
+func (c *CVParseResult) BeforeCreate(tx *gorm.DB) error {
+	if c.ID == "" {
+		c.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type ScoringResult struct {
+	ID              string    `gorm:"column:id;primaryKey"`
+	ApplicationID   string    `gorm:"column:application_id"`
+	OverallScore    float64   `gorm:"column:overall_score"`
+	SkillMatchScore *float64  `gorm:"column:skill_match_score"`
+	ModelUsed       *string   `gorm:"column:model_used"`
+	ScoredAt        time.Time `gorm:"column:scored_at"`
+}
+
+func (ScoringResult) TableName() string { return "scoring_results" }
+
+func (s *ScoringResult) BeforeCreate(tx *gorm.DB) error {
+	if s.ID == "" {
+		s.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type Assessment struct {
+	ID            string     `gorm:"column:id;primaryKey"`
+	ApplicationID string     `gorm:"column:application_id"`
+	TrackType     string     `gorm:"column:track_type"`
+	Status        string     `gorm:"column:status"`
+	Score         *float64   `gorm:"column:score"`
+	StartedAt     *time.Time `gorm:"column:started_at"`
+	CompletedAt   *time.Time `gorm:"column:completed_at"`
+	// Daftar flag proctoring ([{at, reason}]) yang kekumpul selama sesi
+	// interview -- default:'[]' biar GORM omit kolom ini dari INSERT pas
+	// nil, sama kayak Candidate.Experience/Education/Links.
+	ProctoringFlags json.RawMessage `gorm:"column:proctoring_flags;type:jsonb;default:'[]'"`
+
+	Items []AssessmentItem `gorm:"foreignKey:AssessmentID;references:ID"`
+}
+
+func (Assessment) TableName() string { return "assessments" }
+
+func (a *Assessment) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = newUUIDv4()
+	}
+	return nil
+}
+
+type AssessmentItem struct {
+	ID              string   `gorm:"column:id;primaryKey"`
+	AssessmentID    string   `gorm:"column:assessment_id"`
+	QuestionText    string   `gorm:"column:question_text"`
+	CandidateAnswer *string  `gorm:"column:candidate_answer"`
+	AIFeedback      *string  `gorm:"column:ai_feedback"`
+	ItemScore       *float64 `gorm:"column:item_score"`
+	OrderIndex      int      `gorm:"column:order_index"`
+	AudioObjectKey  *string  `gorm:"column:audio_object_key"`
+}
+
+func (AssessmentItem) TableName() string { return "assessment_items" }
+
+func (a *AssessmentItem) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == "" {
+		a.ID = newUUIDv4()
 	}
 	return nil
 }

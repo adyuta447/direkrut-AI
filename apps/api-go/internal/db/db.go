@@ -13,7 +13,7 @@ import (
 func Connect(databaseURL string) (*gorm.DB, error) {
 	gdb, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
 		PrepareStmt:    true,
-		TranslateError: true, // biar unique-violation dsb muncul sbg gorm.ErrDuplicatedKey, bukan pgconn error mentah
+		TranslateError: true, 
 		Logger:         logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {

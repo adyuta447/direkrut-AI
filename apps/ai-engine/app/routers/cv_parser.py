@@ -22,6 +22,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from app.cache import get_or_set, make_cache_key
 from app.logging import log_ai_call
@@ -52,8 +53,11 @@ class ParsedCV(BaseModel):
 
 
 def _extract_pdf_text(raw: bytes) -> str:
-    reader = PdfReader(io.BytesIO(raw))
-    return "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    try:
+        reader = PdfReader(io.BytesIO(raw))
+        return "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    except PdfReadError as exc:
+        raise HTTPException(status_code=422, detail="PDF gak bisa dibaca (kemungkinan rusak/corrupt) -- coba upload ulang") from exc
 
 
 def _parse_ai_json(raw: str) -> ParsedCV:

@@ -12,6 +12,7 @@ interface ApiApplication {
   status: string;
   appliedAt: string;
   updatedAt: string;
+  recommendationScore?: number;
 }
 
 interface ApiApplicationListResponse {
@@ -28,6 +29,7 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     validationStatus: "pending",
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
+    recommendationScore: a.recommendationScore,
   };
 }
 
@@ -77,20 +79,6 @@ export async function submitApplication(jobId: string): Promise<Application | nu
       return mapApiApplicationToApplication(apiApp);
     } catch (err) {
       console.error("[applicationService] gagal submit lamaran lewat API, fallback ke mock lokal:", err);
-    }
-  }
-  return null;
-}
-
-export async function completeInterview(id: string): Promise<Application | null> {
-  if (isApiConfigured) {
-    try {
-      const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/complete-interview`, {
-        method: "POST",
-      });
-      return mapApiApplicationToApplication(apiApp);
-    } catch (err) {
-      console.error("[applicationService] gagal tandain wawancara selesai lewat API:", err);
     }
   }
   return null;

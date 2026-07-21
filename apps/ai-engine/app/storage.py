@@ -15,7 +15,7 @@ from app.config import get_settings
 
 
 @lru_cache
-def get_client():  # type: ignore[no-untyped-def]
+def get_client():
     settings = get_settings()
     return boto3.client(
         "s3",

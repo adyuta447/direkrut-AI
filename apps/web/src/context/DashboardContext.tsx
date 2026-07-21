@@ -48,7 +48,6 @@ interface DashboardContextType {
     note?: string,
     email?: { subject: string; body: string },
   ) => Promise<void>;
-  completeInterview: (applicationId: string) => Promise<void>;
   jobs: Job[];
   addJob: (job: Job) => Promise<void>;
   updateJob: (id: string, updates: Partial<Job>) => Promise<void>;
@@ -212,16 +211,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     updateApplication(id, result ?? { status });
   };
 
-  // Dipanggil dari /interview/[jobId] pas sesi wawancara AI (simulasi
-  // client-side) selesai -- ini yang bikin lamarannya pindah dari
-  // "submitted" ke "under-review" di backend, jadi HRD (yang re-fetch lewat
-  // refetchApplications) akhirnya lihat kandidat ini udah lewat tahap
-  // wawancara, bukan nyangkut di "submitted" selamanya.
-  const completeInterview = async (applicationId: string) => {
-    const result = await applicationService.completeInterview(applicationId);
-    if (result) updateApplication(applicationId, result);
-  };
-
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
     setJobs((prev) => [...prev, saved]);
@@ -273,7 +262,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateApplication,
         applyToJob,
         changeApplicationStatus,
-        completeInterview,
         jobs,
         addJob,
         updateJob,

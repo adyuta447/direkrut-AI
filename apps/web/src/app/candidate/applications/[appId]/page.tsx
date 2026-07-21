@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDashboard } from "@/context/DashboardContext"
 import { getApplicationById } from "@/services/applicationService"
 import { getJobById } from "@/services/jobService"
+import { getInterviewResult, type InterviewResult } from "@/services/aiService"
 import { BackButton } from "@/components/molecules/dashboard/BackButton"
 import { NotFoundCard } from "@/components/molecules/dashboard/NotFoundCard"
 import { AppDetailHero } from "@/components/molecules/dashboard/AppDetailHero"
@@ -59,6 +60,23 @@ export default function ApplicationDetailPage() {
     }
   }, [application?.jobId])
 
+  const [interview, setInterview] = useState<InterviewResult | null>(null)
+  const [isLoadingInterview, setIsLoadingInterview] = useState(true)
+  useEffect(() => {
+    if (!application?.id) return
+    let cancelled = false
+    getInterviewResult(application.id)
+      .then((result) => {
+        if (!cancelled) setInterview(result)
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingInterview(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [application?.id])
+
   if (!application || !job) {
     return (
       <NotFoundCard
@@ -71,7 +89,7 @@ export default function ApplicationDetailPage() {
     )
   }
 
-  const { isFreshGrad, jobApplications, companyJobs, applicationFlowData, positionDistribution, transcriptData, timelineSteps } =
+  const { isFreshGrad, jobApplications, companyJobs, applicationFlowData, positionDistribution, timelineSteps } =
     getApplicationDetailData(application, job, applications, jobs)
 
   return (
@@ -102,7 +120,11 @@ export default function ApplicationDetailPage() {
         </TabsContent>
 
         <TabsContent value="transkrip" className="space-y-4 py-4">
-          <ApplicationTranscriptTab transcriptData={transcriptData} />
+          <ApplicationTranscriptTab
+            transcriptData={interview?.items.map((it) => ({ question: it.question, answer: it.answer, aiFeedback: it.aiFeedback })) ?? []}
+            isLoading={isLoadingInterview}
+            recommendationScore={interview?.recommendationScore}
+          />
         </TabsContent>
 
         <TabsContent value="posisi" className="space-y-6 py-4">

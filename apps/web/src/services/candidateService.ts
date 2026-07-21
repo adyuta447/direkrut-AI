@@ -35,6 +35,7 @@ export interface CandidateProfile {
   about: string;
   photoUrl?: string;
   coverUrl?: string;
+  cvFileUrl?: string;
   experience: ProfileExperience[];
   education: ProfileEducation[];
   links: ProfileLink[];
@@ -50,6 +51,7 @@ interface ApiProfile {
   about?: string;
   photoUrl?: string;
   coverUrl?: string;
+  cvFileUrl?: string;
   experience: Omit<ProfileExperience, "status">[];
   education: Omit<ProfileEducation, "status">[];
   links: Omit<ProfileLink, "status">[];
@@ -66,6 +68,7 @@ function mapApiToProfile(api: ApiProfile): CandidateProfile {
     about: api.about ?? "",
     photoUrl: api.photoUrl || undefined,
     coverUrl: api.coverUrl || undefined,
+    cvFileUrl: api.cvFileUrl || undefined,
     experience: api.experience.map((e) => ({ ...e, status: "saved" as const })),
     education: api.education.map((e) => ({ ...e, status: "saved" as const })),
     links: api.links.map((l) => ({ ...l, status: "saved" as const })),
@@ -115,6 +118,38 @@ export async function updateMyProfile(profile: CandidateProfile): Promise<Candid
     return mapApiToProfile(api);
   } catch (err) {
     console.error("[candidateService] gagal simpan profil ke API:", err);
+    return null;
+  }
+}
+
+// --- Upload CV (presigned PUT, sama pola kayak companyService dokumen legalitas) ---
+
+export async function uploadCV(file: File): Promise<string | null> {
+  if (!isApiConfigured) return null;
+  try {
+    const ext = (file.name.split(".").pop() || "pdf").toLowerCase();
+    const { uploadUrl, objectKey } = await apiFetch<{ uploadUrl: string; objectKey: string }>(
+      "/v1/candidates/me/cv-upload-url",
+      { method: "POST", body: JSON.stringify({ ext }) },
+    );
+
+    const res = await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+    });
+    if (!res.ok) {
+      console.error(`[candidateService] upload CV gagal, status ${res.status}:`, await res.text().catch(() => ""));
+      return null;
+    }
+
+    await apiFetch("/v1/candidates/me/cv", {
+      method: "PATCH",
+      body: JSON.stringify({ objectKey }),
+    });
+    return objectKey;
+  } catch (err) {
+    console.error("[candidateService] gagal upload CV:", err);
     return null;
   }
 }
