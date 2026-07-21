@@ -65,6 +65,13 @@ func (h *Handler) Router() chi.Router {
 		pr.With(appmw.RequireRole("hrd")).Post("/{applicationID}/screen", h.handleScreen)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/screening", h.handleGetScreening)
 
+		// Pre-screening (kandidat): 3 pertanyaan singkat sebelum wawancara AI
+		// yang lebih mahal -- nyaring pelamar asal apply (lihat gate di
+		// handleInterviewQuestions).
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/prescreen/questions", h.handlePreScreenQuestions)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/prescreen/submit", h.handlePreScreenSubmit)
+		pr.Get("/{applicationID}/prescreen", h.handleGetPreScreen)
+
 		// AI interview (kandidat): pertanyaan digenerate AI, jawaban direkam
 		// suara + kamera wajib nyala buat proctoring, jawaban ditranskrip &
 		// dinilai di akhir sesi.
@@ -513,12 +520,13 @@ type proctoringFlag struct {
 	Reason string    `json:"reason"`
 }
 
-// getOrCreateAssessment: satu Assessment per lamaran per track_type. Dipanggil
-// pertama kali dari proctor-check ATAU transcribe, mana yang duluan kejadian
-// pas sesi interview jalan.
-func (h *Handler) getOrCreateAssessment(ctx context.Context, applicationID string) (*appdb.Assessment, error) {
+// getOrCreateAssessment: satu Assessment per lamaran per track_type --
+// reused buat "ai_interview" (dipanggil pertama kali dari proctor-check ATAU
+// transcribe, mana yang duluan kejadian) dan "pre_screening" (dipanggil dari
+// handlePreScreenSubmit).
+func (h *Handler) getOrCreateAssessment(ctx context.Context, applicationID, trackType string) (*appdb.Assessment, error) {
 	var a appdb.Assessment
-	err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", applicationID, "ai_interview").First(&a).Error
+	err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", applicationID, trackType).First(&a).Error
 	if err == nil {
 		return &a, nil
 	}
@@ -527,7 +535,7 @@ func (h *Handler) getOrCreateAssessment(ctx context.Context, applicationID strin
 	}
 	now := time.Now()
 	a = appdb.Assessment{
-		ApplicationID: applicationID, TrackType: "ai_interview", Status: "in_progress",
+		ApplicationID: applicationID, TrackType: trackType, Status: "in_progress",
 		StartedAt: &now, ProctoringFlags: json.RawMessage("[]"),
 	}
 	if err := h.db.WithContext(ctx).Create(&a).Error; err != nil {
@@ -537,7 +545,7 @@ func (h *Handler) getOrCreateAssessment(ctx context.Context, applicationID strin
 }
 
 func (h *Handler) appendProctoringFlag(ctx context.Context, applicationID string, reason *string) error {
-	a, err := h.getOrCreateAssessment(ctx, applicationID)
+	a, err := h.getOrCreateAssessment(ctx, applicationID, "ai_interview")
 	if err != nil {
 		return err
 	}
@@ -555,6 +563,145 @@ func (h *Handler) appendProctoringFlag(ctx context.Context, applicationID string
 	return h.db.WithContext(ctx).Model(&appdb.Assessment{}).Where("id = ?", a.ID).Update("proctoring_flags", updated).Error
 }
 
+// preScreenPassThreshold: sengaja rendah -- tujuannya nyaring jawaban
+// kosong/asal-asalan, bukan nge-rank kualitas kandidat (itu porsi AI
+// screening + wawancara asli yang jauh lebih dalam).
+const preScreenPassThreshold = 40.0
+
+func (h *Handler) preScreenPassed(ctx context.Context, applicationID string) bool {
+	var a appdb.Assessment
+	err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", applicationID, "pre_screening").First(&a).Error
+	if err != nil {
+		return false
+	}
+	return a.Status == "completed" && a.Score != nil && *a.Score >= preScreenPassThreshold
+}
+
+type preScreenQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
+func (h *Handler) handlePreScreenQuestions(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	resp, err := h.aiClient.GeneratePreScreenQuestions(ctx, aiengine.GeneratePreScreenQuestionsRequest{
+		JobDescription: appRow.Job.Description,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal generate pertanyaan screening awal")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, preScreenQuestionsResponse{Questions: resp.Questions})
+}
+
+type preScreenSubmitRequest struct {
+	Responses []aiengine.ValidationAnswer `json:"responses" validate:"required,min=1"`
+}
+
+type preScreenResultResponse struct {
+	Passed bool    `json:"passed"`
+	Score  float64 `json:"score"`
+}
+
+func (h *Handler) handlePreScreenSubmit(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	var req preScreenSubmitRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	assessment, err := h.getOrCreateAssessment(ctx, appRow.ID, "pre_screening")
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan screening awal")
+		return
+	}
+	for i, resp := range req.Responses {
+		item := appdb.AssessmentItem{
+			AssessmentID: assessment.ID, QuestionText: resp.Question,
+			CandidateAnswer: &resp.Answer, OrderIndex: i,
+		}
+		if err := h.db.WithContext(ctx).Create(&item).Error; err != nil {
+			httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan jawaban screening awal")
+			return
+		}
+	}
+
+	scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{
+		ApplicationID: appRow.ID, Responses: req.Responses,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal nilai screening awal")
+		return
+	}
+
+	now := time.Now()
+	score := scoreResp.RecommendationScore
+	if err := h.db.WithContext(ctx).Model(&appdb.Assessment{}).Where("id = ?", assessment.ID).Updates(map[string]any{
+		"score": score, "status": "completed", "completed_at": now,
+	}).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan hasil screening awal")
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, preScreenResultResponse{Passed: score >= preScreenPassThreshold, Score: score})
+}
+
+type preScreenItemResponse struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+}
+
+type preScreenGetResponse struct {
+	Status string                  `json:"status"`
+	Score  *float64                `json:"score"`
+	Items  []preScreenItemResponse `json:"items"`
+}
+
+func (h *Handler) handleGetPreScreen(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", appRow.ID, "pre_screening").First(&assessment).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "belum ada screening awal")
+		return
+	}
+	var items []appdb.AssessmentItem
+	h.db.WithContext(ctx).Where("assessment_id = ?", assessment.ID).Order("order_index ASC").Find(&items)
+
+	itemResp := make([]preScreenItemResponse, 0, len(items))
+	for _, it := range items {
+		answer := ""
+		if it.CandidateAnswer != nil {
+			answer = *it.CandidateAnswer
+		}
+		itemResp = append(itemResp, preScreenItemResponse{Question: it.QuestionText, Answer: answer})
+	}
+	httpx.WriteJSON(w, http.StatusOK, preScreenGetResponse{Status: assessment.Status, Score: assessment.Score, Items: itemResp})
+}
+
 type interviewQuestionsResponse struct {
 	Questions []string `json:"questions"`
 }
@@ -564,10 +711,14 @@ func (h *Handler) handleInterviewQuestions(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
+	ctx := r.Context()
+	if !h.preScreenPassed(ctx, appRow.ID) {
+		httpx.WriteError(w, http.StatusForbidden, "prescreen_required", "selesaikan screening awal dulu sebelum mulai wawancara AI")
+		return
+	}
 	if !h.ensureAIConfigured(w) {
 		return
 	}
-	ctx := r.Context()
 
 	var cvSummary *string
 	var parseResult appdb.CVParseResult
@@ -704,7 +855,7 @@ func (h *Handler) handleInterviewTranscribe(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	assessment, err := h.getOrCreateAssessment(ctx, appRow.ID)
+	assessment, err := h.getOrCreateAssessment(ctx, appRow.ID, "ai_interview")
 	if err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan transkrip")
 		return

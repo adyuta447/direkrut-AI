@@ -4,6 +4,8 @@ import * as React from "react"
 import { useDashboard } from "@/context/DashboardContext"
 import { useRouter } from "next/navigation"
 import {
+  generatePreScreenQuestions,
+  submitPreScreen,
   generateInterviewQuestions,
   getAudioUploadUrl,
   proctorCheck,
@@ -14,13 +16,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import {
   CameraIcon, MicIcon, AlertTriangleIcon,
   CheckCircleIcon, ShieldCheckIcon, ClockIcon, ArrowRightIcon,
-  InfoIcon, SparklesIcon, MessageSquareIcon, VideoOffIcon,
+  InfoIcon, SparklesIcon, MessageSquareIcon, VideoOffIcon, XCircleIcon,
 } from "lucide-react"
 
-type InterviewState = "setup" | "interview" | "finalizing" | "feedback"
+type InterviewState = "setup" | "prescreen" | "interview" | "finalizing" | "feedback"
 
 const PROCTOR_INTERVAL_MS = 20000
 const ANSWER_WINDOW_SECONDS = 120
@@ -170,6 +173,47 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
     setLatestWarningReason(reason)
     setShowWarningModal(true)
   }, [])
+
+  // --- Pre-screening: 3 pertanyaan singkat sebelum wawancara AI yang lebih
+  // mahal -- nyaring pelamar asal apply (lihat gate di backend).
+  const [prescreenQuestions, setPrescreenQuestions] = React.useState<string[]>([])
+  const [prescreenAnswers, setPrescreenAnswers] = React.useState<string[]>([])
+  const [prescreenError, setPrescreenError] = React.useState<string | null>(null)
+  const [isSubmittingPrescreen, setIsSubmittingPrescreen] = React.useState(false)
+  const [prescreenFailed, setPrescreenFailed] = React.useState(false)
+
+  React.useEffect(() => {
+    if (interviewState !== "prescreen" || !application || prescreenQuestions.length > 0 || prescreenError) return
+    let cancelled = false
+    generatePreScreenQuestions(application.id)
+      .then((qs) => {
+        if (!cancelled) {
+          setPrescreenQuestions(qs)
+          setPrescreenAnswers(new Array(qs.length).fill(""))
+        }
+      })
+      .catch(() => { if (!cancelled) setPrescreenError("Gagal menyiapkan pertanyaan screening awal. Coba lagi ya.") })
+    return () => { cancelled = true }
+  }, [interviewState, application, prescreenQuestions.length, prescreenError])
+
+  const submitPrescreenAnswers = async () => {
+    if (!application) return
+    setIsSubmittingPrescreen(true)
+    setPrescreenError(null)
+    try {
+      const responses = prescreenQuestions.map((question, i) => ({ question, answer: prescreenAnswers[i] ?? "" }))
+      const result = await submitPreScreen(application.id, responses)
+      if (result.passed) {
+        setInterviewState("interview")
+      } else {
+        setPrescreenFailed(true)
+      }
+    } catch {
+      setPrescreenError("Gagal ngirim jawaban screening awal. Coba lagi ya.")
+    } finally {
+      setIsSubmittingPrescreen(false)
+    }
+  }
 
   // --- Pertanyaan digenerate AI (bukan hardcoded) ---
   const [questions, setQuestions] = React.useState<string[]>([])
@@ -423,7 +467,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             size="lg"
             className="w-full mt-8 py-6 text-base font-bold shadow-lg"
             disabled={!readyToStart}
-            onClick={() => setInterviewState("interview")}
+            onClick={() => setInterviewState("prescreen")}
           >
             Mulai Wawancara Sekarang
           </Button>
@@ -440,6 +484,75 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
       <p className="text-lg font-medium">{title}</p>
     </div>
   )
+
+  const renderPrescreen = () => {
+    if (prescreenFailed) {
+      return (
+        <div className="flex flex-col h-screen items-center justify-center px-6 text-center gap-4">
+          <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+            <XCircleIcon className="size-8 text-muted-foreground" />
+          </div>
+          <div className="max-w-md space-y-2">
+            <h1 className="text-xl font-bold">Screening awal belum lolos ambang minimum</h1>
+            <p className="text-muted-foreground">
+              Tim HRD tetap akan meninjau lamaranmu secara manual. Ini bukan penolakan otomatis --
+              keputusan akhir tetap di tangan HRD.
+            </p>
+          </div>
+          <Button size="lg" onClick={() => router.push("/candidate")}>Kembali ke Beranda Dashboard</Button>
+        </div>
+      )
+    }
+
+    if (prescreenQuestions.length === 0 && !prescreenError) {
+      return (
+        <div className="flex flex-col h-screen items-center justify-center gap-4">
+          <TypingDots />
+          <p className="text-muted-foreground">Menyiapkan pertanyaan screening awal...</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col h-screen max-w-2xl mx-auto p-6 md:p-12 animate-in fade-in duration-500 overflow-y-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Screening Awal</h1>
+          <p className="text-muted-foreground mt-2">
+            Jawab {prescreenQuestions.length} pertanyaan singkat ini dulu sebelum masuk ke wawancara AI.
+          </p>
+        </div>
+
+        <div className="flex-1 space-y-6">
+          {prescreenQuestions.map((question, i) => (
+            <div key={i} className="space-y-2">
+              <label className="text-sm font-medium">{i + 1}. {question}</label>
+              <textarea
+                className="w-full rounded-xl border bg-background p-3 text-sm min-h-24 focus:outline-none focus:ring-2 focus:ring-primary"
+                value={prescreenAnswers[i] ?? ""}
+                onChange={(e) => {
+                  const next = [...prescreenAnswers]
+                  next[i] = e.target.value
+                  setPrescreenAnswers(next)
+                }}
+                placeholder="Tulis jawabanmu di sini..."
+              />
+            </div>
+          ))}
+        </div>
+
+        {prescreenError && <p className="text-sm text-destructive mt-4">{prescreenError}</p>}
+
+        <Button
+          size="lg"
+          className="w-full mt-8 py-6 text-base font-bold shadow-lg"
+          disabled={isSubmittingPrescreen || prescreenAnswers.some((a) => !a.trim())}
+          onClick={() => void submitPrescreenAnswers()}
+        >
+          {isSubmittingPrescreen ? "Mengirim..." : "Kirim & Lanjut ke Wawancara"}
+        </Button>
+      </div>
+    )
+  }
 
   const renderInterview = () => {
     if (questionsError) {
@@ -659,6 +772,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   return (
     <>
       {interviewState === "setup" && renderSetup()}
+      {interviewState === "prescreen" && renderPrescreen()}
       {interviewState === "interview" && renderInterview()}
       {interviewState === "finalizing" && renderLoadingScreen("Menilai hasil wawancaramu...")}
       {interviewState === "feedback" && renderFeedback()}

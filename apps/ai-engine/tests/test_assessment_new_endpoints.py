@@ -11,6 +11,8 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.routers.assessment import (
     _FALLBACK_QUESTIONS,
+    _PRESCREEN_FALLBACK_QUESTIONS,
+    _parse_prescreen_questions_json,
     _parse_proctor_json,
     _parse_questions_json,
 )
@@ -59,4 +61,24 @@ def test_generate_questions_rejects_request_with_no_key(monkeypatch: pytest.Monk
 def test_proctor_check_rejects_request_with_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("INTERNAL_API_KEY", "correct-secret")
     res = client.post("/v1/assessment/proctor-check", json={"application_id": "app-1", "image_base64": "AAAA"})
+    assert res.status_code == 401
+
+
+def test_parse_prescreen_questions_json_happy_path() -> None:
+    raw = '{"questions": ["Berapa tahun pengalamanmu?", "Kenapa tertarik posisi ini?", "Skill utamamu apa?"]}'
+    result = _parse_prescreen_questions_json(raw)
+    assert result.questions == ["Berapa tahun pengalamanmu?", "Kenapa tertarik posisi ini?", "Skill utamamu apa?"]
+
+
+def test_parse_prescreen_questions_json_falls_back_on_malformed_json() -> None:
+    assert _parse_prescreen_questions_json("bukan json").questions == _PRESCREEN_FALLBACK_QUESTIONS
+
+
+def test_parse_prescreen_questions_json_falls_back_on_empty_list() -> None:
+    assert _parse_prescreen_questions_json('{"questions": []}').questions == _PRESCREEN_FALLBACK_QUESTIONS
+
+
+def test_generate_prescreen_questions_rejects_request_with_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("INTERNAL_API_KEY", "correct-secret")
+    res = client.post("/v1/assessment/generate-prescreen-questions", json={"job_description": "Backend Engineer"})
     assert res.status_code == 401

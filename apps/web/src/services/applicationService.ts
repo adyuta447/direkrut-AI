@@ -1,5 +1,4 @@
 import type { Application } from "../lib/types";
-import { mockApplications } from "../lib/mockData";
 import { apiFetch, isApiConfigured } from "./apiClient";
 
 interface ApiApplication {
@@ -39,10 +38,10 @@ export async function listApplications(): Promise<Application[]> {
       const data = await apiFetch<ApiApplicationListResponse>("/v1/applications");
       return data.items.map(mapApiApplicationToApplication);
     } catch (err) {
-      console.error("[applicationService] gagal ambil daftar lamaran dari API, fallback ke mock:", err);
+      console.error("[applicationService] gagal ambil daftar lamaran dari API:", err);
     }
   }
-  return mockApplications;
+  return [];
 }
 
 export async function listApplicationsForJob(jobId: string): Promise<Application[]> {
@@ -51,10 +50,10 @@ export async function listApplicationsForJob(jobId: string): Promise<Application
       const data = await apiFetch<ApiApplicationListResponse>(`/v1/applications?jobId=${jobId}`);
       return data.items.map(mapApiApplicationToApplication);
     } catch (err) {
-      console.error("[applicationService] gagal ambil lamaran per lowongan dari API, fallback ke mock:", err);
+      console.error("[applicationService] gagal ambil lamaran per lowongan dari API:", err);
     }
   }
-  return mockApplications.filter((a) => a.jobId === jobId);
+  return [];
 }
 
 export async function getApplicationById(id: string): Promise<Application | null> {
@@ -63,10 +62,10 @@ export async function getApplicationById(id: string): Promise<Application | null
       const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}`);
       return mapApiApplicationToApplication(apiApp);
     } catch (err) {
-      console.error("[applicationService] gagal ambil detail lamaran dari API, fallback ke mock:", err);
+      console.error("[applicationService] gagal ambil detail lamaran dari API:", err);
     }
   }
-  return mockApplications.find((a) => a.id === id) ?? null;
+  return null;
 }
 
 export async function submitApplication(jobId: string): Promise<Application | null> {

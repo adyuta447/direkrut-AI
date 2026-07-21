@@ -151,6 +151,14 @@ type GenerateQuestionsResponse struct {
 	Questions []string `json:"questions"`
 }
 
+type GeneratePreScreenQuestionsRequest struct {
+	JobDescription string `json:"job_description"`
+}
+
+type GeneratePreScreenQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
 type ProctorCheckRequest struct {
 	ApplicationID string `json:"application_id"`
 	ImageBase64   string `json:"image_base64"`
@@ -216,6 +224,14 @@ func (c *Client) MatchCandidate(ctx context.Context, req MatchRequest) (*MatchRe
 func (c *Client) GenerateQuestions(ctx context.Context, req GenerateQuestionsRequest) (*GenerateQuestionsResponse, error) {
 	var resp GenerateQuestionsResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-questions", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (c *Client) GeneratePreScreenQuestions(ctx context.Context, req GeneratePreScreenQuestionsRequest) (*GeneratePreScreenQuestionsResponse, error) {
+	var resp GeneratePreScreenQuestionsResponse
+	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-prescreen-questions", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil

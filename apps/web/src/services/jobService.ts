@@ -1,7 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import type { Job } from "../lib/types";
-import { mockJobs } from "../lib/mockData";
 import { apiFetch, isApiConfigured } from "./apiClient";
 
 
@@ -138,10 +137,10 @@ export async function listJobs(): Promise<Job[]> {
       const data = await apiFetch<ApiJobListResponse>("/v1/jobs?limit=50");
       return data.items.map(mapApiJobToJob);
     } catch (err) {
-      console.error("[jobService] gagal ambil daftar lowongan dari API, fallback ke mock:", err);
+      console.error("[jobService] gagal ambil daftar lowongan dari API:", err);
     }
   }
-  return mockJobs;
+  return [];
 }
 
 export async function getJobById(id: string): Promise<Job | null> {
@@ -150,10 +149,10 @@ export async function getJobById(id: string): Promise<Job | null> {
       const apiJob = await apiFetch<ApiJob>(`/v1/jobs/${id}`);
       return mapApiJobToJob(apiJob);
     } catch (err) {
-      console.error("[jobService] gagal ambil detail lowongan dari API, fallback ke mock:", err);
+      console.error("[jobService] gagal ambil detail lowongan dari API:", err);
     }
   }
-  return mockJobs.find((job) => job.id === id) ?? null;
+  return null;
 }
 
 export async function createJob(job: Omit<Job, "id" | "applicantCount">): Promise<Job> {

@@ -196,6 +196,47 @@ export async function getScreeningResult(applicationId: string): Promise<Screeni
   }
 }
 
+// --- Pre-screening (3 pertanyaan singkat sebelum wawancara AI yang lebih mahal) ---
+
+export interface PreScreenAnswer {
+  question: string;
+  answer: string;
+}
+
+export async function generatePreScreenQuestions(applicationId: string): Promise<string[]> {
+  const res = await apiFetch<{ questions: string[] }>(`/v1/applications/${applicationId}/prescreen/questions`, {
+    method: "POST",
+  });
+  return res.questions;
+}
+
+export interface PreScreenResult {
+  passed: boolean;
+  score: number;
+}
+
+export async function submitPreScreen(applicationId: string, responses: PreScreenAnswer[]): Promise<PreScreenResult> {
+  return apiFetch<PreScreenResult>(`/v1/applications/${applicationId}/prescreen/submit`, {
+    method: "POST",
+    body: JSON.stringify({ responses }),
+  });
+}
+
+export interface PreScreenGetResult {
+  status: string;
+  score: number | null;
+  items: PreScreenAnswer[];
+}
+
+export async function getPreScreenResult(applicationId: string): Promise<PreScreenGetResult | null> {
+  try {
+    return await apiFetch<PreScreenGetResult>(`/v1/applications/${applicationId}/prescreen`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
 // --- AI Interview (kamera+mic wajib buat proctoring, jawaban direkam suara) ---
 
 export async function generateInterviewQuestions(applicationId: string): Promise<string[]> {

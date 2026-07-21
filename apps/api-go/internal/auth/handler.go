@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/jwtutil"
@@ -25,6 +26,7 @@ var validate = validator.New()
 type Handler struct {
 	db                     *gorm.DB
 	issuer                 *jwtutil.Issuer
+	redisCache             *appcache.Cache
 	rateLimiter            func(http.Handler) http.Handler
 	requireAuth            func(http.Handler) http.Handler
 	sendPasswordResetEmail func(context.Context, string, string) error
@@ -34,6 +36,7 @@ type Handler struct {
 func NewHandler(
 	gdb *gorm.DB,
 	issuer *jwtutil.Issuer,
+	redisCache *appcache.Cache,
 	rateLimiter func(http.Handler) http.Handler,
 	requireAuth func(http.Handler) http.Handler,
 	sendPasswordResetEmail func(context.Context, string, string) error,
@@ -42,6 +45,7 @@ func NewHandler(
 	return &Handler{
 		db:                     gdb,
 		issuer:                 issuer,
+		redisCache:             redisCache,
 		rateLimiter:            rateLimiter,
 		requireAuth:            requireAuth,
 		sendPasswordResetEmail: sendPasswordResetEmail,
@@ -52,8 +56,12 @@ func NewHandler(
 // Router mendaftarkan seluruh endpoint auth di bawah /v1/auth. register &
 // login di-rate-limit ketat -- dua endpoint ini paling rawan
 // brute-force/credential-stuffing. Endpoint /me/* butuh login (ganti
-// password/email, hapus akun).
+// password/email, hapus akun) -- juga di-rate-limit, biar akun yang
+// kecompromise (token bocor) gak bisa dipakai buat spam ganti password/email
+// atau nyoba-nyoba delete berkali-kali.
 func (h *Handler) Router() chi.Router {
+	accountRateLimit := appmw.RateLimit(h.redisCache, "ratelimit:account", 5, 15*time.Minute)
+
 	r := chi.NewRouter()
 	r.With(h.rateLimiter).Post("/register", h.handleRegister)
 	r.With(h.rateLimiter).Post("/login", h.handleLogin)
@@ -62,9 +70,9 @@ func (h *Handler) Router() chi.Router {
 	r.Post("/refresh", h.handleRefreshToken)
 	r.Group(func(pr chi.Router) {
 		pr.Use(h.requireAuth)
-		pr.Patch("/me/password", h.handleChangePassword)
-		pr.Patch("/me/email", h.handleChangeEmail)
-		pr.Delete("/me", h.handleDeleteAccount)
+		pr.With(accountRateLimit).Patch("/me/password", h.handleChangePassword)
+		pr.With(accountRateLimit).Patch("/me/email", h.handleChangeEmail)
+		pr.With(accountRateLimit).Delete("/me", h.handleDeleteAccount)
 	})
 	return r
 }
