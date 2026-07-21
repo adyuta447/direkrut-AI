@@ -196,6 +196,23 @@ export async function getScreeningResult(applicationId: string): Promise<Screeni
   }
 }
 
+// --- Cross-role recommendation (lowongan lain yang cocok buat CV kandidat) ---
+//
+// Butuh kandidat ini udah discreen dulu (reuse ringkasan CV-nya) -- kalau
+// belum, backend balikin 422 screening_required.
+
+export interface CrossRoleMatch {
+  jobId: string;
+  jobTitle: string;
+  score: number;
+  matchedEvidence: string[];
+}
+
+export async function getCrossRoleRecommendations(applicationId: string): Promise<CrossRoleMatch[]> {
+  const data = await apiFetch<{ matches: CrossRoleMatch[] }>(`/v1/applications/${applicationId}/cross-role`);
+  return data.matches;
+}
+
 // --- Pre-screening (3 pertanyaan singkat sebelum wawancara AI yang lebih mahal) ---
 
 export interface PreScreenAnswer {

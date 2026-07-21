@@ -1,11 +1,14 @@
 "use client";
 
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
+import { IconAlertCircle, IconSearch, IconSparkles } from "@tabler/icons-react";
 import { useDashboard } from "@/context/DashboardContext";
-import { getExtendedData } from "@/lib/dashboard/extended-data";
+import { getCrossRoleRecommendations, type CrossRoleMatch } from "@/services/aiService";
+import { ApiError } from "@/services/apiClient";
+import { TypingDots } from "@/components/atoms/shared/TypingDots";
+import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -29,6 +32,15 @@ const COLORS = [
   "var(--chart-5)",
 ];
 
+// Auto-fetch cross-role buat N kandidat paling baru yang udah discreen --
+// dibatesin biar buka halaman ini gak langsung micu puluhan AI match call
+// sekaligus (tiap kandidat bisa nge-hit sampai 5 lowongan lain, tiap
+// lowongan = embed CV + embed lowongan + evidence LLM call). Kandidat di
+// luar cap tetap muncul, tinggal klik tombol buat cek manual.
+const AUTO_FETCH_LIMIT = 10;
+
+type MatchState = "loading" | "error" | CrossRoleMatch[];
+
 export default function CrossRoleRecommendationPage() {
   const { applications, jobs, refetchApplications } = useDashboard();
 
@@ -43,36 +55,74 @@ export default function CrossRoleRecommendationPage() {
   const [filterLabel, setFilterLabel] = useState("Semua Kategori");
   const [filterRole, setFilterRole] = useState("Semua Posisi Usulan");
   const [showChart, setShowChart] = useState(false);
+  const [matchesByApp, setMatchesByApp] = useState<Record<string, MatchState>>({});
+
+  // Kandidat yang udah discreen (recommendationScore keisi lewat
+  // ScoringResult) -- itu prasyarat buat cross-role, backend reuse
+  // ringkasan CV dari screening biar gak parse CV dua kali.
+  const screenedApplications = useMemo(
+    () =>
+      applications
+        .filter((a) => a.recommendationScore != null && a.status !== "rejected")
+        .sort((a, b) => (b.appliedDate > a.appliedDate ? 1 : -1)),
+    [applications],
+  );
+
+  const runCrossRole = useCallback(async (applicationId: string) => {
+    setMatchesByApp((prev) => ({ ...prev, [applicationId]: "loading" }));
+    try {
+      const matches = await getCrossRoleRecommendations(applicationId);
+      setMatchesByApp((prev) => ({ ...prev, [applicationId]: matches }));
+    } catch (err) {
+      console.error("[cross-role] gagal ambil rekomendasi:", err instanceof ApiError ? err.message : err);
+      setMatchesByApp((prev) => ({ ...prev, [applicationId]: "error" }));
+    }
+  }, []);
+
+  useEffect(() => {
+    screenedApplications.slice(0, AUTO_FETCH_LIMIT).forEach((app) => {
+      setMatchesByApp((prev) => {
+        if (prev[app.id] !== undefined) return prev;
+        void runCrossRole(app.id);
+        return { ...prev, [app.id]: "loading" };
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenedApplications]);
 
   const crossRoleList = useMemo(() => {
-    return applications
-      .map((app, index) => {
-        if (index % 3 === 0) return null;
-        const alternateJob = jobs[(index + 1) % jobs.length];
-        if (!alternateJob) return null;
-        const isHighlyRelevant = index % 2 === 0;
-        const label = isHighlyRelevant
-          ? "Sangat Relevan"
-          : "Potensi Adaptasi Cepat";
+    return screenedApplications.flatMap((app) => {
+      const state = matchesByApp[app.id];
+      if (!Array.isArray(state)) return [];
+      return state.map((m) => {
+        const isHighlyRelevant = m.score >= 70;
+        const label = isHighlyRelevant ? "Sangat Relevan" : "Potensi Adaptasi Cepat";
         return {
           id: app.id,
           candidateName: app.applicantName,
           originalRole: app.jobTitle,
-          suggestedRole: alternateJob.title,
+          suggestedRole: m.jobTitle,
           label,
           variant: isHighlyRelevant ? "default" : "secondary",
-          reason: isHighlyRelevant
-            ? `Keterampilan inti (transferable skills) selaras dengan kebutuhan ${alternateJob.title}.`
-            : `Fondasi kuat yang dapat disesuaikan untuk ${alternateJob.title} dengan masa onboarding minimal.`,
-          evidenceType: isHighlyRelevant ? "cv" : "interview",
-          evidence: isHighlyRelevant
-            ? `Kutipan CV: "Memimpin kolaborasi lintas divisi yang mengharuskan penggunaan prinsip kerja dari ${alternateJob.title}."`
-            : `Log Wawancara (08:21): "Meskipun posisi ini di luar keahlian utama saya, saya telah mengikuti sertifikasi dasar terkait departemen tersebut."`,
-          emailed: getExtendedData(app.applicantName).crossRoleEmailed,
+          reason: `Skor kecocokan ${Math.round(m.score)}% antara CV ${app.applicantName} dengan kualifikasi posisi ${m.jobTitle}, dihitung AI dari kemiripan skill & pengalaman.`,
+          evidenceType: "cv",
+          evidence: m.matchedEvidence.length > 0
+            ? m.matchedEvidence.join(" • ")
+            : "Kecocokan berdasarkan kemiripan semantik ringkasan CV dengan deskripsi lowongan.",
+          emailed: false,
         };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [applications, jobs]);
+      });
+    });
+  }, [screenedApplications, matchesByApp]);
+
+  const pendingApplications = useMemo(
+    () =>
+      screenedApplications.filter((app) => {
+        const state = matchesByApp[app.id];
+        return state === undefined || state === "loading" || state === "error" || (Array.isArray(state) && state.length === 0);
+      }),
+    [screenedApplications, matchesByApp],
+  );
 
   const uniqueLabels = useMemo(
     () => Array.from(new Set(crossRoleList.map((i) => i.label))),
@@ -82,6 +132,8 @@ export default function CrossRoleRecommendationPage() {
     () => Array.from(new Set(crossRoleList.map((i) => i.suggestedRole))),
     [crossRoleList],
   );
+
+  const filtersActive = searchTerm.trim() !== "" || filterLabel !== "Semua Kategori" || filterRole !== "Semua Posisi Usulan";
 
   const filteredList = crossRoleList.filter((item) => {
     const matchSearch =
@@ -140,18 +192,9 @@ export default function CrossRoleRecommendationPage() {
     },
   ];
 
-  const evidenceCounts = { cv: 0, interview: 0 };
-  filteredList.forEach((item) => {
-    if (item.evidenceType === "cv") evidenceCounts.cv++;
-    else evidenceCounts.interview++;
-  });
   const evidenceData = [
-    { name: "Kutipan CV", count: evidenceCounts.cv, fill: "var(--chart-2)" },
-    {
-      name: "Log Wawancara",
-      count: evidenceCounts.interview,
-      fill: "var(--chart-4)",
-    },
+    { name: "Kutipan CV", count: filteredList.length, fill: "var(--chart-2)" },
+    { name: "Log Wawancara", count: 0, fill: "var(--chart-4)" },
   ];
 
   if (jobs.length < 2) {
@@ -216,8 +259,9 @@ export default function CrossRoleRecommendationPage() {
               Cara Kerja AI Cross-Role
             </h3>
             <p className="text-sm text-white/85 mt-1">
-              AI otomatis nge-scan portofolio dan wawancara semua kandidat,
-              terus dicocokin sama posisi lain yang lagi kebuka.
+              AI cocokin ringkasan CV kandidat yang udah discreen sama
+              deskripsi lowongan aktif lainnya di company ini (skor kecocokan
+              &ge; 50%).
             </p>
           </div>
         </div>
@@ -278,10 +322,40 @@ export default function CrossRoleRecommendationPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {filteredList.map((item) => (
-          <CrossRoleCard key={item.id} item={item} />
+        {filteredList.map((item, idx) => (
+          <CrossRoleCard key={`${item.id}-${item.suggestedRole}-${idx}`} item={item} />
         ))}
-        {filteredList.length === 0 && (
+
+        {!filtersActive && pendingApplications.map((app) => {
+          const state = matchesByApp[app.id];
+          return (
+            <div
+              key={app.id}
+              className="rounded-3xl border border-dashed border-hairline bg-surface-1 p-6 flex flex-col items-center justify-center text-center gap-3 min-h-45"
+            >
+              <p className="font-semibold text-ink">{app.applicantName}</p>
+              <p className="text-xs text-ink-muted">Lamaran: {app.jobTitle}</p>
+              {state === "loading" ? (
+                <div className="flex items-center gap-2 text-ink-muted text-sm">
+                  <TypingDots /> Nyari lowongan lain yang cocok...
+                </div>
+              ) : state === "error" ? (
+                <>
+                  <p className="text-sm text-destructive">Gagal ambil rekomendasi.</p>
+                  <Button size="sm" onClick={() => runCrossRole(app.id)}>Coba lagi</Button>
+                </>
+              ) : Array.isArray(state) ? (
+                <p className="text-sm text-ink-muted">Belum ada posisi lain yang cukup cocok saat ini.</p>
+              ) : (
+                <Button size="sm" onClick={() => runCrossRole(app.id)}>
+                  <IconSparkles className="size-4 mr-1.5" /> Cari Rekomendasi
+                </Button>
+              )}
+            </div>
+          );
+        })}
+
+        {filteredList.length === 0 && pendingApplications.length === 0 && (
           <div className="col-span-full flex flex-col items-center rounded-2xl bg-surface-1 py-10 px-6 text-center">
             <Image
               src="/dashboard/decline.svg"
@@ -295,7 +369,9 @@ export default function CrossRoleRecommendationPage() {
               Belum ada rekomendasi yang cocok
             </p>
             <p className="mt-1 text-sm text-ink-muted">
-              Coba ganti kata kunci atau filternya ya.
+              {screenedApplications.length === 0
+                ? "Screening CV kandidat dulu di halaman detail lamaran biar AI bisa nyariin posisi lain yang cocok."
+                : "Coba ganti kata kunci atau filternya ya."}
             </p>
           </div>
         )}
