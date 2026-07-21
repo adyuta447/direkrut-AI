@@ -84,7 +84,9 @@ export function SettingsCandidateTabAccount() {
         <CardHeader>
           <CardTitle className="text-destructive">Hapus Akun</CardTitle>
           <CardDescription>
-            Hapus akunmu secara permanen beserta semua riwayat lamaran dan profil.
+            Semua data pribadimu (nama, kontak, profil, file CV) dihapus
+            permanen dari sistem -- termasuk file CV di penyimpanan. Riwayat
+            lamaran tetap tercatat secara anonim buat keperluan statistik HRD.
           </CardDescription>
         </CardHeader>
         <CardContent>

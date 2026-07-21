@@ -1,11 +1,11 @@
 import * as React from "react"
-import { IconVideo, IconPlayerPlay, IconAlertTriangle, IconSparkles } from "@tabler/icons-react"
+import { IconVideo, IconPlayerPlay, IconAlertTriangle, IconSparkles, IconBriefcase, IconFileText } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
-import { getInterviewResult, getInterviewAudioUrl, type InterviewResult } from "@/services/aiService"
+import { getInterviewResult, getInterviewAudioUrl, getScreeningResult, type InterviewResult, type ScreeningResult } from "@/services/aiService"
 
 interface CandidateDetailCVProps {
   candidate: Application & ExtendedCandidateData
@@ -117,65 +117,84 @@ function InterviewLogCard({ candidate }: { candidate: Application & ExtendedCand
   )
 }
 
+// Kartu "Portofolio & Riwayat" -- SEMUA isinya dari hasil parse CV AI yang
+// tersimpan (cv_parse_results, via GET /screening), gak ada lagi riwayat
+// kerja/sertifikasi karangan. Kalau AI-nya belum ngambil data itu (parse CV
+// cuma ngasih ringkasan + skill + estimasi tahun), ya gak ditampilin --
+// lebih jujur kosong daripada nampilin "Perusahaan Tech XYZ" palsu ke HRD.
+function PortfolioCard({ candidate }: { candidate: Application & ExtendedCandidateData }) {
+  const [screening, setScreening] = React.useState<ScreeningResult | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    let cancelled = false
+    getScreeningResult(candidate.id)
+      .then((result) => { if (!cancelled) setScreening(result) })
+      .catch(() => { /* kartu ini opsional -- kalau gagal, tampil state kosong */ })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
+  }, [candidate.id])
+
+  return (
+    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
+      <CardHeader className="rounded-t-3xl bg-brand-accent-strong py-5 text-white">
+        <CardTitle className="text-[20px] font-semibold text-white">Portofolio &amp; Riwayat Kandidat</CardTitle>
+        <CardDescription className="text-white/80">Diambil otomatis dari CV yang diunggah kandidat, dibaca AI</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        {isLoading ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface-1 p-6 text-ink-muted">
+            <TypingDots /> Ngambil hasil baca CV...
+          </div>
+        ) : !screening ? (
+          <div className="rounded-2xl border border-dashed border-hairline bg-surface-1 p-6 text-center space-y-2">
+            <IconFileText className="size-8 text-muted-foreground/50 mx-auto" />
+            <p className="text-[15px] font-semibold text-ink">CV kandidat belum dibaca AI</p>
+            <p className="text-sm text-ink-muted">Jalankan Screening AI dulu di tab Analisis -- ringkasan CV &amp; skill kandidat bakal muncul di sini.</p>
+          </div>
+        ) : (
+          <>
+            {screening.cvSummary && (
+              <div>
+                <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Ringkasan CV (dari AI)</h4>
+                <p className="text-[15px] leading-relaxed p-5 bg-surface-1 border border-hairline rounded-2xl italic text-ink">
+                  &quot;{screening.cvSummary}&quot;
+                </p>
+              </div>
+            )}
+            {screening.workExperienceYears != null && (
+              <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface-1 p-5">
+                <IconBriefcase className="size-6 text-primary shrink-0" />
+                <div>
+                  <p className="text-2xl font-semibold text-ink tabular-nums">{screening.workExperienceYears} tahun</p>
+                  <p className="text-xs text-ink-muted">estimasi pengalaman kerja relevan (dibaca AI dari CV)</p>
+                </div>
+              </div>
+            )}
+            {screening.skills.length > 0 && (
+              <div>
+                <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Skill Terdeteksi dari CV</h4>
+                <div className="flex flex-wrap gap-2">
+                  {screening.skills.map((skill) => (
+                    <span key={skill} className="rounded-full bg-surface-1 border border-hairline px-3 py-1 text-xs font-medium text-ink">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function CandidateDetailCV({ candidate }: CandidateDetailCVProps) {
   return (
     <div className="space-y-6">
       <InterviewLogCard candidate={candidate} />
-
-      <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
-        <CardHeader className="rounded-t-3xl bg-brand-accent-strong py-5 text-white">
-          <CardTitle className="text-[20px] font-semibold text-white">Portofolio &amp; Riwayat Kandidat</CardTitle>
-          <CardDescription className="text-white/80">Diambil otomatis dari CV dan dokumen yang diunggah</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div>
-            <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Ringkasan Pengalaman Kerja (dari AI)</h4>
-            <p className="text-[15px] leading-relaxed p-5 bg-surface-1 border border-hairline rounded-2xl italic text-ink">
-              &quot;{candidate.experienceSummary}&quot;
-            </p>
-          </div>
-          <div>
-            <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Profil Singkat</h4>
-            <p className="text-sm leading-relaxed">
-              Profil dasarnya udah sesuai sama kualifikasi awal <strong>{candidate.jobTitle}</strong>. Layak banget lanjut ke tahap berikutnya.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Pengalaman Kerja</h4>
-            <div className="relative border-l-2 border-muted ml-3 space-y-6">
-              <div className="relative pl-6">
-                <div className="absolute w-3 h-3 bg-primary rounded-full -left-[7px] top-1.5 ring-4 ring-background" />
-                <h5 className="font-semibold">{candidate.lastPosition || "Staff Senior"}</h5>
-                <p className="text-sm text-muted-foreground">Perusahaan Tech XYZ • Jan 2021 - Sekarang (2 Tahun 8 Bulan)</p>
-                <p className="text-sm mt-2">Memimpin tim beranggotakan 5 orang dan berhasil menaikkan metrik kesuksesan proyek hingga 20%.</p>
-              </div>
-              <div className="relative pl-6">
-                <div className="absolute w-3 h-3 bg-muted-foreground rounded-full -left-[7px] top-1.5 ring-4 ring-background" />
-                <h5 className="font-semibold">Junior Staff</h5>
-                <p className="text-sm text-muted-foreground">Startup Kreatif Nusantara • Mei 2019 - Des 2020 (1 Tahun 7 Bulan)</p>
-                <p className="text-sm mt-2">Membantu administrasi proyek dan pengolahan data pelanggan secara reguler.</p>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Sertifikasi</h4>
-              <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
-                <li>Sertifikasi Manajemen Proyek Profesional (PMP) - 2022</li>
-                <li>Google Data Analytics Certificate - 2021</li>
-                <li>AWS Certified Cloud Practitioner - 2020</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-[17px] font-semibold text-ink border-b border-hairline pb-2 mb-4">Pencapaian &amp; Prestasi</h4>
-              <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
-                <li>Karyawan Terbaik (Employee of the Year) - 2022</li>
-                <li>Juara 1 Lomba Analisis Data Tingkat Nasional - 2019</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <PortfolioCard candidate={candidate} />
     </div>
   )
 }

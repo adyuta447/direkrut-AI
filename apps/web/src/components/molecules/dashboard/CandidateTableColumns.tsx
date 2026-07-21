@@ -141,7 +141,7 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
     accessorKey: "applicantName",
     header: ({ column }) => <SortableHeader label="Nama & Domisili" column={column} />,
     cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
+      const ext = getExtendedData(row.original)
       return (
         <CandidateTableCellViewer
           item={row.original}
@@ -199,7 +199,7 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
+      const ext = getExtendedData(row.original)
       return <div className="text-sm whitespace-nowrap">{ext.experience}</div>
     },
   },
@@ -211,11 +211,13 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
+      const ext = getExtendedData(row.original)
+      const latest = row.original.candidateProfile?.experience?.[0]
+      const period = [latest?.startDate, latest?.endDate || (latest ? "Sekarang" : "")].filter(Boolean).join(" - ")
       return (
         <div className="flex flex-col gap-1 py-2">
           <div className="font-semibold text-sm">{ext.lastPosition}</div>
-          <div className="text-xs text-muted-foreground">Okt 2022 - Saat Ini</div>
+          {period && <div className="text-xs text-muted-foreground">{period}</div>}
         </div>
       )
     },
@@ -228,7 +230,7 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
+      const ext = getExtendedData(row.original)
       const lines = ext.education.split("\n")
       return (
         <div className="flex flex-col gap-1 py-2">
@@ -256,24 +258,8 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
+      const ext = getExtendedData(row.original)
       return <div className="text-sm">{ext.gender}</div>
-    },
-  },
-  {
-    id: "lastActive",
-    header: () => (
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Terakhir Aktif
-      </div>
-    ),
-    cell: ({ row }) => {
-      const ext = getExtendedData(row.original.applicantName)
-      return (
-        <div className="text-sm whitespace-nowrap text-muted-foreground">
-          {ext.lastActive}
-        </div>
-      )
     },
   },
   {

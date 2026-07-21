@@ -9,14 +9,16 @@ interface CandidateContactGridProps {
 }
 
 export function CandidateContactGrid({ candidate, onToggleChart, showChart }: CandidateContactGridProps) {
+  // Semua nilai dari profil asli kandidat -- yang belum diisi tampil "—",
+  // bukan data karangan.
   const rows = [
-    { label: "Nomor WA", val: candidate.phone || "+62 812-XXXX-XXXX" },
-    { label: "Email", val: `${candidate.applicantName.toLowerCase().replace(/\s/g, "")}@email.com` },
-    { label: "Domisili", val: candidate.domicile || "Jakarta Selatan" },
-    { label: "Pengalaman", val: candidate.experience || "3 Tahun" },
-    { label: "Posisi Terakhir", val: candidate.lastPosition || "Staff" },
-    { label: "Pendidikan", val: candidate.education || "S1 Sistem Informasi" },
-    { label: "Tanggal Melamar", val: candidate.appliedDate },
+    { label: "Nomor WA", val: candidate.phone || "—" },
+    { label: "Email", val: candidate.email || "—" },
+    { label: "Domisili", val: candidate.domicile },
+    { label: "Pengalaman", val: candidate.experience },
+    { label: "Posisi Terakhir", val: candidate.lastPosition },
+    { label: "Pendidikan", val: candidate.education.split("\n")[0] },
+    { label: "Tanggal Melamar", val: new Date(candidate.appliedDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) },
   ]
 
   return (

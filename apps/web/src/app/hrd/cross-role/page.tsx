@@ -42,7 +42,7 @@ const AUTO_FETCH_LIMIT = 10;
 type MatchState = "loading" | "error" | CrossRoleMatch[];
 
 export default function CrossRoleRecommendationPage() {
-  const { applications, jobs, refetchApplications } = useDashboard();
+  const { applications, refetchApplications } = useDashboard();
 
   // Sama kayak hrd/page.tsx -- context cuma fetch sekali pas login, refetch
   // di sini biar lamaran baru kelihatan tanpa reload penuh.
@@ -197,30 +197,6 @@ export default function CrossRoleRecommendationPage() {
     { name: "Log Wawancara", count: 0, fill: "var(--chart-4)" },
   ];
 
-  if (jobs.length < 2) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-4 lg:p-8 min-h-[70vh]">
-        <div className="flex flex-col items-center rounded-3xl border border-hairline bg-canvas p-10 text-center max-w-lg">
-          <Image
-            src="/dashboard/add_file.svg"
-            alt=""
-            width={220}
-            height={165}
-            unoptimized
-            className="pointer-events-none mb-6 h-32 w-auto select-none"
-          />
-          <h2 className="text-2xl font-bold mb-2 text-ink">
-            Lowongan Aktifnya Kurang dari 2 Nih
-          </h2>
-          <p className="text-ink-muted max-w-md">
-            AI Cross-Role butuh minimal 2 lowongan yang buka bareng biar bisa
-            mulai nyariin kandidat lintas posisi. Yuk tambah lowongan dulu.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -260,8 +236,10 @@ export default function CrossRoleRecommendationPage() {
             </h3>
             <p className="text-sm text-white/85 mt-1">
               AI cocokin ringkasan CV kandidat yang udah discreen sama
-              deskripsi lowongan aktif lainnya di company ini (skor kecocokan
-              &ge; 50%).
+              deskripsi lowongan aktif <strong>lainnya</strong> di company ini
+              -- cuma match dengan skor &ge; 50% DAN bukti kecocokan konkret
+              yang ditampilin. Butuh minimal 2 lowongan aktif di company kamu
+              biar ada posisi alternatif buat dicocokin.
             </p>
           </div>
         </div>
@@ -345,7 +323,10 @@ export default function CrossRoleRecommendationPage() {
                   <Button size="sm" onClick={() => runCrossRole(app.id)}>Coba lagi</Button>
                 </>
               ) : Array.isArray(state) ? (
-                <p className="text-sm text-ink-muted">Belum ada posisi lain yang cukup cocok saat ini.</p>
+                <p className="text-sm text-ink-muted">
+                  Belum ada posisi lain yang cukup cocok. Pastikan ada lowongan
+                  aktif lain di company kamu selain yang dia lamar.
+                </p>
               ) : (
                 <Button size="sm" onClick={() => runCrossRole(app.id)}>
                   <IconSparkles className="size-4 mr-1.5" /> Cari Rekomendasi

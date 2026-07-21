@@ -1,4 +1,3 @@
-import { getExtendedData } from "@/lib/dashboard/extended-data";
 import type { Application } from "@/lib/types";
 
 export interface AnalyticsDatum {
@@ -38,23 +37,19 @@ export function useCandidateAnalytics(jobApplications: Application[]) {
     { name: "Kurang", count: scoreCounts["Kurang"], fill: "var(--destructive)" },
   ].filter((d) => (d.count ?? 0) > 0);
 
-  const expCounts = { "Fresh Graduate": 0, "1-3 Tahun": 0, ">3 Tahun": 0 };
+  // Breakdown pengalaman dari jumlah entri kerja ASLI di profil kandidat
+  // (bukan lagi angka sintetis dari hash nama).
+  const expCounts = { "Fresh Graduate": 0, "1-2 Pengalaman": 0, "3+ Pengalaman": 0 };
   jobApplications.forEach((app) => {
-    const ext = getExtendedData(app.applicantName);
-    const expStr = ext.experience;
-    if (expStr === "Fresh Graduate") expCounts["Fresh Graduate"]++;
-    else if (expStr.includes("thn")) {
-      const years = parseInt(expStr.split("thn")[0].trim());
-      if (years >= 3) expCounts[">3 Tahun"]++;
-      else expCounts["1-3 Tahun"]++;
-    } else {
-      expCounts["Fresh Graduate"]++;
-    }
+    const n = app.candidateProfile?.experience?.length ?? 0;
+    if (n === 0) expCounts["Fresh Graduate"]++;
+    else if (n <= 2) expCounts["1-2 Pengalaman"]++;
+    else expCounts["3+ Pengalaman"]++;
   });
   const expData: AnalyticsDatum[] = [
     { name: "Fresh Graduate", count: expCounts["Fresh Graduate"], fill: "var(--chart-1)" },
-    { name: "1-3 Tahun", count: expCounts["1-3 Tahun"], fill: "var(--chart-3)" },
-    { name: ">3 Tahun", count: expCounts[">3 Tahun"], fill: "var(--chart-5)" },
+    { name: "1-2 Pengalaman", count: expCounts["1-2 Pengalaman"], fill: "var(--chart-3)" },
+    { name: "3+ Pengalaman", count: expCounts["3+ Pengalaman"], fill: "var(--chart-5)" },
   ].filter((d) => (d.count ?? 0) > 0);
 
   return { statusData, scoreData, expData };

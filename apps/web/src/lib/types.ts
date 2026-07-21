@@ -32,6 +32,19 @@ export interface Job {
   timeline?: { from: string; to: string };
 }
 
+/** Potongan profil asli kandidat (diisi kandidat di halaman profilnya),
+ * dikirim backend di listing/detail lamaran buat dashboard HRD. */
+export interface CandidateProfileSummary {
+  location?: string;
+  gender?: string;
+  age?: number;
+  headline?: string;
+  phone?: string;
+  email?: string;
+  experience?: { role?: string; company?: string; startDate?: string; endDate?: string }[];
+  education?: { school?: string; degree?: string; startYear?: string; endYear?: string }[];
+}
+
 export interface Application {
   id: string;
   applicantId: string;
@@ -55,10 +68,7 @@ export interface Application {
   email?: string;
   phone?: string;
   category?: "fresh-graduate" | "professional";
-  isJobHopper?: boolean;
-  experienceSummary?: string;
-  waitingDays?: number;
-  crossRoleEmailed?: boolean;
+  candidateProfile?: CandidateProfileSummary;
 }
 
 export interface ValidationResponse {

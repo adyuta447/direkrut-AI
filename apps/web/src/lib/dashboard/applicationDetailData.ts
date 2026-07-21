@@ -7,8 +7,8 @@ import type { Application, Job } from "@/lib/types";
  * ada JSX. Transkrip wawancara AI diambil terpisah lewat aiService.getInterviewResult
  * (butuh fetch async, gak cocok di helper sinkron ini). */
 export function getApplicationDetailData(application: Application, job: Job, applications: Application[], jobs: Job[]) {
-  const ext = getExtendedData(application.applicantName);
-  const isFreshGrad = application.category === "fresh-graduate" || ext.category === "fresh-graduate";
+  const ext = getExtendedData(application);
+  const isFreshGrad = ext.category === "fresh-graduate";
   const jobApplications = applications.filter((a) => a.jobId === application.jobId);
   const companyJobs = jobs.filter((j) => j.company === job.company);
   const jobRejected = jobApplications.filter((a) => a.status === "rejected").length;

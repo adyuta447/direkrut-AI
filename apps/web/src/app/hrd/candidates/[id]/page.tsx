@@ -43,7 +43,7 @@ export default function CandidateDetailPage() {
   }, [params.id])
 
   const candidate = rawCandidate
-    ? { ...rawCandidate, ...getExtendedData(rawCandidate.id) }
+    ? { ...rawCandidate, ...getExtendedData(rawCandidate) }
     : null
 
   if (!candidate) {

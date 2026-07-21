@@ -457,7 +457,11 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
                   />
                 </div>
                 <span className="text-sm select-none group-hover:text-foreground text-muted-foreground transition-colors">
-                  Saya telah membaca dan menyetujui semua aturan di atas. Saya siap mengikuti wawancara dengan jujur.
+                  Saya menyetujui aturan di atas dan <strong>setuju</strong> rekaman
+                  suara, transkrip jawaban, dan cuplikan frame kamera saya
+                  diproses oleh layanan AI untuk penilaian wawancara ini. Hasilnya
+                  hanya dilihat HRD perusahaan terkait, dan keputusan akhir tetap
+                  dibuat manusia -- bukan AI.
                 </span>
               </label>
             </div>

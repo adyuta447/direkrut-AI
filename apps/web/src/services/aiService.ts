@@ -25,10 +25,38 @@ export interface ChatStreamChunk {
   latency_ms?: number;
 }
 
+export interface ParsedWorkHistoryItem {
+  role: string;
+  company: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}
+
+export interface ParsedEducationItem {
+  school: string;
+  degree: string;
+  start_year: string;
+  end_year: string;
+}
+
+export interface ParsedLinkItem {
+  platform: string;
+  url: string;
+}
+
 export interface ParseCVResult {
   summary: string;
   skills: string[];
   work_experience_years: number | null;
+  name?: string;
+  location?: string;
+  phone?: string;
+  age?: number | null;
+  gender?: string;
+  links?: ParsedLinkItem[];
+  work_history?: ParsedWorkHistoryItem[];
+  education?: ParsedEducationItem[];
 }
 
 export interface ScoreValidationResult {

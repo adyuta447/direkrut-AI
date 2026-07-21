@@ -67,7 +67,7 @@ func main() {
 	aiClient := aiengine.NewClient(cfg.AIEngineBaseURL, cfg.InternalAPIKey)
 	aiHandler := aiengine.NewHandler(aiClient, requireAuth)
 
-	authHandler := auth.NewHandler(gdb, issuer, redisCache, authRateLimit, requireAuth, sendPasswordResetEmail, cfg.WebOrigin)
+	authHandler := auth.NewHandler(gdb, issuer, redisCache, authRateLimit, requireAuth, sendPasswordResetEmail, cfg.WebOrigin, storageClient)
 	jobHandler := job.NewHandler(gdb, redisCache, storageClient, requireAuth)
 	applicationHandler := application.NewHandler(gdb, redisCache, mailerClient, aiClient, storageClient, requireAuth)
 	candidateHandler := candidate.NewHandler(gdb, storageClient, requireAuth)

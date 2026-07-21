@@ -32,13 +32,13 @@ export type { Candidate }
 
 const AI_VISIBILITY: VisibilityState = {
   whatsapp: false, experience: false, lastPosition: false,
-  education: false, gender: false, lastActive: false,
+  education: false, gender: false,
   jobTitle: true, recommendationScore: true, status: true,
 }
 
 const DETAIL_VISIBILITY: VisibilityState = {
   whatsapp: true, experience: true, lastPosition: true,
-  education: true, gender: true, lastActive: true,
+  education: true, gender: true,
   jobTitle: false, recommendationScore: false, status: false,
 }
 

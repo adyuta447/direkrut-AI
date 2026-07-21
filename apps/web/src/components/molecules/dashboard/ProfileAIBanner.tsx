@@ -39,6 +39,7 @@ export function ProfileAIBanner({ isUploading, isSimulatingAI, onFileSelected }:
         </CardTitle>
         <CardDescription className="text-base text-white/80">
           Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/JPG/PNG), biar Direkrut AI yang ngisiin profilnya.
+          CV di sini cuma buat bantu ngelengkapin profil -- CV lamaran yang dikirim ke HRD kamu upload pas melamar.
         </CardDescription>
       </CardHeader>
       <CardContent className="relative z-10">
