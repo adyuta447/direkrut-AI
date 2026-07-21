@@ -19,6 +19,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.logging import log_ai_call
+from app.prompt_guard import INJECTION_GUARD
 from app.providers import get_provider_for_task
 from app.rate_limit import limit
 
@@ -33,6 +34,7 @@ _CHAT_SYSTEM_PROMPT = (
     "Jawab dalam bahasa Indonesia yang profesional tapi tetap ramah. "
     "Kalau ditanya di luar konteks HR/rekrutmen, arahkan kembali ke topik "
     "yang relevan dengan sopan."
+    "\n\n" + INJECTION_GUARD
 )
 
 

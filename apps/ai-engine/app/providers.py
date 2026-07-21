@@ -97,7 +97,7 @@ class OpenAIProvider(AIProvider):
 
 
 class GeminiProvider(AIProvider):
-    EMBED_MODEL = "models/text-embedding-004"
+    EMBED_MODEL = "models/gemini-embedding-001"
     COMPLETE_MODEL = "gemini-flash-lite-latest"
 
     def __init__(self) -> None:
@@ -230,7 +230,7 @@ def get_provider(name: str | None = None) -> AIProvider:
 _TASK_PROVIDER_MAP: dict[str, str] = {
     "complete": "groq",       # Llama 3.3 70B -- cepat, gratis
     "stream": "groq",         # Streaming chat -- low latency
-    "embed": "gemini",        # text-embedding-004 -- Groq gak punya
+    "embed": "gemini",        # gemini-embedding-001 -- Groq gak punya
     "vision": "gemini",       # Flash Lite -- Groq gak support vision
     "transcribe": "groq",     # Whisper large v3
 }

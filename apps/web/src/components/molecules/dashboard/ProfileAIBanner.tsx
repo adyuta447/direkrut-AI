@@ -1,3 +1,4 @@
+import * as React from "react"
 import Image from "next/image"
 import { BotIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,10 +21,12 @@ function AILoadingState({ title, subtitle }: { title: string; subtitle: string }
 interface ProfileAIBannerProps {
   isUploading: boolean
   isSimulatingAI: boolean
-  onUploadClick: () => void
+  onFileSelected: (file: File) => void
 }
 
-export function ProfileAIBanner({ isUploading, isSimulatingAI, onUploadClick }: ProfileAIBannerProps) {
+export function ProfileAIBanner({ isUploading, isSimulatingAI, onFileSelected }: ProfileAIBannerProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
   return (
     <Card className="rounded-3xl border border-hairline bg-primary text-white shadow-none ring-0 overflow-hidden relative">
       <div className="absolute top-0 right-0 p-4 opacity-15">
@@ -35,7 +38,7 @@ export function ProfileAIBanner({ isUploading, isSimulatingAI, onUploadClick }: 
           Isi Profil Otomatis dengan AI
         </CardTitle>
         <CardDescription className="text-base text-white/80">
-          Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/DOCX), biar Direkrut AI yang ngisiin profilnya.
+          Nggak usah ngetik manual dari nol. Upload CV kamu (PDF/JPG/PNG), biar Direkrut AI yang ngisiin profilnya.
         </CardDescription>
       </CardHeader>
       <CardContent className="relative z-10">
@@ -46,8 +49,19 @@ export function ProfileAIBanner({ isUploading, isSimulatingAI, onUploadClick }: 
         ) : (
           <div
             className="border-2 border-dashed border-white/40 bg-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer hover:border-white"
-            onClick={onUploadClick}
+            onClick={() => inputRef.current?.click()}
           >
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onFileSelected(file)
+                e.target.value = ""
+              }}
+            />
             <div className="flex flex-col items-center gap-4">
               <Image src="/dashboard/add_file.svg" alt="" width={160} height={120} unoptimized className="pointer-events-none h-24 w-auto select-none" />
               <div>

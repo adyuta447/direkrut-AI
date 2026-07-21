@@ -142,6 +142,33 @@ type MatchResponse struct {
 	MatchedEvidence []string `json:"matched_evidence"`
 }
 
+type GenerateQuestionsRequest struct {
+	JobDescription string  `json:"job_description"`
+	CVSummary      *string `json:"cv_summary,omitempty"`
+}
+
+type GenerateQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
+type GeneratePreScreenQuestionsRequest struct {
+	JobDescription string `json:"job_description"`
+}
+
+type GeneratePreScreenQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
+type ProctorCheckRequest struct {
+	ApplicationID string `json:"application_id"`
+	ImageBase64   string `json:"image_base64"`
+}
+
+type ProctorCheckResponse struct {
+	Flagged bool    `json:"flagged"`
+	Reason  *string `json:"reason"`
+}
+
 type ChatMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
@@ -189,6 +216,30 @@ func (c *Client) EmbedText(ctx context.Context, req EmbedRequest) (*EmbedRespons
 func (c *Client) MatchCandidate(ctx context.Context, req MatchRequest) (*MatchResponse, error) {
 	var resp MatchResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/vector-search/match", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (c *Client) GenerateQuestions(ctx context.Context, req GenerateQuestionsRequest) (*GenerateQuestionsResponse, error) {
+	var resp GenerateQuestionsResponse
+	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-questions", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (c *Client) GeneratePreScreenQuestions(ctx context.Context, req GeneratePreScreenQuestionsRequest) (*GeneratePreScreenQuestionsResponse, error) {
+	var resp GeneratePreScreenQuestionsResponse
+	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-prescreen-questions", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (c *Client) ProctorCheck(ctx context.Context, req ProctorCheckRequest) (*ProctorCheckResponse, error) {
+	var resp ProctorCheckResponse
+	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/proctor-check", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil

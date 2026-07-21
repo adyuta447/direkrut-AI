@@ -5,8 +5,10 @@ package candidate
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -15,17 +17,19 @@ import (
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/storage"
 )
 
 var validate = validator.New()
 
 type Handler struct {
 	db          *gorm.DB
+	storage     *storage.Storage
 	requireAuth func(http.Handler) http.Handler
 }
 
-func NewHandler(gdb *gorm.DB, requireAuth func(http.Handler) http.Handler) *Handler {
-	return &Handler{db: gdb, requireAuth: requireAuth}
+func NewHandler(gdb *gorm.DB, s *storage.Storage, requireAuth func(http.Handler) http.Handler) *Handler {
+	return &Handler{db: gdb, storage: s, requireAuth: requireAuth}
 }
 
 func (h *Handler) Router() chi.Router {
@@ -34,6 +38,8 @@ func (h *Handler) Router() chi.Router {
 		pr.Use(h.requireAuth)
 		pr.With(appmw.RequireRole("candidate")).Get("/me", h.handleGetMe)
 		pr.With(appmw.RequireRole("candidate")).Put("/me", h.handleUpdateMe)
+		pr.With(appmw.RequireRole("candidate")).Post("/me/cv-upload-url", h.handleCVUploadURL)
+		pr.With(appmw.RequireRole("candidate")).Patch("/me/cv", h.handleSaveCV)
 	})
 	return r
 }
@@ -70,6 +76,7 @@ type profileResponse struct {
 	About      string           `json:"about,omitempty"`
 	PhotoURL   string           `json:"photoUrl,omitempty"`
 	CoverURL   string           `json:"coverUrl,omitempty"`
+	CvFileURL  string           `json:"cvFileUrl,omitempty"`
 	Experience []experienceItem `json:"experience"`
 	Education  []educationItem  `json:"education"`
 	Links      []linkItem       `json:"links"`
@@ -82,6 +89,7 @@ func toProfileResponse(c appdb.Candidate, skills []string) profileResponse {
 		Age: c.Age, Gender: derefStr(c.Gender), About: derefStr(c.About),
 		PhotoURL:   derefStr(c.PhotoURL),
 		CoverURL:   derefStr(c.CoverURL),
+		CvFileURL:  derefStr(c.CvFileURL),
 		Experience: unmarshalOrEmpty[experienceItem](c.Experience),
 		Education:  unmarshalOrEmpty[educationItem](c.Education),
 		Links:      unmarshalOrEmpty[linkItem](c.Links),
@@ -241,4 +249,68 @@ func (h *Handler) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 	skills, _ := h.loadSkillNames(ctx, c.ID)
 	httpx.WriteJSON(w, http.StatusOK, toProfileResponse(c, skills))
+}
+
+type cvUploadURLRequest struct {
+	Ext string `json:"ext" validate:"required,oneof=pdf jpg jpeg png"`
+}
+
+// handleCVUploadURL: presigned PUT buat CV kandidat, mirip persis pola
+// company.handleDocumentUploadURL -- objectKey per-candidate (bukan
+// per-lamaran), karena CV ini reusable lintas lamaran; AI screening
+// (internal/application handleScreen) baca dari Candidate.CvFileURL yang
+// diisi handleSaveCV di bawah.
+func (h *Handler) handleCVUploadURL(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CandidateID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun kandidat ini belum lengkap")
+		return
+	}
+
+	var req cvUploadURLRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+
+	objectKey := fmt.Sprintf("cv/%s/%d.%s", claims.CandidateID, time.Now().UnixNano(), req.Ext)
+	uploadURL, err := h.storage.PresignPutCV(r.Context(), objectKey, 10*time.Minute)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal buat upload URL")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"uploadUrl": uploadURL, "objectKey": objectKey})
+}
+
+type saveCVRequest struct {
+	ObjectKey string `json:"objectKey" validate:"required,max=500"`
+}
+
+func (h *Handler) handleSaveCV(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CandidateID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun kandidat ini belum lengkap")
+		return
+	}
+
+	var req saveCVRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+
+	if err := h.db.WithContext(r.Context()).Model(&appdb.Candidate{}).
+		Where("id = ?", claims.CandidateID).Update("cv_file_url", req.ObjectKey).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan CV")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }

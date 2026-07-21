@@ -22,9 +22,11 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from app.cache import get_or_set, make_cache_key
 from app.logging import log_ai_call
+from app.prompt_guard import INJECTION_GUARD, wrap_untrusted
 from app.providers import AIProvider, GeminiProvider, GroqProvider
 from app.rate_limit import limit
 from app.storage import download_object
@@ -37,6 +39,7 @@ _EXTRACTION_SYSTEM_PROMPT = (
     "Kamu adalah asisten HR yang mengekstrak informasi terstruktur dari CV. "
     "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
     '{"summary": string, "skills": [string], "work_experience_years": number|null}'
+    "\n\n" + INJECTION_GUARD
 )
 
 
@@ -52,8 +55,11 @@ class ParsedCV(BaseModel):
 
 
 def _extract_pdf_text(raw: bytes) -> str:
-    reader = PdfReader(io.BytesIO(raw))
-    return "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    try:
+        reader = PdfReader(io.BytesIO(raw))
+        return "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+    except PdfReadError as exc:
+        raise HTTPException(status_code=422, detail="PDF gak bisa dibaca (kemungkinan rusak/corrupt) -- coba upload ulang") from exc
 
 
 def _parse_ai_json(raw: str) -> ParsedCV:
@@ -98,7 +104,7 @@ async def _compute_parsed_cv(object_key: str) -> ParsedCV:
                 "rasterisasi PDF-ke-gambar di luar scope prototype ini",
             )
         provider = GroqProvider()
-        result = await provider.complete(text, system=_EXTRACTION_SYSTEM_PROMPT)
+        result = await provider.complete(wrap_untrusted("ISI_CV", text), system=_EXTRACTION_SYSTEM_PROMPT)
         provider_name, model_name = "groq", provider.COMPLETE_MODEL
     else:
         raise HTTPException(status_code=422, detail=f"format file '{extension or '(tanpa ekstensi)'}' belum didukung -- cuma PDF & gambar (jpg/png/webp)")

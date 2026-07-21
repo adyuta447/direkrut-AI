@@ -37,7 +37,6 @@ func New(ctx context.Context, endpoint, accessKey, secretKey, bucket string, use
 	return &Storage{presign: s3.NewPresignClient(client), bucket: bucket}, nil
 }
 
-
 func (s *Storage) PresignPutCV(ctx context.Context, objectKey string, expires time.Duration) (string, error) {
 	req, err := s.presign.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -45,6 +44,19 @@ func (s *Storage) PresignPutCV(ctx context.Context, objectKey string, expires ti
 	}, s3.WithPresignExpires(expires))
 	if err != nil {
 		return "", fmt.Errorf("storage: presign put: %w", err)
+	}
+	return req.URL, nil
+}
+
+// PresignGetObject terbitin presigned GET URL, dipakai HRD buat playback
+// audio jawaban interview kandidat tanpa api-go pernah nampung bytes-nya.
+func (s *Storage) PresignGetObject(ctx context.Context, objectKey string, expires time.Duration) (string, error) {
+	req, err := s.presign.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(objectKey),
+	}, s3.WithPresignExpires(expires))
+	if err != nil {
+		return "", fmt.Errorf("storage: presign get: %w", err)
 	}
 	return req.URL, nil
 }

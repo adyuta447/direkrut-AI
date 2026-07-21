@@ -34,7 +34,7 @@ async def test_get_or_set_only_computes_once_on_repeated_calls() -> None:
     first_value, first_hit = await get_or_set(key, compute)
     second_value, second_hit = await get_or_set(key, compute)
 
-    assert call_count == 1  # compute() cuma dipanggil sekali, bukan dua kali
+    assert call_count == 1 
     assert first_hit is False
     assert second_hit is True
     assert first_value == second_value == {"summary": "hasil mahal", "skills": ["python"]}

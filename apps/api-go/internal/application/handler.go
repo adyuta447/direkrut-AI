@@ -6,6 +6,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,12 +16,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
+	"github.com/adyuta447/direkrut-ai/api-go/internal/aiengine"
 	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
 	appdb "github.com/adyuta447/direkrut-ai/api-go/internal/db"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/mailer"
 	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/notification"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/storage"
 )
 
 var validate = validator.New()
@@ -30,14 +33,16 @@ type Handler struct {
 	redisCache  *appcache.Cache
 	requireAuth func(http.Handler) http.Handler
 	mailer      *mailer.Mailer
+	aiClient    *aiengine.Client
+	storage     *storage.Storage
 }
 
 // ponytail: no cache-aside buat data lamaran itu sendiri -- data privat
 // per-user, bukan listing publik bertrafik tinggi kayak jobs. redisCache di
 // sini cuma dipakai buat rate-limit endpoint yang ngirim email (lihat
 // Router()).
-func NewHandler(gdb *gorm.DB, redisCache *appcache.Cache, m *mailer.Mailer, requireAuth func(http.Handler) http.Handler) *Handler {
-	return &Handler{db: gdb, redisCache: redisCache, requireAuth: requireAuth, mailer: m}
+func NewHandler(gdb *gorm.DB, redisCache *appcache.Cache, m *mailer.Mailer, aiClient *aiengine.Client, storageClient *storage.Storage, requireAuth func(http.Handler) http.Handler) *Handler {
+	return &Handler{db: gdb, redisCache: redisCache, requireAuth: requireAuth, mailer: m, aiClient: aiClient, storage: storageClient}
 }
 
 func (h *Handler) Router() chi.Router {
@@ -54,21 +59,53 @@ func (h *Handler) Router() chi.Router {
 		pr.Get("/", h.handleListApplications)
 		pr.Get("/{applicationID}", h.handleGetApplication)
 		pr.With(appmw.RequireRole("hrd"), decisionRateLimit).Patch("/{applicationID}/status", h.handleUpdateStatus)
-		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/complete-interview", h.handleCompleteInterview)
+
+		// AI screening (HRD): parse CV kandidat + hitung match score vs
+		// deskripsi lowongan.
+		pr.With(appmw.RequireRole("hrd")).Post("/{applicationID}/screen", h.handleScreen)
+		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/screening", h.handleGetScreening)
+
+		// Pre-screening (kandidat): 3 pertanyaan singkat sebelum wawancara AI
+		// yang lebih mahal -- nyaring pelamar asal apply (lihat gate di
+		// handleInterviewQuestions).
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/prescreen/questions", h.handlePreScreenQuestions)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/prescreen/submit", h.handlePreScreenSubmit)
+		pr.Get("/{applicationID}/prescreen", h.handleGetPreScreen)
+
+		// AI interview (kandidat): pertanyaan digenerate AI, jawaban direkam
+		// suara + kamera wajib nyala buat proctoring, jawaban ditranskrip &
+		// dinilai di akhir sesi.
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/interview/questions", h.handleInterviewQuestions)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/interview/audio-upload-url", h.handleInterviewAudioUploadURL)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/interview/proctor-check", h.handleInterviewProctorCheck)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/interview/transcribe", h.handleInterviewTranscribe)
+		pr.With(appmw.RequireRole("candidate")).Post("/{applicationID}/interview/finalize", h.handleInterviewFinalize)
+		pr.Get("/{applicationID}/interview", h.handleGetInterview)
+		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/interview/audio/{questionIndex}", h.handleInterviewAudioURL)
 	})
 	return r
 }
 
+func (h *Handler) ensureAIConfigured(w http.ResponseWriter) bool {
+	if !h.aiClient.IsConfigured() {
+		httpx.WriteError(w, http.StatusServiceUnavailable, "ai_not_configured",
+			"AI engine belum dikonfigurasi (AI_ENGINE_BASE_URL dan INTERNAL_API_KEY harus diset)")
+		return false
+	}
+	return true
+}
+
 type applicationResponse struct {
-	ID            string    `json:"id"`
-	JobID         string    `json:"jobId"`
-	JobTitle      string    `json:"jobTitle,omitempty"`
-	CompanyName   string    `json:"companyName,omitempty"`
-	CandidateID   string    `json:"candidateId"`
-	CandidateName string    `json:"candidateName,omitempty"`
-	Status        string    `json:"status"`
-	AppliedAt     time.Time `json:"appliedAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID                  string    `json:"id"`
+	JobID               string    `json:"jobId"`
+	JobTitle            string    `json:"jobTitle,omitempty"`
+	CompanyName         string    `json:"companyName,omitempty"`
+	CandidateID         string    `json:"candidateId"`
+	CandidateName       string    `json:"candidateName,omitempty"`
+	Status              string    `json:"status"`
+	AppliedAt           time.Time `json:"appliedAt"`
+	UpdatedAt           time.Time `json:"updatedAt"`
+	RecommendationScore *float64  `json:"recommendationScore,omitempty"`
 }
 
 func toApplicationResponse(a appdb.Application) applicationResponse {
@@ -84,6 +121,10 @@ func toApplicationResponse(a appdb.Application) applicationResponse {
 	}
 	if a.Candidate != nil {
 		resp.CandidateName = a.Candidate.FullName
+	}
+	if a.ScoringResult != nil {
+		score := a.ScoringResult.OverallScore
+		resp.RecommendationScore = &score
 	}
 	return resp
 }
@@ -148,6 +189,21 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil lamaran yang baru dibuat")
 		return
 	}
+
+	// Screening AI jalan otomatis di background begitu lamaran masuk -- gak
+	// nunggu HRD klik tombol dulu (lihat diagram alur: Terima Lamaran ->
+	// Simpan ke Database -> Kirim ke AI Engine). Best-effort: appRow di sini
+	// udah punya Job+Candidate preloaded, jadi goroutine-nya gak perlu query
+	// ulang. request context BUKAN dipakai (bakal ke-cancel begitu response
+	// ini keburu dikirim), pakai context.Background() yang independen.
+	if appRow.Candidate != nil && appRow.Candidate.CvFileURL != nil && *appRow.Candidate.CvFileURL != "" && h.aiClient.IsConfigured() {
+		go func(app appdb.Application) {
+			if _, err := h.runScreening(context.Background(), &app); err != nil {
+				log.Printf("[application] auto-screening gagal buat lamaran %s: %v", app.ID, err)
+			}
+		}(appRow)
+	}
+
 	httpx.WriteJSON(w, http.StatusCreated, toApplicationResponse(appRow))
 }
 
@@ -158,7 +214,7 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ctx := r.Context()
-	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate")
+	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate").Preload("ScoringResult")
 
 	switch claims.Role {
 	case "candidate":
@@ -209,7 +265,6 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
-
 func (h *Handler) loadVisibleApplication(w http.ResponseWriter, r *http.Request) (*appdb.Application, bool) {
 	claims, ok := appmw.ClaimsFromContext(r.Context())
 	if !ok {
@@ -219,7 +274,7 @@ func (h *Handler) loadVisibleApplication(w http.ResponseWriter, r *http.Request)
 	appID := chi.URLParam(r, "applicationID")
 
 	var appRow appdb.Application
-	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").First(&appRow, "id = ?", appID).Error; err != nil {
+	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").First(&appRow, "id = ?", appID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran gak ditemukan")
 		return nil, false
 	}
@@ -327,13 +382,529 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
 }
 
-// handleCompleteInterview dipanggil kandidat sendiri begitu sesi wawancara AI
-// (simulasi client-side di /interview/[jobId]) kelar -- ini satu-satunya titik
-// di mana penyelesaian wawancara nyampe ke backend, jadi dashboard HRD (yang
-// baca ulang /v1/applications) akhirnya lihat lamaran pindah dari "submitted"
-// ke "under-review". Idempotent: dipanggil lagi pas status udah lewat
-// "submitted" cuma balikin state sekarang, gak error.
-func (h *Handler) handleCompleteInterview(w http.ResponseWriter, r *http.Request) {
+// --- AI screening (CV parse + job-match score) ---
+
+type screeningResponse struct {
+	CVSummary           string   `json:"cvSummary"`
+	Skills              []string `json:"skills"`
+	WorkExperienceYears *float64 `json:"workExperienceYears"`
+	OverallScore        float64  `json:"overallScore"`
+	// SimilarityScore/MatchedEvidence cuma keisi pas response ini datang
+	// langsung dari POST /screen yang baru ngitung -- gak dipersist (gak ada
+	// kolom buat evidence bullets di scoring_results), jadi GET /screening
+	// abis reload halaman nampilin skor angka aja tanpa bullet penjelasnya.
+	SimilarityScore float64  `json:"similarityScore,omitempty"`
+	MatchedEvidence []string `json:"matchedEvidence,omitempty"`
+}
+
+// handleScreen idempotent: kalau lamaran ini udah pernah discreen, balikin
+// hasil yang tersimpan daripada manggil AI ulang (buang-buang quota provider
+// buat hasil yang gak berubah -- CV & deskripsi lowongan yang sama bakal
+// balikin skor yang sama).
+func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var existingScore appdb.ScoringResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingScore).Error; err == nil {
+		resp := screeningResponse{OverallScore: existingScore.OverallScore}
+		var existingParse appdb.CVParseResult
+		if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error; err == nil {
+			var parsed aiengine.ParseCVResponse
+			if json.Unmarshal([]byte(existingParse.ParsedJSON), &parsed) == nil {
+				resp.CVSummary = parsed.Summary
+				resp.Skills = parsed.Skills
+				resp.WorkExperienceYears = parsed.WorkExperienceYears
+			}
+		}
+		httpx.WriteJSON(w, http.StatusOK, resp)
+		return
+	}
+
+	if appRow.Candidate == nil || appRow.Candidate.CvFileURL == nil || *appRow.Candidate.CvFileURL == "" {
+		httpx.WriteError(w, http.StatusUnprocessableEntity, "no_cv", "kandidat belum upload CV di profilnya")
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+
+	resp, err := h.runScreening(ctx, appRow)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", err.Error())
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, *resp)
+}
+
+// runScreening parse CV kandidat + hitung match score vs deskripsi lowongan,
+// lalu persist ke cv_parse_results & scoring_results. Dipanggil dari
+// handleScreen (manual, HRD klik tombol) DAN otomatis di goroutine
+// background begitu lamaran disubmit (lihat handleSubmitApplication) --
+// keduanya lewat jalur yang sama biar logic scoring gak kepisah dua tempat.
+func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (*screeningResponse, error) {
+	parsed, err := h.aiClient.ParseCV(ctx, aiengine.ParseCVRequest{
+		CVObjectKey: *appRow.Candidate.CvFileURL, ApplicationID: appRow.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gagal parse CV: %w", err)
+	}
+	parsedJSON, _ := json.Marshal(parsed)
+	cvResult := appdb.CVParseResult{
+		ApplicationID: appRow.ID, ParsedJSON: string(parsedJSON),
+		ExtractedYearsExperience: parsed.WorkExperienceYears, ParsedAt: time.Now(),
+	}
+	if err := h.db.WithContext(ctx).Create(&cvResult).Error; err != nil {
+		return nil, fmt.Errorf("gagal simpan hasil parse CV: %w", err)
+	}
+
+	jobDescription := appRow.Job.Description
+	if appRow.Job.Requirements != nil && *appRow.Job.Requirements != "" {
+		jobDescription += "\n\n" + *appRow.Job.Requirements
+	}
+	match, err := h.aiClient.MatchCandidate(ctx, aiengine.MatchRequest{
+		ApplicationID: appRow.ID, JobID: appRow.JobID,
+		CVSummary: parsed.Summary, JobDescription: jobDescription,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gagal hitung skor kecocokan: %w", err)
+	}
+	overallScore := match.SimilarityScore * 100
+	modelUsed := "groq+gemini"
+	scoreResult := appdb.ScoringResult{
+		ApplicationID: appRow.ID, OverallScore: overallScore, SkillMatchScore: &overallScore,
+		ModelUsed: &modelUsed, ScoredAt: time.Now(),
+	}
+	if err := h.db.WithContext(ctx).Create(&scoreResult).Error; err != nil {
+		return nil, fmt.Errorf("gagal simpan hasil skor: %w", err)
+	}
+
+	return &screeningResponse{
+		CVSummary: parsed.Summary, Skills: parsed.Skills, WorkExperienceYears: parsed.WorkExperienceYears,
+		OverallScore: overallScore, SimilarityScore: match.SimilarityScore, MatchedEvidence: match.MatchedEvidence,
+	}, nil
+}
+
+func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var scoreResult appdb.ScoringResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&scoreResult).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran ini belum discreen")
+		return
+	}
+	resp := screeningResponse{OverallScore: scoreResult.OverallScore}
+	var parseResult appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
+		var parsed aiengine.ParseCVResponse
+		if json.Unmarshal([]byte(parseResult.ParsedJSON), &parsed) == nil {
+			resp.CVSummary = parsed.Summary
+			resp.Skills = parsed.Skills
+			resp.WorkExperienceYears = parsed.WorkExperienceYears
+		}
+	}
+	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+// --- AI interview (pertanyaan digenerate AI, jawaban suara + proctoring kamera) ---
+
+type proctoringFlag struct {
+	At     time.Time `json:"at"`
+	Reason string    `json:"reason"`
+}
+
+// getOrCreateAssessment: satu Assessment per lamaran per track_type --
+// reused buat "ai_interview" (dipanggil pertama kali dari proctor-check ATAU
+// transcribe, mana yang duluan kejadian) dan "pre_screening" (dipanggil dari
+// handlePreScreenSubmit).
+func (h *Handler) getOrCreateAssessment(ctx context.Context, applicationID, trackType string) (*appdb.Assessment, error) {
+	var a appdb.Assessment
+	err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", applicationID, trackType).First(&a).Error
+	if err == nil {
+		return &a, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	now := time.Now()
+	a = appdb.Assessment{
+		ApplicationID: applicationID, TrackType: trackType, Status: "in_progress",
+		StartedAt: &now, ProctoringFlags: json.RawMessage("[]"),
+	}
+	if err := h.db.WithContext(ctx).Create(&a).Error; err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (h *Handler) appendProctoringFlag(ctx context.Context, applicationID string, reason *string) error {
+	a, err := h.getOrCreateAssessment(ctx, applicationID, "ai_interview")
+	if err != nil {
+		return err
+	}
+	var flags []proctoringFlag
+	_ = json.Unmarshal(a.ProctoringFlags, &flags)
+	r := ""
+	if reason != nil {
+		r = *reason
+	}
+	flags = append(flags, proctoringFlag{At: time.Now(), Reason: r})
+	updated, err := json.Marshal(flags)
+	if err != nil {
+		return err
+	}
+	return h.db.WithContext(ctx).Model(&appdb.Assessment{}).Where("id = ?", a.ID).Update("proctoring_flags", updated).Error
+}
+
+// preScreenPassThreshold: sengaja rendah -- tujuannya nyaring jawaban
+// kosong/asal-asalan, bukan nge-rank kualitas kandidat (itu porsi AI
+// screening + wawancara asli yang jauh lebih dalam).
+const preScreenPassThreshold = 40.0
+
+func (h *Handler) preScreenPassed(ctx context.Context, applicationID string) bool {
+	var a appdb.Assessment
+	err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", applicationID, "pre_screening").First(&a).Error
+	if err != nil {
+		return false
+	}
+	return a.Status == "completed" && a.Score != nil && *a.Score >= preScreenPassThreshold
+}
+
+type preScreenQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
+func (h *Handler) handlePreScreenQuestions(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	resp, err := h.aiClient.GeneratePreScreenQuestions(ctx, aiengine.GeneratePreScreenQuestionsRequest{
+		JobDescription: appRow.Job.Description,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal generate pertanyaan screening awal")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, preScreenQuestionsResponse{Questions: resp.Questions})
+}
+
+type preScreenSubmitRequest struct {
+	Responses []aiengine.ValidationAnswer `json:"responses" validate:"required,min=1"`
+}
+
+type preScreenResultResponse struct {
+	Passed bool    `json:"passed"`
+	Score  float64 `json:"score"`
+}
+
+func (h *Handler) handlePreScreenSubmit(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	var req preScreenSubmitRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	assessment, err := h.getOrCreateAssessment(ctx, appRow.ID, "pre_screening")
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan screening awal")
+		return
+	}
+	for i, resp := range req.Responses {
+		item := appdb.AssessmentItem{
+			AssessmentID: assessment.ID, QuestionText: resp.Question,
+			CandidateAnswer: &resp.Answer, OrderIndex: i,
+		}
+		if err := h.db.WithContext(ctx).Create(&item).Error; err != nil {
+			httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan jawaban screening awal")
+			return
+		}
+	}
+
+	scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{
+		ApplicationID: appRow.ID, Responses: req.Responses,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal nilai screening awal")
+		return
+	}
+
+	now := time.Now()
+	score := scoreResp.RecommendationScore
+	if err := h.db.WithContext(ctx).Model(&appdb.Assessment{}).Where("id = ?", assessment.ID).Updates(map[string]any{
+		"score": score, "status": "completed", "completed_at": now,
+	}).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan hasil screening awal")
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, preScreenResultResponse{Passed: score >= preScreenPassThreshold, Score: score})
+}
+
+type preScreenItemResponse struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+}
+
+type preScreenGetResponse struct {
+	Status string                  `json:"status"`
+	Score  *float64                `json:"score"`
+	Items  []preScreenItemResponse `json:"items"`
+}
+
+func (h *Handler) handleGetPreScreen(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", appRow.ID, "pre_screening").First(&assessment).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "belum ada screening awal")
+		return
+	}
+	var items []appdb.AssessmentItem
+	h.db.WithContext(ctx).Where("assessment_id = ?", assessment.ID).Order("order_index ASC").Find(&items)
+
+	itemResp := make([]preScreenItemResponse, 0, len(items))
+	for _, it := range items {
+		answer := ""
+		if it.CandidateAnswer != nil {
+			answer = *it.CandidateAnswer
+		}
+		itemResp = append(itemResp, preScreenItemResponse{Question: it.QuestionText, Answer: answer})
+	}
+	httpx.WriteJSON(w, http.StatusOK, preScreenGetResponse{Status: assessment.Status, Score: assessment.Score, Items: itemResp})
+}
+
+type interviewQuestionsResponse struct {
+	Questions []string `json:"questions"`
+}
+
+func (h *Handler) handleInterviewQuestions(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+	if !h.preScreenPassed(ctx, appRow.ID) {
+		httpx.WriteError(w, http.StatusForbidden, "prescreen_required", "selesaikan screening awal dulu sebelum mulai wawancara AI")
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+
+	var cvSummary *string
+	var parseResult appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
+		var parsed aiengine.ParseCVResponse
+		if json.Unmarshal([]byte(parseResult.ParsedJSON), &parsed) == nil && parsed.Summary != "" {
+			cvSummary = &parsed.Summary
+		}
+	}
+
+	resp, err := h.aiClient.GenerateQuestions(ctx, aiengine.GenerateQuestionsRequest{
+		JobDescription: appRow.Job.Description, CVSummary: cvSummary,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal generate pertanyaan interview")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, interviewQuestionsResponse{Questions: resp.Questions})
+}
+
+type audioUploadURLRequest struct {
+	QuestionIndex int `json:"questionIndex" validate:"gte=0"`
+}
+
+type audioUploadURLResponse struct {
+	UploadURL string `json:"uploadUrl"`
+	ObjectKey string `json:"objectKey"`
+}
+
+func (h *Handler) handleInterviewAudioUploadURL(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	var req audioUploadURLRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+
+	objectKey := fmt.Sprintf("interview-audio/%s/%d-%d.webm", appRow.ID, req.QuestionIndex, time.Now().UnixNano())
+	uploadURL, err := h.storage.PresignPutCV(r.Context(), objectKey, 10*time.Minute)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal buat upload URL")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, audioUploadURLResponse{UploadURL: uploadURL, ObjectKey: objectKey})
+}
+
+type proctorCheckRequest struct {
+	ImageBase64 string `json:"imageBase64" validate:"required"`
+}
+
+type proctorCheckResponse struct {
+	Flagged bool    `json:"flagged"`
+	Reason  *string `json:"reason"`
+}
+
+func (h *Handler) handleInterviewProctorCheck(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	var req proctorCheckRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	result, err := h.aiClient.ProctorCheck(ctx, aiengine.ProctorCheckRequest{
+		ApplicationID: appRow.ID, ImageBase64: req.ImageBase64,
+	})
+	if err != nil {
+		// Best-effort -- satu frame gagal dicek gak boleh gagalin sesi interview-nya.
+		log.Printf("[application] proctor-check gagal buat lamaran %s: %v", appRow.ID, err)
+		httpx.WriteJSON(w, http.StatusOK, proctorCheckResponse{Flagged: false})
+		return
+	}
+	if result.Flagged {
+		if err := h.appendProctoringFlag(ctx, appRow.ID, result.Reason); err != nil {
+			log.Printf("[application] gagal simpan proctoring flag: %v", err)
+		}
+	}
+	httpx.WriteJSON(w, http.StatusOK, proctorCheckResponse{Flagged: result.Flagged, Reason: result.Reason})
+}
+
+type transcribeRequest struct {
+	ObjectKey     string `json:"objectKey" validate:"required"`
+	QuestionIndex int    `json:"questionIndex" validate:"gte=0"`
+	QuestionText  string `json:"questionText" validate:"required"`
+}
+
+type transcribeResponse struct {
+	Transcript      string `json:"transcript"`
+	AnalysisSummary string `json:"analysisSummary"`
+}
+
+func (h *Handler) handleInterviewTranscribe(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	var req transcribeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+	ctx := r.Context()
+
+	result, err := h.aiClient.TranscribeInterview(ctx, aiengine.TranscribeInterviewRequest{
+		ApplicationID: appRow.ID, AudioObjectKey: req.ObjectKey,
+	})
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal transkrip jawaban")
+		return
+	}
+
+	assessment, err := h.getOrCreateAssessment(ctx, appRow.ID, "ai_interview")
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan transkrip")
+		return
+	}
+	answer := result.Transcript
+	objectKey := req.ObjectKey
+	// analysis_summary dari ai-engine ("Analisis Jawaban NLP" di diagram
+	// alur) dicatat di sini juga -- sebelumnya cuma dibalikin ke frontend
+	// buat konfirmasi sesaat, gak pernah kesimpen, jadi transkrip di HRD
+	// dashboard/candidate gak pernah nampilin analisis per-jawabannya.
+	analysisSummary := result.AnalysisSummary
+
+	// Upsert by (assessment_id, order_index) -- jawab ulang pertanyaan yang
+	// sama nimpa rekaman lama, bukan numpuk duplikat.
+	var existing appdb.AssessmentItem
+	err = h.db.WithContext(ctx).Where("assessment_id = ? AND order_index = ?", assessment.ID, req.QuestionIndex).First(&existing).Error
+	switch {
+	case err == nil:
+		h.db.WithContext(ctx).Model(&existing).Updates(map[string]any{
+			"candidate_answer": answer, "question_text": req.QuestionText, "audio_object_key": objectKey, "ai_feedback": analysisSummary,
+		})
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		item := appdb.AssessmentItem{
+			AssessmentID: assessment.ID, QuestionText: req.QuestionText,
+			CandidateAnswer: &answer, OrderIndex: req.QuestionIndex, AudioObjectKey: &objectKey, AIFeedback: &analysisSummary,
+		}
+		h.db.WithContext(ctx).Create(&item)
+	default:
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal simpan transkrip")
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, transcribeResponse{Transcript: result.Transcript, AnalysisSummary: result.AnalysisSummary})
+}
+
+type finalizeInterviewResponse struct {
+	Application         applicationResponse `json:"application"`
+	RecommendationScore *float64            `json:"recommendationScore"`
+	AuthenticityScore   map[string]float64  `json:"authenticityScore,omitempty"`
+}
+
+// handleInterviewFinalize dipanggil kandidat sendiri begitu semua pertanyaan
+// interview udah dijawab. Nilai jawaban lewat ScoreValidation, simpan skor
+// rekomendasi (recommendation_score) sebagai Assessment.Score, lalu -- kayak
+// handleCompleteInterview versi lama -- pindahin status lamaran "submitted"
+// ke "under-review". Idempotent buat status-flip-nya (dipanggil lagi abis
+// status lewat "submitted" gak error, cuma gak flip ulang); scoring-nya
+// sendiri dihitung ulang tiap kali dipanggil (nilai final, gak ada draft).
+func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request) {
 	claims, ok := appmw.ClaimsFromContext(r.Context())
 	if !ok {
 		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
@@ -343,32 +914,154 @@ func (h *Handler) handleCompleteInterview(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-
-	if appRow.Status != "submitted" {
-		httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
-		return
-	}
-
 	ctx := r.Context()
-	fromStatus := appRow.Status
-	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
-			Update("status", "under-review").Error; err != nil {
-			return err
-		}
-		history := appdb.ApplicationStatusHistory{
-			ApplicationID: appRow.ID, FromStatus: &fromStatus, ToStatus: "under-review",
-			ChangedBy: &claims.UserID, Note: nilIfEmpty("Kandidat menyelesaikan wawancara AI"),
-		}
-		return tx.Create(&history).Error
-	})
-	if txErr != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal update status lamaran")
+
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").First(&assessment).Error; err != nil {
+		httpx.WriteError(w, http.StatusUnprocessableEntity, "no_interview", "belum ada sesi interview yang direkam")
+		return
+	}
+	var items []appdb.AssessmentItem
+	h.db.WithContext(ctx).Where("assessment_id = ?", assessment.ID).Order("order_index ASC").Find(&items)
+	if len(items) == 0 {
+		httpx.WriteError(w, http.StatusUnprocessableEntity, "no_answers", "belum ada jawaban yang direkam")
 		return
 	}
 
-	appRow.Status = "under-review"
-	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
+	resp := finalizeInterviewResponse{}
+	if h.aiClient.IsConfigured() {
+		responses := make([]aiengine.ValidationAnswer, 0, len(items))
+		for _, it := range items {
+			answer := ""
+			if it.CandidateAnswer != nil {
+				answer = *it.CandidateAnswer
+			}
+			responses = append(responses, aiengine.ValidationAnswer{Question: it.QuestionText, Answer: answer})
+		}
+		scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{ApplicationID: appRow.ID, Responses: responses})
+		if err != nil {
+			log.Printf("[application] gagal score-validation buat lamaran %s: %v", appRow.ID, err)
+		} else {
+			now := time.Now()
+			score := scoreResp.RecommendationScore
+			h.db.WithContext(ctx).Model(&assessment).Updates(map[string]any{
+				"score": score, "status": "completed", "completed_at": now,
+			})
+			resp.RecommendationScore = &score
+			resp.AuthenticityScore = scoreResp.AuthenticityScore
+		}
+	}
+
+	if appRow.Status == "submitted" {
+		fromStatus := appRow.Status
+		txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
+				Update("status", "under-review").Error; err != nil {
+				return err
+			}
+			history := appdb.ApplicationStatusHistory{
+				ApplicationID: appRow.ID, FromStatus: &fromStatus, ToStatus: "under-review",
+				ChangedBy: &claims.UserID, Note: nilIfEmpty("Kandidat menyelesaikan wawancara AI"),
+			}
+			return tx.Create(&history).Error
+		})
+		if txErr != nil {
+			httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal update status lamaran")
+			return
+		}
+		appRow.Status = "under-review"
+	}
+
+	if appRow.Candidate != nil {
+		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "interview_completed",
+			"Wawancara AI selesai", "Wawancara AI kamu udah selesai dinilai. Cek hasilnya di halaman lamaran.")
+	}
+
+	resp.Application = toApplicationResponse(*appRow)
+	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+type interviewItemResponse struct {
+	QuestionIndex int    `json:"questionIndex"`
+	Question      string `json:"question"`
+	Answer        string `json:"answer"`
+	AIFeedback    string `json:"aiFeedback,omitempty"`
+}
+
+type interviewResultResponse struct {
+	Status              string                  `json:"status"`
+	RecommendationScore *float64                `json:"recommendationScore"`
+	Items               []interviewItemResponse `json:"items"`
+	ProctoringFlags     []proctoringFlag        `json:"proctoringFlags"`
+}
+
+func (h *Handler) handleGetInterview(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").First(&assessment).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "belum ada sesi interview")
+		return
+	}
+	var items []appdb.AssessmentItem
+	h.db.WithContext(ctx).Where("assessment_id = ?", assessment.ID).Order("order_index ASC").Find(&items)
+
+	itemResp := make([]interviewItemResponse, 0, len(items))
+	for _, it := range items {
+		answer := ""
+		if it.CandidateAnswer != nil {
+			answer = *it.CandidateAnswer
+		}
+		feedback := ""
+		if it.AIFeedback != nil {
+			feedback = *it.AIFeedback
+		}
+		itemResp = append(itemResp, interviewItemResponse{QuestionIndex: it.OrderIndex, Question: it.QuestionText, Answer: answer, AIFeedback: feedback})
+	}
+	var flags []proctoringFlag
+	_ = json.Unmarshal(assessment.ProctoringFlags, &flags)
+
+	httpx.WriteJSON(w, http.StatusOK, interviewResultResponse{
+		Status: assessment.Status, RecommendationScore: assessment.Score, Items: itemResp, ProctoringFlags: flags,
+	})
+}
+
+type interviewAudioURLResponse struct {
+	URL string `json:"url"`
+}
+
+func (h *Handler) handleInterviewAudioURL(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	questionIndex := chi.URLParam(r, "questionIndex")
+	ctx := r.Context()
+
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").First(&assessment).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "belum ada sesi interview")
+		return
+	}
+	var item appdb.AssessmentItem
+	if err := h.db.WithContext(ctx).Where("assessment_id = ? AND order_index = ?", assessment.ID, questionIndex).First(&item).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "jawaban gak ditemukan")
+		return
+	}
+	if item.AudioObjectKey == nil || *item.AudioObjectKey == "" {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "gak ada rekaman audio buat jawaban ini")
+		return
+	}
+	url, err := h.storage.PresignGetObject(ctx, *item.AudioObjectKey, 10*time.Minute)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal buat URL playback")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, interviewAudioURLResponse{URL: url})
 }
 
 func statusLabel(status string) string {

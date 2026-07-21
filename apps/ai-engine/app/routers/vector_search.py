@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from app.cache import get_or_set, make_cache_key
 from app.logging import log_ai_call
+from app.prompt_guard import INJECTION_GUARD, wrap_untrusted
 from app.providers import get_provider_for_task
 from app.rate_limit import limit
 
@@ -71,6 +72,7 @@ _EVIDENCE_SYSTEM_PROMPT = (
     "kandidat dengan persyaratan lowongan. "
     "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
     '{"matched_evidence": ["kecocokan 1", "kecocokan 2", ...]}'
+    "\n\n" + INJECTION_GUARD
 )
 
 
@@ -85,7 +87,7 @@ async def embed_text(payload: EmbedRequest) -> EmbedResponse:
         embedding = await provider.embed(payload.text)
         log_ai_call(
             provider="gemini",
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             latency_ms=(time.monotonic() - started) * 1000,
             cache_hit=False,
         )
@@ -125,7 +127,7 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
         embed_latency = (time.monotonic() - started) * 1000
         log_ai_call(
             provider="gemini",
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             latency_ms=embed_latency,
             cache_hit=False,
         )
@@ -135,8 +137,9 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
 
         # Step 3: Identifikasi bukti kecocokan pakai LLM
         match_prompt = (
-            f"Ringkasan CV kandidat:\n{payload.cv_summary}\n\n"
-            f"Deskripsi lowongan:\n{payload.job_description}"
+            wrap_untrusted("RINGKASAN_CV_KANDIDAT", payload.cv_summary)
+            + "\n\n"
+            + wrap_untrusted("DESKRIPSI_LOWONGAN", payload.job_description)
         )
         started = time.monotonic()
         raw_evidence = await complete_provider.complete(

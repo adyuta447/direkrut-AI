@@ -6,7 +6,7 @@
  * dari ai-engine biar token muncul satu per satu di UI.
  */
 
-import { apiFetch, isApiConfigured, getAuthToken } from "./apiClient";
+import { apiFetch, isApiConfigured, getAuthToken, ApiError } from "./apiClient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -164,4 +164,167 @@ export async function matchCandidate(
     method: "POST",
     body: JSON.stringify({ applicationId, jobId, cvSummary, jobDescription }),
   });
+}
+
+// --- AI Screening (per-lamaran, dipersist backend, dipakai HRD) ---
+//
+// Beda sama parseCV/matchCandidate di atas: fungsi-fungsi di bawah ini
+// manggil /v1/applications/{id}/... (bukan /v1/ai/...) -- endpoint yang
+// baca CV dari Candidate.CvFileURL yang udah tersimpan, jalanin CV-parse +
+// job-match, DAN nyimpen hasilnya ke Postgres, jadi gak perlu dihitung ulang
+// tiap kali halaman detail kandidat dibuka.
+
+export interface ScreeningResult {
+  cvSummary: string;
+  skills: string[];
+  workExperienceYears: number | null;
+  overallScore: number;
+  similarityScore?: number;
+  matchedEvidence?: string[];
+}
+
+export async function screenApplication(applicationId: string): Promise<ScreeningResult> {
+  return apiFetch<ScreeningResult>(`/v1/applications/${applicationId}/screen`, { method: "POST" });
+}
+
+export async function getScreeningResult(applicationId: string): Promise<ScreeningResult | null> {
+  try {
+    return await apiFetch<ScreeningResult>(`/v1/applications/${applicationId}/screening`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+// --- Pre-screening (3 pertanyaan singkat sebelum wawancara AI yang lebih mahal) ---
+
+export interface PreScreenAnswer {
+  question: string;
+  answer: string;
+}
+
+export async function generatePreScreenQuestions(applicationId: string): Promise<string[]> {
+  const res = await apiFetch<{ questions: string[] }>(`/v1/applications/${applicationId}/prescreen/questions`, {
+    method: "POST",
+  });
+  return res.questions;
+}
+
+export interface PreScreenResult {
+  passed: boolean;
+  score: number;
+}
+
+export async function submitPreScreen(applicationId: string, responses: PreScreenAnswer[]): Promise<PreScreenResult> {
+  return apiFetch<PreScreenResult>(`/v1/applications/${applicationId}/prescreen/submit`, {
+    method: "POST",
+    body: JSON.stringify({ responses }),
+  });
+}
+
+export interface PreScreenGetResult {
+  status: string;
+  score: number | null;
+  items: PreScreenAnswer[];
+}
+
+export async function getPreScreenResult(applicationId: string): Promise<PreScreenGetResult | null> {
+  try {
+    return await apiFetch<PreScreenGetResult>(`/v1/applications/${applicationId}/prescreen`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+// --- AI Interview (kamera+mic wajib buat proctoring, jawaban direkam suara) ---
+
+export async function generateInterviewQuestions(applicationId: string): Promise<string[]> {
+  const res = await apiFetch<{ questions: string[] }>(`/v1/applications/${applicationId}/interview/questions`, {
+    method: "POST",
+  });
+  return res.questions;
+}
+
+export async function getAudioUploadUrl(
+  applicationId: string,
+  questionIndex: number,
+): Promise<{ uploadUrl: string; objectKey: string }> {
+  return apiFetch(`/v1/applications/${applicationId}/interview/audio-upload-url`, {
+    method: "POST",
+    body: JSON.stringify({ questionIndex }),
+  });
+}
+
+export interface ProctorCheckResult {
+  flagged: boolean;
+  reason: string | null;
+}
+
+export async function proctorCheck(applicationId: string, imageBase64: string): Promise<ProctorCheckResult> {
+  return apiFetch<ProctorCheckResult>(`/v1/applications/${applicationId}/interview/proctor-check`, {
+    method: "POST",
+    body: JSON.stringify({ imageBase64 }),
+  });
+}
+
+export interface TranscribeAnswerResult {
+  transcript: string;
+  analysisSummary: string;
+}
+
+export async function transcribeAnswer(
+  applicationId: string,
+  objectKey: string,
+  questionIndex: number,
+  questionText: string,
+): Promise<TranscribeAnswerResult> {
+  return apiFetch<TranscribeAnswerResult>(`/v1/applications/${applicationId}/interview/transcribe`, {
+    method: "POST",
+    body: JSON.stringify({ objectKey, questionIndex, questionText }),
+  });
+}
+
+export interface FinalizeInterviewResult {
+  recommendationScore: number | null;
+  authenticityScore?: { authentic: number; generic: number; aiGenerated: number };
+}
+
+export async function finalizeInterview(applicationId: string): Promise<FinalizeInterviewResult> {
+  return apiFetch<FinalizeInterviewResult>(`/v1/applications/${applicationId}/interview/finalize`, {
+    method: "POST",
+  });
+}
+
+export interface InterviewItem {
+  questionIndex: number;
+  question: string;
+  answer: string;
+  aiFeedback?: string;
+}
+
+export interface ProctoringFlag {
+  at: string;
+  reason: string;
+}
+
+export interface InterviewResult {
+  status: string;
+  recommendationScore: number | null;
+  items: InterviewItem[];
+  proctoringFlags: ProctoringFlag[];
+}
+
+export async function getInterviewResult(applicationId: string): Promise<InterviewResult | null> {
+  try {
+    return await apiFetch<InterviewResult>(`/v1/applications/${applicationId}/interview`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export async function getInterviewAudioUrl(applicationId: string, questionIndex: number): Promise<string> {
+  const res = await apiFetch<{ url: string }>(`/v1/applications/${applicationId}/interview/audio/${questionIndex}`);
+  return res.url;
 }

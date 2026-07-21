@@ -8,21 +8,9 @@ import {
   ReactNode,
 } from "react";
 import { User, UserRole, Application, Job, Department } from "@/lib/types";
-import { mockApplications, mockJobs } from "@/lib/mockData";
 import * as jobService from "@/services/jobService";
 import * as applicationService from "@/services/applicationService";
 import * as authService from "@/services/authService";
-
-function seedDepartments(): Department[] {
-  const names = Array.from(new Set(mockJobs.map((j) => j.department)));
-  return names.map((name) => ({
-    id: name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, ""),
-    name,
-  }));
-}
 
 interface DashboardContextType {
   currentUser: User | null;
@@ -48,7 +36,6 @@ interface DashboardContextType {
     note?: string,
     email?: { subject: string; body: string },
   ) => Promise<void>;
-  completeInterview: (applicationId: string) => Promise<void>;
   jobs: Job[];
   addJob: (job: Job) => Promise<void>;
   updateJob: (id: string, updates: Partial<Job>) => Promise<void>;
@@ -73,8 +60,7 @@ const DashboardContext = createContext<DashboardContextType | undefined>(
  * Provider tunggal buat seluruh app -- landing page, dashboard hrd, dan
  * dashboard candidate semua baca dari sini (dipasang sekali di
  * app/providers.tsx). Auth (currentUser) dan CRUD jobs/applications lewat
- * service layer (@/services/*) yang otomatis coba apps/api-go beneran dan
- * fallback ke mock data kalau API belum diset atau gagal.
+ * service layer (@/services/*).
  *
  * Dark mode TIDAK dikelola di sini -- itu tanggung jawab ThemeProvider
  * (next-themes), dipasang di layout hrd/candidate.
@@ -84,11 +70,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // authService.restoreSession) -- tanpa ini, refresh halaman bikin user
   // "ke-logout" secara visual walau token-nya masih valid.
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.restoreSession());
-  const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [departments, setDepartments] = useState<Department[]>(() =>
-    seedDepartments(),
-  );
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [currentPage, setCurrentPage] = useState("landing");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
@@ -212,16 +196,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     updateApplication(id, result ?? { status });
   };
 
-  // Dipanggil dari /interview/[jobId] pas sesi wawancara AI (simulasi
-  // client-side) selesai -- ini yang bikin lamarannya pindah dari
-  // "submitted" ke "under-review" di backend, jadi HRD (yang re-fetch lewat
-  // refetchApplications) akhirnya lihat kandidat ini udah lewat tahap
-  // wawancara, bukan nyangkut di "submitted" selamanya.
-  const completeInterview = async (applicationId: string) => {
-    const result = await applicationService.completeInterview(applicationId);
-    if (result) updateApplication(applicationId, result);
-  };
-
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
     setJobs((prev) => [...prev, saved]);
@@ -253,11 +227,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setDepartments((prev) => prev.filter((dept) => dept.id !== id));
   };
 
-  const mockIds = new Set(mockApplications.map((a) => a.id));
-  const myApplications = applications.filter(
-    (a, index) => index < 5 || !mockIds.has(a.id),
-  );
-
   return (
     <DashboardContext.Provider
       value={{
@@ -267,13 +236,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         applications,
-        myApplications,
+        myApplications: applications,
         refetchApplications,
         addApplication,
         updateApplication,
         applyToJob,
         changeApplicationStatus,
-        completeInterview,
         jobs,
         addJob,
         updateJob,

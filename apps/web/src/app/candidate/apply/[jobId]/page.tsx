@@ -18,7 +18,7 @@ import type { Job } from "@/lib/types"
 const STEP_TITLES = ["Informasi Pribadi", "Dokumen Resume / CV", "Tinjauan Akhir"]
 const STEP_DESCS = [
   "Pastikan datanya sesuai sama identitas kamu ya.",
-  "Format yang diterima: PDF, DOCX maksimal 5MB.",
+  "Upload CV yang mau kamu kirim buat lamaran ini.",
   "Cek sekali lagi sebelum lamaranmu meluncur.",
 ]
 
@@ -43,8 +43,8 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   }, [unwrappedParams.jobId])
 
   const {
-    step, formData, onFormDataChange, file, isParsing, isSubmitting, isProfileComplete,
-    handleNext, handleBack, handleUpload, handleRemoveFile, handleSubmit,
+    step, formData, onFormDataChange, hasCv, isLoadingCv, isUploadingCv, cvUploadError, isSubmitting, isProfileComplete,
+    handleNext, handleBack, handleUploadCv, handleSubmit,
   } = useApplyFlow(job ?? undefined)
 
   if (!job) return <div className="p-8 text-center">Pekerjaan tidak ditemukan</div>
@@ -77,11 +77,12 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
             {step === 1 && <ApplyStep1 formData={formData} onChange={onFormDataChange} />}
             {step === 2 && (
               <ApplyStep2
-                file={file}
-                isParsing={isParsing}
+                hasCv={hasCv}
+                isLoadingCv={isLoadingCv}
+                isUploadingCv={isUploadingCv}
+                cvUploadError={cvUploadError}
                 jobTitle={job.title}
-                onUpload={handleUpload}
-                onRemove={handleRemoveFile}
+                onUploadCv={handleUploadCv}
               />
             )}
             {step === 3 && (
@@ -93,7 +94,9 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
               <ArrowLeftIcon className="mr-2 size-4" /> {step === 1 ? "Batal" : "Kembali"}
             </Button>
             {step < 3 ? (
-              <Button onClick={handleNext}>Selanjutnya <ArrowRightIcon className="ml-2 size-4" /></Button>
+              <Button onClick={handleNext} disabled={step === 2 && (isLoadingCv || isUploadingCv || !hasCv)}>
+                Selanjutnya <ArrowRightIcon className="ml-2 size-4" />
+              </Button>
             ) : (
               <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
