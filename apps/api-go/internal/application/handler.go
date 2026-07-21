@@ -17,6 +17,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/adyuta447/direkrut-ai/api-go/internal/aiengine"
 	appcache "github.com/adyuta447/direkrut-ai/api-go/internal/cache"
@@ -449,19 +450,39 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 // background begitu lamaran disubmit (lihat handleSubmitApplication) --
 // keduanya lewat jalur yang sama biar logic scoring gak kepisah dua tempat.
 func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (*screeningResponse, error) {
-	parsed, err := h.aiClient.ParseCV(ctx, aiengine.ParseCVRequest{
-		CVObjectKey: *appRow.Candidate.CvFileURL, ApplicationID: appRow.ID,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("gagal parse CV: %w", err)
+	// Resume dari state setengah jadi: kalau run sebelumnya sempet nyimpen
+	// hasil parse CV tapi keburu gagal di step match/skor, reuse hasil parse
+	// yang udah ada -- jangan parse ulang (buang quota AI) apalagi Create
+	// ulang (unique constraint application_id -> "duplicated key not
+	// allowed", yang bikin retry screening macet selamanya).
+	var parsed *aiengine.ParseCVResponse
+	var existingParse appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error; err == nil {
+		var cached aiengine.ParseCVResponse
+		if json.Unmarshal([]byte(existingParse.ParsedJSON), &cached) == nil {
+			parsed = &cached
+		}
 	}
-	parsedJSON, _ := json.Marshal(parsed)
-	cvResult := appdb.CVParseResult{
-		ApplicationID: appRow.ID, ParsedJSON: string(parsedJSON),
-		ExtractedYearsExperience: parsed.WorkExperienceYears, ParsedAt: time.Now(),
-	}
-	if err := h.db.WithContext(ctx).Create(&cvResult).Error; err != nil {
-		return nil, fmt.Errorf("gagal simpan hasil parse CV: %w", err)
+	if parsed == nil {
+		fresh, err := h.aiClient.ParseCV(ctx, aiengine.ParseCVRequest{
+			CVObjectKey: *appRow.Candidate.CvFileURL, ApplicationID: appRow.ID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("gagal parse CV: %w", err)
+		}
+		parsed = fresh
+		parsedJSON, _ := json.Marshal(parsed)
+		cvResult := appdb.CVParseResult{
+			ApplicationID: appRow.ID, ParsedJSON: string(parsedJSON),
+			ExtractedYearsExperience: parsed.WorkExperienceYears, ParsedAt: time.Now(),
+		}
+		// Upsert: auto-screen (goroutine) & tombol manual HRD bisa balapan.
+		if err := h.db.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "application_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"parsed_json", "extracted_years_experience", "parsed_at"}),
+		}).Create(&cvResult).Error; err != nil {
+			return nil, fmt.Errorf("gagal simpan hasil parse CV: %w", err)
+		}
 	}
 
 	jobDescription := appRow.Job.Description
@@ -481,7 +502,10 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (
 		ApplicationID: appRow.ID, OverallScore: overallScore, SkillMatchScore: &overallScore,
 		ModelUsed: &modelUsed, ScoredAt: time.Now(),
 	}
-	if err := h.db.WithContext(ctx).Create(&scoreResult).Error; err != nil {
+	if err := h.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "application_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"overall_score", "skill_match_score", "model_used", "scored_at"}),
+	}).Create(&scoreResult).Error; err != nil {
 		return nil, fmt.Errorf("gagal simpan hasil skor: %w", err)
 	}
 
@@ -602,7 +626,11 @@ func (h *Handler) handleCrossRole(w http.ResponseWriter, r *http.Request) {
 
 	matches := make([]crossRoleMatch, 0, len(otherJobs))
 	for i, ok := range found {
-		if ok && results[i].Score >= crossRoleScoreThreshold {
+		// Syarat bukti kecocokan non-kosong itu penting: embedding cenderung
+		// ngasih similarity tinggi ke semua teks (tes live: CV software
+		// engineer vs lowongan content writer masih dapet 60), tapi buat
+		// pasangan yang beneran gak nyambung, LLM evidence-nya balik kosong.
+		if ok && results[i].Score >= crossRoleScoreThreshold && len(results[i].MatchedEvidence) > 0 {
 			matches = append(matches, results[i])
 		}
 	}
