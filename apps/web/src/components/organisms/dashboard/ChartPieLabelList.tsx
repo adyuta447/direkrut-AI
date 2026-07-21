@@ -43,7 +43,7 @@ export function ChartPieLabelList() {
   const chartData = React.useMemo(() => {
     let fg = 0, pro = 0
     applications.forEach(app => {
-      const cat = getExtendedData(app.applicantName).category
+      const cat = getExtendedData(app).category
       if (cat === "fresh-graduate") fg++
       else pro++
     })

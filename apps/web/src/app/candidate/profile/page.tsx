@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { ChevronRightIcon } from "lucide-react"
+import { ChevronRightIcon, XIcon } from "lucide-react"
 import { IconProgress } from "@tabler/icons-react"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
@@ -25,10 +25,12 @@ const SECTION_LINKS = [
   { id: "section-skills", label: "Keahlian & Sertifikasi" },
 ]
 
+// Kosong semua -- gak ada data karangan; nama diisi dari akun yang login,
+// sisanya diisi manual atau otomatis dari hasil AI baca CV.
 const INITIAL_PROFILE: CandidateProfile & { aboutStatus?: "draft" | "saved" } = {
-  name: "Kandidat Demo",
-  phone: "+6283434343434",
-  location: "Indonesia",
+  name: "",
+  phone: "",
+  location: "",
   age: "",
   gender: "",
   photoUrl: undefined,
@@ -48,9 +50,19 @@ export default function CandidateProfilePage() {
   const [isUploading, setIsUploading] = React.useState(false)
   const [isSimulatingAI, setIsSimulatingAI] = React.useState(false)
   const [hasAutoFilled, setHasAutoFilled] = React.useState(isProfileComplete)
-  const [profile, setProfile] = React.useState(INITIAL_PROFILE)
+  const [profile, setProfile] = React.useState(() => ({
+    ...INITIAL_PROFILE,
+    name: currentUser?.name ?? "",
+  }))
   const [newSkill, setNewSkill] = React.useState("")
   const [notice, setNotice] = React.useState<string | null>(null)
+  // Banner sukses auto-fill bisa ditutup -- murni state tampilan, gak
+  // ngaruh ke data profil yang udah kesimpen.
+  const [successDismissed, setSuccessDismissed] = React.useState(false)
+  // CV lamaran yang udah pernah diupload kandidat (pas apply) -- kalau ada,
+  // profil bisa diisi otomatis dari situ tanpa upload ulang; hasil parse-nya
+  // di-cache per file, jadi gak ada proses screening/baca-CV ulang.
+  const [existingCvKey, setExistingCvKey] = React.useState<string | null>(null)
 
   // Tarik profil asli begitu halaman ke-mount -- kalau belum pernah diisi
   // (akun baru), backend balikin field kosong dan INITIAL_PROFILE tetap
@@ -63,6 +75,7 @@ export default function CandidateProfilePage() {
         if (fetched.experience.length || fetched.education.length || fetched.skills.length) {
           setHasAutoFilled(true)
         }
+        if (fetched.cvFileUrl) setExistingCvKey(fetched.cvFileUrl)
       }
     })
     return () => {
@@ -94,33 +107,84 @@ export default function CandidateProfilePage() {
     })
   }
 
-  const handleCVUpload = async (file: File) => {
-    setIsUploading(true)
-    const objectKey = await uploadCV(file)
-    setIsUploading(false)
-    if (!objectKey) {
-      notify("Gagal upload CV. Coba lagi ya.")
-      return
-    }
-
+  // Isi profil dari hasil AI baca CV (dipakai dua jalur: upload file baru,
+  // atau salin dari CV lamaran yang udah ada -- yang kedua gak perlu upload
+  // dan hasil parse-nya udah di-cache, jadi gak ada screening ulang).
+  // overwrite=false (jalur salin/pertama kali): jangan nimpa bagian yang udah
+  // keisi. overwrite=true (upload file baru buat UPDATE): hasil baca CV baru
+  // menimpa isian lama selama parse-nya beneran nemu konten.
+  const fillProfileFromCv = async (objectKey: string, overwrite = false) => {
     setIsSimulatingAI(true)
     try {
       const parsed = await parseCV(currentUser?.id ?? "profile", objectKey)
       setIsSimulatingAI(false)
       setHasAutoFilled(true)
+      setSuccessDismissed(false)
       setIsProfileComplete(true)
       const mergedSkills = Array.from(new Set([...profile.skills, ...parsed.skills]))
+      const parsedExperience = (parsed.work_history ?? []).map((w) => ({
+        id: genId(), role: w.role, company: w.company,
+        startDate: w.start_date, endDate: w.end_date, description: w.description,
+        status: "saved" as const,
+      }))
+      const parsedEducation = (parsed.education ?? []).map((e) => ({
+        id: genId(), school: e.school, degree: e.degree,
+        startYear: e.start_year, endYear: e.end_year,
+        status: "saved" as const,
+      }))
+      const useParsedAbout = parsed.summary.trim() !== "" && (overwrite || !profile.about.trim())
+      // Aturan per-field: pakai hasil baca CV kalau CV-nya BENERAN nyantumin
+      // data itu (dan lagi mode update, atau field lamanya masih kosong) --
+      // kalau CV baru gak nyebut, data lama dipertahankan, gak dikosongin.
+      const pick = (parsedVal: string | undefined, oldVal: string) =>
+        parsedVal && parsedVal.trim() !== "" && (overwrite || !oldVal.trim()) ? parsedVal : oldVal
+      const parsedLinks = (parsed.links ?? [])
+        .filter((l) => l.url.trim() !== "")
+        .map((l) => ({ id: genId(), platform: l.platform || "Website", url: l.url, status: "saved" as const }))
       persistProfile({
         ...profile,
-        about: profile.about.trim() ? profile.about : parsed.summary,
-        aboutStatus: profile.about.trim() ? profile.aboutStatus : "saved",
+        name: pick(parsed.name, profile.name),
+        location: pick(parsed.location, profile.location),
+        phone: pick(parsed.phone, profile.phone),
+        gender: pick(parsed.gender, profile.gender),
+        age: parsed.age != null && (overwrite || !profile.age.trim()) ? String(Math.round(parsed.age)) : profile.age,
+        about: useParsedAbout ? parsed.summary : profile.about,
+        aboutStatus: useParsedAbout ? "saved" : profile.aboutStatus,
         skills: mergedSkills,
+        links:
+          parsedLinks.length > 0 && (overwrite || profile.links.length === 0)
+            ? parsedLinks
+            : profile.links,
+        experience:
+          parsedExperience.length > 0 && (overwrite || profile.experience.length === 0)
+            ? parsedExperience
+            : profile.experience,
+        education:
+          parsedEducation.length > 0 && (overwrite || profile.education.length === 0)
+            ? parsedEducation
+            : profile.education,
       })
-      notify("CV kamu berhasil dibaca AI -- ringkasan & skill udah keisi otomatis.")
+      notify("CV kamu berhasil dibaca AI -- ringkasan, skill, pengalaman, dan pendidikan udah keisi otomatis. Cek dan sesuaikan ya.")
     } catch {
       setIsSimulatingAI(false)
       notify("Gagal baca CV. Coba lagi ya.")
     }
+  }
+
+  const handleCVUpload = async (file: File) => {
+    setIsUploading(true)
+    // registerAsOfficialCv=false: CV di halaman profil cuma buat bantu AI
+    // ngisiin profil (personal branding) -- BUKAN CV lamaran yang dikirim ke
+    // HRD/discreen. CV resmi buat lamaran diupload di alur apply.
+    const objectKey = await uploadCV(file, false)
+    setIsUploading(false)
+    if (!objectKey) {
+      notify("Gagal upload CV. Coba lagi ya.")
+      return
+    }
+    // Upload file baru = aksi eksplisit buat memperbarui -- hasil baca CV
+    // baru boleh menimpa isian lama.
+    await fillProfileFromCv(objectKey, true)
   }
 
   const handleAddSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -207,17 +271,50 @@ export default function CandidateProfilePage() {
       <NoticeDialog message={notice} onClose={() => setNotice(null)} />
       <PageHeader className="mb-6" eyebrow="Personal Branding" title="Profil Saya" description="Profil yang lengkap bikin peluang dilirik HRD makin gede." />
 
+      {!hasAutoFilled && existingCvKey && !isSimulatingAI && !isUploading && (
+        <div className="rounded-3xl border border-hairline bg-canvas p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="text-[17px] font-semibold text-ink">CV lamaranmu udah ada di sistem</p>
+            <p className="text-sm text-ink-muted mt-1">
+              Gak perlu upload ulang -- profil bisa langsung diisi otomatis dari
+              CV yang kamu pakai buat melamar (tanpa proses screening ulang).
+            </p>
+          </div>
+          <Button className="shrink-0" onClick={() => fillProfileFromCv(existingCvKey)}>
+            Isi Profil dari CV Lamaran
+          </Button>
+        </div>
+      )}
+
       {!hasAutoFilled && (
         <ProfileAIBanner isUploading={isUploading} isSimulatingAI={isSimulatingAI} onFileSelected={handleCVUpload} />
       )}
 
-      {hasAutoFilled && (
-        <div className="rounded-3xl border border-hairline bg-canvas p-6 flex flex-col sm:flex-row items-center gap-5">
+      {hasAutoFilled && !successDismissed && (
+        <div className="relative rounded-3xl border border-hairline bg-canvas p-6 flex flex-col sm:flex-row items-center gap-5">
+          <button
+            type="button"
+            aria-label="Tutup"
+            onClick={() => setSuccessDismissed(true)}
+            className="absolute right-4 top-4 rounded-full p-1.5 text-ink-muted hover:bg-surface-1 hover:text-ink transition-colors"
+          >
+            <XIcon className="size-4" />
+          </button>
           <Image src="/status/success.svg" alt="" width={160} height={100} unoptimized className="pointer-events-none h-20 w-auto shrink-0 select-none" />
-          <div className="text-center sm:text-left">
+          <div className="text-center sm:text-left flex-1">
             <p className="text-[20px] font-bold tracking-[-0.01em] text-ink">Profil Berhasil Dilengkapi oleh AI!</p>
             <p className="text-[14px] text-ink-muted mt-1">Silakan periksa kembali data di bawah ini. Tekan tombol Edit (ikon pensil) untuk memperbaiki bagian yang salah.</p>
           </div>
+          <Button
+            variant="outline"
+            className="shrink-0 border-hairline"
+            onClick={() => {
+              setHasAutoFilled(false)
+              setSuccessDismissed(false)
+            }}
+          >
+            Perbarui dari CV Baru
+          </Button>
         </div>
       )}
 

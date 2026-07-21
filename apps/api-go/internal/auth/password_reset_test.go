@@ -37,7 +37,7 @@ func TestBuildPasswordResetURLWhenOriginHasMultipleValues(t *testing.T) {
 
 func TestHandleForgotPasswordWhenEmailInvalid(t *testing.T) {
 	// Given
-	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000")
+	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000", nil)
 	req := httptest.NewRequest(http.MethodPost, "/v1/auth/forgot-password", strings.NewReader(`{"email":"bad"}`))
 	rec := httptest.NewRecorder()
 
@@ -52,7 +52,7 @@ func TestHandleForgotPasswordWhenEmailInvalid(t *testing.T) {
 
 func TestHandleForgotPasswordWhenEmailSenderNotConfigured(t *testing.T) {
 	// Given
-	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000")
+	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000", nil)
 	req := httptest.NewRequest(http.MethodPost, "/v1/auth/forgot-password", strings.NewReader(`{"email":"user@example.com"}`))
 	rec := httptest.NewRecorder()
 
@@ -67,7 +67,7 @@ func TestHandleForgotPasswordWhenEmailSenderNotConfigured(t *testing.T) {
 
 func TestHandleResetPasswordWhenPasswordExceedsBcryptByteLimit(t *testing.T) {
 	// Given
-	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000")
+	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000", nil)
 	token := strings.Repeat("a", 32)
 	password := strings.Repeat("é", 37)
 	req := httptest.NewRequest(http.MethodPost, "/v1/auth/reset-password", strings.NewReader(`{"token":"`+token+`","newPassword":"`+password+`"}`))

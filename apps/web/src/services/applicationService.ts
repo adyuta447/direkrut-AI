@@ -1,4 +1,4 @@
-import type { Application } from "../lib/types";
+import type { Application, CandidateProfileSummary } from "../lib/types";
 import { apiFetch, isApiConfigured } from "./apiClient";
 
 interface ApiApplication {
@@ -12,6 +12,7 @@ interface ApiApplication {
   appliedAt: string;
   updatedAt: string;
   recommendationScore?: number;
+  candidateProfile?: CandidateProfileSummary;
 }
 
 interface ApiApplicationListResponse {
@@ -29,6 +30,10 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
     recommendationScore: a.recommendationScore,
+    candidateProfile: a.candidateProfile,
+    email: a.candidateProfile?.email,
+    phone: a.candidateProfile?.phone,
+    category: a.candidateProfile ? ((a.candidateProfile.experience?.length ?? 0) > 0 ? "professional" : "fresh-graduate") : undefined,
   };
 }
 

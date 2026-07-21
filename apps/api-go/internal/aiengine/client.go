@@ -91,10 +91,38 @@ type ParseCVRequest struct {
 	ApplicationID string `json:"application_id"`
 }
 
+type ParsedWorkHistoryItem struct {
+	Role        string `json:"role"`
+	Company     string `json:"company"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
+	Description string `json:"description"`
+}
+
+type ParsedEducationItem struct {
+	School    string `json:"school"`
+	Degree    string `json:"degree"`
+	StartYear string `json:"start_year"`
+	EndYear   string `json:"end_year"`
+}
+
+type ParsedLinkItem struct {
+	Platform string `json:"platform"`
+	URL      string `json:"url"`
+}
+
 type ParseCVResponse struct {
-	Summary             string   `json:"summary"`
-	Skills              []string `json:"skills"`
-	WorkExperienceYears *float64 `json:"work_experience_years"`
+	Summary             string                  `json:"summary"`
+	Skills              []string                `json:"skills"`
+	WorkExperienceYears *float64                `json:"work_experience_years"`
+	Name                string                  `json:"name,omitempty"`
+	Location            string                  `json:"location,omitempty"`
+	Phone               string                  `json:"phone,omitempty"`
+	Age                 *float64                `json:"age,omitempty"`
+	Gender              string                  `json:"gender,omitempty"`
+	Links               []ParsedLinkItem        `json:"links,omitempty"`
+	WorkHistory         []ParsedWorkHistoryItem `json:"work_history,omitempty"`
+	Education           []ParsedEducationItem   `json:"education,omitempty"`
 }
 
 type ValidationAnswer struct {
@@ -224,6 +252,29 @@ func (c *Client) MatchCandidate(ctx context.Context, req MatchRequest) (*MatchRe
 func (c *Client) GenerateQuestions(ctx context.Context, req GenerateQuestionsRequest) (*GenerateQuestionsResponse, error) {
 	var resp GenerateQuestionsResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-questions", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+type GenerateFeedbackRequest struct {
+	JobTitle            string   `json:"job_title"`
+	JobDescription      string   `json:"job_description"`
+	CVSummary           *string  `json:"cv_summary,omitempty"`
+	InterviewSummary    *string  `json:"interview_summary,omitempty"`
+	RecommendationScore *float64 `json:"recommendation_score,omitempty"`
+}
+
+type GenerateFeedbackResponse struct {
+	Feedback string `json:"feedback"`
+}
+
+// GenerateFeedback: email feedback pengembangan buat kandidat yang ditolak
+// (poin nilai tambah produk -- kandidat selalu dapet arahan, bukan cuma
+// penolakan).
+func (c *Client) GenerateFeedback(ctx context.Context, req GenerateFeedbackRequest) (*GenerateFeedbackResponse, error) {
+	var resp GenerateFeedbackResponse
+	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-feedback", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil

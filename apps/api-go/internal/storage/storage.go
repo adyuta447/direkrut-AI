@@ -16,6 +16,7 @@ import (
 )
 
 type Storage struct {
+	client  *s3.Client
 	presign *s3.PresignClient
 	bucket  string
 }
@@ -34,7 +35,20 @@ func New(ctx context.Context, endpoint, accessKey, secretKey, bucket string, use
 		o.UsePathStyle = usePathStyle
 	})
 
-	return &Storage{presign: s3.NewPresignClient(client), bucket: bucket}, nil
+	return &Storage{client: client, presign: s3.NewPresignClient(client), bucket: bucket}, nil
+}
+
+// DeleteObject hapus permanen satu object -- dipakai purge PII (mis. file CV
+// kandidat pas akun dihapus / data deletion request).
+func (s *Storage) DeleteObject(ctx context.Context, objectKey string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(objectKey),
+	})
+	if err != nil {
+		return fmt.Errorf("storage: delete object: %w", err)
+	}
+	return nil
 }
 
 func (s *Storage) PresignPutCV(ctx context.Context, objectKey string, expires time.Duration) (string, error) {

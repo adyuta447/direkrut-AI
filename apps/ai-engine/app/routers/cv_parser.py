@@ -38,7 +38,18 @@ _IMAGE_MIME_BY_EXTENSION = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png":
 _EXTRACTION_SYSTEM_PROMPT = (
     "Kamu adalah asisten HR yang mengekstrak informasi terstruktur dari CV. "
     "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
-    '{"summary": string, "skills": [string], "work_experience_years": number|null}'
+    '{"summary": string, "skills": [string], "work_experience_years": number|null, '
+    '"name": string, "location": string, "phone": string, "age": number|null, '
+    '"gender": string, '
+    '"links": [{"platform": string, "url": string}], '
+    '"work_history": [{"role": string, "company": string, "start_date": string, '
+    '"end_date": string, "description": string}], '
+    '"education": [{"school": string, "degree": string, "start_year": string, "end_year": string}]} '
+    "(name/location/phone/age/gender diambil dari data diri di CV; links = "
+    "tautan LinkedIn/GitHub/portofolio/media sosial yang tertulis di CV, "
+    "platform diisi nama layanannya; work_history/education urut dari yang "
+    "terbaru; string tanggal/tahun apa adanya dari CV. Semua field yang gak "
+    'tertulis di CV dikosongkan ("" / null / []) -- JANGAN mengarang.)'
     "\n\n" + INJECTION_GUARD
 )
 
@@ -48,10 +59,38 @@ class ParseCVRequest(BaseModel):
     application_id: str
 
 
+class WorkHistoryItem(BaseModel):
+    role: str = ""
+    company: str = ""
+    start_date: str = ""
+    end_date: str = ""
+    description: str = ""
+
+
+class EducationItem(BaseModel):
+    school: str = ""
+    degree: str = ""
+    start_year: str = ""
+    end_year: str = ""
+
+
+class LinkItem(BaseModel):
+    platform: str = ""
+    url: str = ""
+
+
 class ParsedCV(BaseModel):
     summary: str
     skills: list[str]
     work_experience_years: float | None = None
+    name: str = ""
+    location: str = ""
+    phone: str = ""
+    age: float | None = None
+    gender: str = ""
+    links: list[LinkItem] = []
+    work_history: list[WorkHistoryItem] = []
+    education: list[EducationItem] = []
 
 
 def _extract_pdf_text(raw: bytes) -> str:
@@ -69,8 +108,16 @@ def _parse_ai_json(raw: str) -> ParsedCV:
             summary=str(data.get("summary", "")),
             skills=[str(s) for s in data.get("skills", [])],
             work_experience_years=data.get("work_experience_years"),
+            name=str(data.get("name", "") or ""),
+            location=str(data.get("location", "") or ""),
+            phone=str(data.get("phone", "") or ""),
+            age=data.get("age"),
+            gender=str(data.get("gender", "") or ""),
+            links=[LinkItem(**l) for l in data.get("links", []) if isinstance(l, dict)],
+            work_history=[WorkHistoryItem(**h) for h in data.get("work_history", []) if isinstance(h, dict)],
+            education=[EducationItem(**e) for e in data.get("education", []) if isinstance(e, dict)],
         )
-    except (json.JSONDecodeError, TypeError, AttributeError):
+    except (json.JSONDecodeError, TypeError, AttributeError, ValueError):
         return ParsedCV(summary=raw.strip(), skills=[], work_experience_years=None)
 
 

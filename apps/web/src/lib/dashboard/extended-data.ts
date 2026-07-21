@@ -1,7 +1,17 @@
+import type { CandidateProfileSummary } from "@/lib/types";
+
+/** Bentuk minimum yang dibutuhin adapter -- Application maupun Candidate
+ * (tipe baris tabel) dua-duanya memenuhi ini. */
+interface HasCandidateProfile {
+  appliedDate: string;
+  candidateProfile?: CandidateProfileSummary;
+}
+
 /**
- * Data profil kandidat sintetis, diturunkan deterministik dari hash nama
- * (mock -- diganti field asli begitu API kandidat tersedia). Di-cache per
- * nama karena sebelumnya dihitung ulang ~7x per baris per render.
+ * Adapter profil kandidat buat dashboard HRD -- SEMUA nilai diturunkan dari
+ * data profil asli yang diisi kandidat (Application.candidateProfile, dikirim
+ * backend), bukan lagi data sintetis dari hash nama. Field yang kandidatnya
+ * belum isi ditampilin "—" apa adanya -- lebih jujur kosong daripada karangan.
  */
 export interface ExtendedCandidateData {
   domicile: string;
@@ -9,64 +19,53 @@ export interface ExtendedCandidateData {
   lastPosition: string;
   education: string;
   gender: string;
-  lastActive: string;
   category: "fresh-graduate" | "professional";
   isJobHopper: boolean;
   waitingDays: number;
-  crossRoleEmailed: boolean;
-  experienceSummary: string;
 }
 
-const cache = new Map<string, ExtendedCandidateData>();
+const EMPTY = "—";
 
-export function getExtendedData(name: string): ExtendedCandidateData {
-  const cached = cache.get(name);
-  if (cached) return cached;
+/** Selisih hari sejak tanggal melamar -- dipakai stat card "nunggu > 7 hari". */
+export function daysSinceApplied(appliedDate: string): number {
+  const applied = new Date(appliedDate).getTime();
+  if (isNaN(applied)) return 0;
+  return Math.max(0, Math.floor((Date.now() - applied) / 86_400_000));
+}
 
-  const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+export function getExtendedData(app: HasCandidateProfile): ExtendedCandidateData {
+  const p = app.candidateProfile;
+  const experiences = p?.experience ?? [];
+  const educations = p?.education ?? [];
+  const latestExp = experiences[0];
+  const latestEdu = educations[0];
 
-  const domiciles = ["Jakarta Pusat, DKI Jakarta", "Bandung, Jawa Barat", "Surabaya, Jawa Timur", "Medan, Sumatera Utara", "Tangerang Selatan, Banten", "Depok, Jawa Barat", "Semarang, Jawa Tengah", "Bogor, Jawa Barat"];
-  const domicile = domiciles[hash % domiciles.length];
+  const experience =
+    experiences.length === 0
+      ? "Fresh Graduate"
+      : `${experiences.length} pengalaman kerja`;
 
-  const years = hash % 5;
-  const months = (hash * 3) % 11;
-  const experience = years === 0 && months === 0 ? "Fresh Graduate" : years === 0 ? `${months} bln` : `${years} thn ${months} bln`;
+  const lastPosition = latestExp?.role
+    ? latestExp.company
+      ? `${latestExp.role} · ${latestExp.company}`
+      : latestExp.role
+    : (p?.headline ?? EMPTY);
 
-  const positions = ["Software Engineer", "Marketing Specialist", "Product Manager", "Data Analyst", "Sales Executive", "UI/UX Designer", "HR Admin", "Finance Staff"];
-  const lastPosition = positions[hash % positions.length];
+  const education = latestEdu
+    ? [latestEdu.degree, latestEdu.school, [latestEdu.startYear, latestEdu.endYear].filter(Boolean).join(" - ")]
+        .filter(Boolean)
+        .join("\n")
+    : EMPTY;
 
-  const universities = ["Universitas Indonesia", "Institut Teknologi Bandung", "Universitas Gadjah Mada", "Bina Nusantara", "Universitas Padjadjaran", "Universitas Diponegoro", "Telkom University"];
-  const degrees = ["S1 - Sistem Informasi", "S1 - Manajemen", "S1 - Ilmu Komunikasi", "D3 - Akuntansi", "S1 - Teknik Informatika", "S1 - Psikologi"];
-  const education = `${degrees[hash % degrees.length]}\n${universities[(hash * 2) % universities.length]}\nAug 2019 - Jul 2023`;
-
-  const genders = ["Laki-laki", "Perempuan"];
-  const gender = genders[hash % 2];
-
-  const activeTimes = ["Beberapa detik yang lalu", "2 menit yang lalu", "1 jam yang lalu", "Kemarin", "2 hari yang lalu"];
-  const lastActive = activeTimes[hash % activeTimes.length];
-
-  const category = hash % 3 === 0 ? ("fresh-graduate" as const) : ("professional" as const);
-  const isJobHopper = category === "professional" && hash % 4 === 0;
-  const waitingDays = (hash % 14) + 1;
-  const crossRoleEmailed = hash % 2 === 0;
-  const experienceSummary =
-    category === "professional"
-      ? "3 tahun di bidang yang relevan, pernah di 2 perusahaan teknologi, pengalaman mengelola sistem skala menengah."
-      : "Pengalaman magang 6 bulan sebagai asisten lab dan 3 bulan di perusahaan startup lokal. Aktif di himpunan mahasiswa.";
-
-  const data: ExtendedCandidateData = {
-    domicile,
+  return {
+    domicile: p?.location || EMPTY,
     experience,
-    lastPosition,
+    lastPosition: lastPosition || EMPTY,
     education,
-    gender,
-    lastActive,
-    category,
-    isJobHopper,
-    waitingDays,
-    crossRoleEmailed,
-    experienceSummary,
+    gender: p?.gender || EMPTY,
+    category: experiences.length > 0 ? "professional" : "fresh-graduate",
+    // Sinyal sederhana dari data asli: banyak entri kerja = sering pindah.
+    isJobHopper: experiences.length >= 4,
+    waitingDays: daysSinceApplied(app.appliedDate),
   };
-  cache.set(name, data);
-  return data;
 }

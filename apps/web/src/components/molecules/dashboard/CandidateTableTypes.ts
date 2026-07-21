@@ -1,3 +1,5 @@
+import type { CandidateProfileSummary } from "@/lib/types"
+
 export interface Candidate {
   id: string
   applicantName: string
@@ -7,4 +9,7 @@ export interface Candidate {
   status: string
   appliedDate: string
   jobId: string
+  candidateProfile?: CandidateProfileSummary
+  email?: string
+  phone?: string
 }

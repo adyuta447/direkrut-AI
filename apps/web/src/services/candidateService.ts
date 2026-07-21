@@ -124,7 +124,13 @@ export async function updateMyProfile(profile: CandidateProfile): Promise<Candid
 
 // --- Upload CV (presigned PUT, sama pola kayak companyService dokumen legalitas) ---
 
-export async function uploadCV(file: File): Promise<string | null> {
+/** Upload file CV ke object storage. `registerAsOfficialCv` (default true)
+ * nentuin apakah file ini didaftarkan sebagai CV resmi kandidat
+ * (Candidate.cvFileUrl) yang dikirim ke HRD & dipakai AI screening.
+ * Halaman profil manggil dengan `false`: di sana CV cuma alat bantu ngisi
+ * profil (personal branding), BUKAN CV lamaran -- CV buat HRD diupload di
+ * alur apply. */
+export async function uploadCV(file: File, registerAsOfficialCv = true): Promise<string | null> {
   if (!isApiConfigured) return null;
   try {
     const ext = (file.name.split(".").pop() || "pdf").toLowerCase();
@@ -143,10 +149,12 @@ export async function uploadCV(file: File): Promise<string | null> {
       return null;
     }
 
-    await apiFetch("/v1/candidates/me/cv", {
-      method: "PATCH",
-      body: JSON.stringify({ objectKey }),
-    });
+    if (registerAsOfficialCv) {
+      await apiFetch("/v1/candidates/me/cv", {
+        method: "PATCH",
+        body: JSON.stringify({ objectKey }),
+      });
+    }
     return objectKey;
   } catch (err) {
     console.error("[candidateService] gagal upload CV:", err);

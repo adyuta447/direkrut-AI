@@ -253,6 +253,60 @@ async def generate_prescreen_questions(payload: GeneratePreScreenQuestionsReques
     return GeneratePreScreenQuestionsResponse(**result)
 
 
+class GenerateFeedbackRequest(BaseModel):
+    job_title: str
+    job_description: str
+    cv_summary: str | None = None
+    interview_summary: str | None = None
+    recommendation_score: float | None = None
+
+
+class GenerateFeedbackResponse(BaseModel):
+    feedback: str
+
+
+_FEEDBACK_SYSTEM_PROMPT = (
+    "Kamu adalah asisten HR yang menulis email feedback personal buat "
+    "kandidat yang belum lolos seleksi. Tulis dalam Bahasa Indonesia yang "
+    "hangat, sopan, dan MEMBANGUN -- bukan menghakimi. Isi WAJIB: (1) terima "
+    "kasih sudah melamar, (2) 2-3 poin kekuatan kandidat yang keliatan dari "
+    "CV/wawancaranya, (3) 2-3 area pengembangan yang konkret dan bisa "
+    "ditindaklanjuti, dikaitkan dengan kualifikasi posisi, (4) saran skill "
+    "atau jenis pelatihan yang relevan (mis. pelatihan gratis Kemnaker/"
+    "prakerja, kursus online), (5) penegasan bahwa penilaian AI ini cuma "
+    "bahan bantu dan keputusan akhir dibuat oleh tim rekrutmen perusahaan. "
+    "JANGAN sebut skor angka. Balas HANYA teks email-nya (tanpa subject, "
+    "tanpa markdown), maksimal 250 kata."
+    "\n\n" + INJECTION_GUARD
+)
+
+
+@router.post("/generate-feedback", response_model=GenerateFeedbackResponse)
+async def generate_feedback(payload: GenerateFeedbackRequest) -> GenerateFeedbackResponse:
+    """Feedback pengembangan buat kandidat yang ditolak -- poin nilai tambah
+    produk: kandidat gak cuma dapet penolakan, tapi juga arahan berkembang."""
+    parts = [wrap_untrusted("DESKRIPSI_LOWONGAN", f"{payload.job_title}\n{payload.job_description}")]
+    if payload.cv_summary:
+        parts.append(wrap_untrusted("RINGKASAN_CV_KANDIDAT", payload.cv_summary))
+    if payload.interview_summary:
+        parts.append(wrap_untrusted("RINGKASAN_WAWANCARA_KANDIDAT", payload.interview_summary))
+    prompt = "\n\n".join(parts)
+
+    cache_key = make_cache_key("generate_feedback", prompt)
+
+    async def compute() -> dict:
+        provider = GroqProvider()
+        started = time.monotonic()
+        feedback = await provider.complete(prompt, system=_FEEDBACK_SYSTEM_PROMPT)
+        log_ai_call(provider="groq", model=provider.COMPLETE_MODEL, latency_ms=(time.monotonic() - started) * 1000, cache_hit=False)
+        return {"feedback": feedback.strip()}
+
+    result, cache_hit = await get_or_set(cache_key, compute)
+    if cache_hit:
+        log_ai_call(provider="cache", model="-", latency_ms=0.0, cache_hit=True)
+    return GenerateFeedbackResponse(**result)
+
+
 _PROCTOR_SYSTEM_PROMPT = (
     "Kamu adalah sistem pengawas ujian (proctoring) yang menganalisis satu "
     "frame webcam dari sesi interview kandidat. Deteksi tanda-tanda kecurangan: "

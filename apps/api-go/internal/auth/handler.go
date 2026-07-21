@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/jwtutil"
 	appmw "github.com/adyuta447/direkrut-ai/api-go/internal/middleware"
+	"github.com/adyuta447/direkrut-ai/api-go/internal/storage"
 )
 
 var validate = validator.New()
@@ -31,6 +33,7 @@ type Handler struct {
 	requireAuth            func(http.Handler) http.Handler
 	sendPasswordResetEmail func(context.Context, string, string) error
 	webOrigin              string
+	storage                *storage.Storage
 }
 
 func NewHandler(
@@ -41,6 +44,7 @@ func NewHandler(
 	requireAuth func(http.Handler) http.Handler,
 	sendPasswordResetEmail func(context.Context, string, string) error,
 	webOrigin string,
+	storageClient *storage.Storage,
 ) *Handler {
 	return &Handler{
 		db:                     gdb,
@@ -50,6 +54,7 @@ func NewHandler(
 		requireAuth:            requireAuth,
 		sendPasswordResetEmail: sendPasswordResetEmail,
 		webOrigin:              webOrigin,
+		storage:                storageClient,
 	}
 }
 
@@ -394,18 +399,57 @@ func (h *Handler) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Simpan object key CV sebelum di-null-kan, buat dihapus dari object
+	// storage sesudah transaksi DB sukses.
+	var cvObjectKey string
+
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := h.revokeAllRefreshTokens(ctx, tx, user.ID); err != nil {
 			return err
 		}
-		// Soft-delete (kolom deleted_at yang udah dipakai login buat nyaring
-		// akun nonaktif) -- bukan hard-delete, biar riwayat lamaran/lowongan
-		// yang nyambung ke user ini gak keputus FK-nya.
+
+		// Purge PII (data deletion request): baris user & lamaran tetap ada
+		// (soft-delete, FK riwayat gak keputus), tapi semua data pribadi
+		// dianonimkan permanen -- nama, kontak, profil, CV. Email diganti
+		// alamat sintetis biar bebas dipakai daftar ulang.
+		if user.Role == "candidate" {
+			var cand appdb.Candidate
+			if err := tx.Where("user_id = ?", user.ID).First(&cand).Error; err == nil {
+				if cand.CvFileURL != nil {
+					cvObjectKey = *cand.CvFileURL
+				}
+				if err := tx.Model(&appdb.Candidate{}).Where("id = ?", cand.ID).Updates(map[string]any{
+					"full_name": "Akun Dihapus", "phone": nil, "headline": nil, "location": nil,
+					"cv_file_url": nil, "age": nil, "gender": nil, "about": nil,
+					"photo_url": nil, "cover_url": nil,
+					"experience": "[]", "education": "[]", "links": "[]",
+				}).Error; err != nil {
+					return err
+				}
+				if err := tx.Where("candidate_id = ?", cand.ID).Delete(&appdb.CandidateSkill{}).Error; err != nil {
+					return err
+				}
+			}
+		}
+		if err := tx.Model(&appdb.User{}).Where("id = ?", user.ID).
+			Update("email", "deleted-"+user.ID+"@deleted.invalid").Error; err != nil {
+			return err
+		}
+
 		return tx.Delete(&user).Error
 	})
 	if txErr != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus akun")
 		return
+	}
+
+	// Hapus file CV dari object storage -- best-effort sesudah DB sukses;
+	// pointer di DB udah hilang duluan, jadi kalau delete-nya gagal pun file
+	// itu gak bisa diakses lagi lewat aplikasi.
+	if cvObjectKey != "" && h.storage != nil {
+		if err := h.storage.DeleteObject(ctx, cvObjectKey); err != nil {
+			log.Printf("[auth] gagal hapus file CV %s dari storage: %v", cvObjectKey, err)
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -82,3 +82,12 @@ def test_generate_prescreen_questions_rejects_request_with_no_key(monkeypatch: p
     monkeypatch.setenv("INTERNAL_API_KEY", "correct-secret")
     res = client.post("/v1/assessment/generate-prescreen-questions", json={"job_description": "Backend Engineer"})
     assert res.status_code == 401
+
+
+def test_generate_feedback_rejects_request_with_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("INTERNAL_API_KEY", "correct-secret")
+    res = client.post(
+        "/v1/assessment/generate-feedback",
+        json={"job_title": "Backend Engineer", "job_description": "Go & PostgreSQL"},
+    )
+    assert res.status_code == 401

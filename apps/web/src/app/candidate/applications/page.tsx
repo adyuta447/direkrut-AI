@@ -14,6 +14,16 @@ import {
   ApplicationStageFilter,
   STAGE_FILTERS,
 } from "@/components/molecules/dashboard/ApplicationStageFilter"
+import { StatusLegendPopover, type StatusLegendItem } from "@/components/molecules/dashboard/StatusLegendPopover"
+
+// Wording dari sudut pandang kandidat -- state machine yang sama dengan
+// legend di dashboard HRD, biar dua sisi baca alur yang konsisten.
+const CANDIDATE_STATUS_FLOW: StatusLegendItem[] = [
+  { status: "submitted", meaning: "Lamaranmu masuk -- CV kamu lagi discreen AI." },
+  { status: "under-review", meaning: "Tim HRD lagi meninjau hasil screening & wawancaramu." },
+  { status: "interview", meaning: "Selamat! Kamu diundang wawancara lanjutan bareng tim perusahaan." },
+  { status: "rejected", meaning: "Belum lolos kali ini -- cek email, ada feedback pengembangan buat kamu." },
+]
 
 export default function CandidateApplicationsPage() {
   const { myApplications, jobs } = useDashboard()
@@ -45,11 +55,17 @@ export default function CandidateApplicationsPage() {
           title="Riwayat Lamaran"
           description="Semua lamaranmu kepantau di satu tempat. Nggak perlu bolak-balik cek email."
           action={
-            <div className="w-full md:w-80">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Cari posisi atau perusahaan..."
+            <div className="flex w-full items-center gap-2 md:w-auto">
+              <div className="w-full md:w-80">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Cari posisi atau perusahaan..."
+                />
+              </div>
+              <StatusLegendPopover
+                items={CANDIDATE_STATUS_FLOW}
+                footnote="AI cuma bantu screening awal -- keputusan akhir selalu di tangan tim HRD perusahaan."
               />
             </div>
           }

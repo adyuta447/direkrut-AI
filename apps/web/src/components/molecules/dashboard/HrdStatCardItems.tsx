@@ -1,5 +1,5 @@
 import { IconTrendingUp, IconMinus } from "@tabler/icons-react"
-import { getExtendedData } from "@/lib/dashboard/extended-data"
+import { daysSinceApplied } from "@/lib/dashboard/extended-data"
 import { getScoreLevel } from "@/lib/dashboard/status"
 import { StatCard } from "@/components/molecules/dashboard/StatCard"
 import { Badge } from "@/components/ui/badge"
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 interface Application {
   status: string
   applicantName: string
+  appliedDate: string
   recommendationScore?: number
 }
 
@@ -23,7 +24,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
   const administrasiApps = applications.filter((a) => a.status === "under-review")
   const tahapAdministrasi = administrasiApps.length
   const delayedApps = administrasiApps.filter(
-    (a) => (getExtendedData(a.applicantName).waitingDays || 0) > 7
+    (a) => daysSinceApplied(a.appliedDate) > 7
   ).length
   const wawancara = applications.filter((a) => a.status === "interview").length
 

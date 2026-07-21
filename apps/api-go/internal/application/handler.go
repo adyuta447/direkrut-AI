@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -99,17 +100,32 @@ func (h *Handler) ensureAIConfigured(w http.ResponseWriter) bool {
 	return true
 }
 
+// candidateProfileSummary: potongan profil kandidat asli (diisi kandidat di
+// halaman profilnya) yang ditampilin di tabel/detail dashboard HRD --
+// pengganti data sintetis dari hash nama yang dulu dipakai FE.
+type candidateProfileSummary struct {
+	Location       string           `json:"location,omitempty"`
+	Gender         string           `json:"gender,omitempty"`
+	Age            *int             `json:"age,omitempty"`
+	Headline       string           `json:"headline,omitempty"`
+	Phone          string           `json:"phone,omitempty"`
+	Email          string           `json:"email,omitempty"`
+	Experience     []map[string]any `json:"experience,omitempty"`
+	Education      []map[string]any `json:"education,omitempty"`
+}
+
 type applicationResponse struct {
-	ID                  string    `json:"id"`
-	JobID               string    `json:"jobId"`
-	JobTitle            string    `json:"jobTitle,omitempty"`
-	CompanyName         string    `json:"companyName,omitempty"`
-	CandidateID         string    `json:"candidateId"`
-	CandidateName       string    `json:"candidateName,omitempty"`
-	Status              string    `json:"status"`
-	AppliedAt           time.Time `json:"appliedAt"`
-	UpdatedAt           time.Time `json:"updatedAt"`
-	RecommendationScore *float64  `json:"recommendationScore,omitempty"`
+	ID                  string                   `json:"id"`
+	JobID               string                   `json:"jobId"`
+	JobTitle            string                   `json:"jobTitle,omitempty"`
+	CompanyName         string                   `json:"companyName,omitempty"`
+	CandidateID         string                   `json:"candidateId"`
+	CandidateName       string                   `json:"candidateName,omitempty"`
+	Status              string                   `json:"status"`
+	AppliedAt           time.Time                `json:"appliedAt"`
+	UpdatedAt           time.Time                `json:"updatedAt"`
+	RecommendationScore *float64                 `json:"recommendationScore,omitempty"`
+	CandidateProfile    *candidateProfileSummary `json:"candidateProfile,omitempty"`
 }
 
 func toApplicationResponse(a appdb.Application) applicationResponse {
@@ -125,6 +141,18 @@ func toApplicationResponse(a appdb.Application) applicationResponse {
 	}
 	if a.Candidate != nil {
 		resp.CandidateName = a.Candidate.FullName
+		profile := candidateProfileSummary{
+			Location: derefStr(a.Candidate.Location), Gender: derefStr(a.Candidate.Gender),
+			Age: a.Candidate.Age, Headline: derefStr(a.Candidate.Headline), Phone: derefStr(a.Candidate.Phone),
+		}
+		if a.Candidate.User != nil {
+			profile.Email = a.Candidate.User.Email
+		}
+		// Experience/Education disimpan sbg JSONB bebas -- diterusin apa
+		// adanya (unmarshal best-effort, kalau korup ya kosong aja).
+		_ = json.Unmarshal(a.Candidate.Experience, &profile.Experience)
+		_ = json.Unmarshal(a.Candidate.Education, &profile.Education)
+		resp.CandidateProfile = &profile
 	}
 	if a.ScoringResult != nil {
 		score := a.ScoringResult.OverallScore
@@ -218,7 +246,7 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ctx := r.Context()
-	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate").Preload("ScoringResult")
+	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult")
 
 	switch claims.Role {
 	case "candidate":
@@ -381,9 +409,78 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 					log.Printf("[application] gagal kirim email keputusan HRD ke %s: %v", to, err)
 				}
 			}(appRow.Candidate.User.Email, req.EmailSubject, req.EmailBody)
+		} else if req.Status == "rejected" && appRow.Candidate.User != nil && h.aiClient.IsConfigured() {
+			// Poin nilai tambah produk: kandidat yang ditolak SELALU dapet
+			// email feedback pengembangan (digenerate AI dari CV + hasil
+			// wawancaranya), kecuali HRD udah nulis email sendiri di atas.
+			// Best-effort di background -- gagal generate/kirim gak boleh
+			// gagalin update status.
+			go h.sendRejectionFeedback(*appRow)
 		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, toApplicationResponse(*appRow))
+}
+
+// sendRejectionFeedback: generate email feedback pengembangan lewat
+// ai-engine (berbasis CV + ringkasan wawancara yang tersimpan) dan kirim ke
+// kandidat + notifikasi in-app. Dipanggil sebagai goroutine dari
+// handleUpdateStatus pas kandidat ditolak tanpa email manual dari HRD --
+// context.Background() karena request aslinya udah selesai duluan.
+func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
+	ctx := context.Background()
+	if appRow.Job == nil || appRow.Candidate == nil || appRow.Candidate.User == nil {
+		return
+	}
+
+	jobDescription := appRow.Job.Description
+	if appRow.Job.Requirements != nil && *appRow.Job.Requirements != "" {
+		jobDescription += "\n\n" + *appRow.Job.Requirements
+	}
+	req := aiengine.GenerateFeedbackRequest{JobTitle: appRow.Job.Title, JobDescription: jobDescription}
+
+	var parseResult appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
+		var parsed aiengine.ParseCVResponse
+		if json.Unmarshal([]byte(parseResult.ParsedJSON), &parsed) == nil && parsed.Summary != "" {
+			req.CVSummary = &parsed.Summary
+		}
+	}
+
+	// Ringkasan wawancara = gabungan feedback AI per jawaban (diisi pas
+	// transcribe) -- kalau kandidat belum sempet wawancara, ya tanpa itu.
+	var assessment appdb.Assessment
+	if err := h.db.WithContext(ctx).Preload("Items").
+		Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").First(&assessment).Error; err == nil {
+		var notes []string
+		for _, item := range assessment.Items {
+			if item.AIFeedback != nil && *item.AIFeedback != "" {
+				notes = append(notes, *item.AIFeedback)
+			}
+		}
+		if len(notes) > 0 {
+			joined := strings.Join(notes, "\n")
+			req.InterviewSummary = &joined
+		}
+	}
+
+	resp, err := h.aiClient.GenerateFeedback(ctx, req)
+	if err != nil {
+		log.Printf("[application] gagal generate feedback penolakan buat lamaran %s: %v", appRow.ID, err)
+		return
+	}
+
+	companyName := ""
+	if appRow.Job.Company != nil {
+		companyName = appRow.Job.Company.Name
+	}
+	subject := fmt.Sprintf("Feedback lamaranmu untuk %s di %s", appRow.Job.Title, companyName)
+	if err := h.mailer.Send(ctx, appRow.Candidate.User.Email, subject, resp.Feedback); err != nil {
+		log.Printf("[application] gagal kirim email feedback penolakan ke %s: %v", appRow.Candidate.User.Email, err)
+		return
+	}
+	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_feedback",
+		"Feedback pengembangan dari lamaranmu",
+		fmt.Sprintf("Kami kirim feedback + saran pengembangan buat lamaranmu di posisi %s lewat email. Semangat terus!", appRow.Job.Title))
 }
 
 // --- AI screening (CV parse + job-match score) ---
@@ -1208,4 +1305,11 @@ func nilIfEmpty(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
