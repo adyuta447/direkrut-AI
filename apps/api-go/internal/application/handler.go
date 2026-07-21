@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -64,6 +66,7 @@ func (h *Handler) Router() chi.Router {
 		// deskripsi lowongan.
 		pr.With(appmw.RequireRole("hrd")).Post("/{applicationID}/screen", h.handleScreen)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/screening", h.handleGetScreening)
+		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/cross-role", h.handleCrossRole)
 
 		// Pre-screening (kandidat): 3 pertanyaan singkat sebelum wawancara AI
 		// yang lebih mahal -- nyaring pelamar asal apply (lihat gate di
@@ -511,6 +514,101 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+// --- Cross-role recommendation (lowongan lain yang cocok buat CV kandidat ini) ---
+
+type crossRoleMatch struct {
+	JobID           string   `json:"jobId"`
+	JobTitle        string   `json:"jobTitle"`
+	Score           float64  `json:"score"`
+	MatchedEvidence []string `json:"matchedEvidence"`
+}
+
+type crossRoleResponse struct {
+	Matches []crossRoleMatch `json:"matches"`
+}
+
+// crossRoleOtherJobsLimit: dibatesin biar satu klik HRD gak micu match call
+// (embed CV + embed lowongan + evidence LLM call) ke puluhan lowongan
+// sekaligus -- di-cap ke lowongan aktif TERBARU di company yang sama.
+const crossRoleOtherJobsLimit = 5
+const crossRoleScoreThreshold = 50.0
+
+// handleCrossRole: cari lowongan LAIN (company sama, masih aktif, bukan
+// yang udah dia lamar) yang cocok sama CV kandidat ini. Reuse ringkasan CV
+// yang udah kesimpen dari screening (handleScreen) -- kandidat ini WAJIB
+// udah discreen dulu, biar gak parse CV dua kali. Dipicu manual lewat
+// tombol di FE (bukan auto buat semua kandidat), dan hasilnya gak
+// dipersist -- HRD klik ulang kalau mau refresh, biaya AI-nya cuma jalan
+// pas tombolnya beneran diklik. Tiap lowongan lain dicek PARALEL (goroutine)
+// biar latency-nya gak numpuk linear per lowongan.
+func (h *Handler) handleCrossRole(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var parseResult appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err != nil {
+		httpx.WriteError(w, http.StatusUnprocessableEntity, "screening_required", "screening CV kandidat ini dulu sebelum cari rekomendasi lintas posisi")
+		return
+	}
+	var parsedCV aiengine.ParseCVResponse
+	if err := json.Unmarshal([]byte(parseResult.ParsedJSON), &parsedCV); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal baca hasil screening CV")
+		return
+	}
+	if !h.ensureAIConfigured(w) {
+		return
+	}
+
+	var otherJobs []appdb.Job
+	if err := h.db.WithContext(ctx).
+		Where("company_id = ? AND status = ? AND id != ?", appRow.Job.CompanyID, "published", appRow.JobID).
+		Order("created_at DESC").Limit(crossRoleOtherJobsLimit).Find(&otherJobs).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil daftar lowongan lain")
+		return
+	}
+
+	results := make([]crossRoleMatch, len(otherJobs))
+	found := make([]bool, len(otherJobs))
+	var wg sync.WaitGroup
+	for i, job := range otherJobs {
+		wg.Add(1)
+		go func(i int, job appdb.Job) {
+			defer wg.Done()
+			jobDescription := job.Description
+			if job.Requirements != nil && *job.Requirements != "" {
+				jobDescription += "\n\n" + *job.Requirements
+			}
+			match, err := h.aiClient.MatchCandidate(ctx, aiengine.MatchRequest{
+				ApplicationID: appRow.ID, JobID: job.ID,
+				CVSummary: parsedCV.Summary, JobDescription: jobDescription,
+			})
+			if err != nil {
+				log.Printf("[application] cross-role match gagal buat lamaran %s vs lowongan %s: %v", appRow.ID, job.ID, err)
+				return
+			}
+			results[i] = crossRoleMatch{
+				JobID: job.ID, JobTitle: job.Title,
+				Score: match.SimilarityScore * 100, MatchedEvidence: match.MatchedEvidence,
+			}
+			found[i] = true
+		}(i, job)
+	}
+	wg.Wait()
+
+	matches := make([]crossRoleMatch, 0, len(otherJobs))
+	for i, ok := range found {
+		if ok && results[i].Score >= crossRoleScoreThreshold {
+			matches = append(matches, results[i])
+		}
+	}
+	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
+
+	httpx.WriteJSON(w, http.StatusOK, crossRoleResponse{Matches: matches})
 }
 
 // --- AI interview (pertanyaan digenerate AI, jawaban suara + proctoring kamera) ---

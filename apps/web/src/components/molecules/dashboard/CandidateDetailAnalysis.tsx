@@ -10,6 +10,7 @@ import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 import { getScreeningResult, screenApplication, type ScreeningResult } from "@/services/aiService"
+import { ApiError } from "@/services/apiClient"
 import { getScoreLevel } from "@/lib/dashboard/status"
 
 interface CandidateDetailAnalysisProps {
@@ -37,8 +38,8 @@ export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisPr
     try {
       const result = await screenApplication(candidate.id)
       setScreening(result)
-    } catch {
-      setError("Gagal jalanin screening AI. Pastikan kandidat udah upload CV di profilnya.")
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Gagal jalanin screening AI.")
     } finally {
       setIsScreening(false)
     }
