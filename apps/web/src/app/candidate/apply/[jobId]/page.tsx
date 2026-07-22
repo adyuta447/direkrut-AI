@@ -4,7 +4,6 @@ import * as React from "react"
 import { ArrowLeftIcon, ArrowRightIcon, BriefcaseIcon, SendIcon } from "lucide-react"
 import { useDashboard } from "@/context/DashboardContext"
 import { getJobById } from "@/services/jobService"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ApplyStep1 } from "@/components/molecules/dashboard/ApplyStep1"
@@ -51,64 +50,63 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   if (step === 4) return <ApplySuccessState job={job} />
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-6 w-full max-w-4xl mx-auto space-y-8">
+    <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 w-full max-w-5xl mx-auto space-y-6">
+      {/* Header flat, solid, border-hairline -- konsisten sama gaya landing page. */}
       <div>
-        <div className="flex items-center gap-2 text-muted-foreground mb-4">
+        <div className="flex items-center gap-2 text-ink-muted mb-3">
           <BriefcaseIcon className="size-4" />
           <span className="text-sm font-medium">{job.company}</span>
         </div>
-        <h2 className="text-2xl font-bold tracking-tight">Melamar untuk {job.title}</h2>
-        <div className="flex items-center gap-4 mt-3">
-          <Badge variant="secondary" className="font-normal">{job.location}</Badge>
-          <Badge variant="secondary" className="font-normal">{job.type}</Badge>
-          <Badge variant="outline" className="font-normal border-primary/30 text-primary bg-primary/5">{job.salaryRange}</Badge>
+        <h2 className="text-3xl font-bold tracking-tight text-ink md:text-4xl">Melamar untuk {job.title}</h2>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-hairline px-3 py-1 text-xs font-semibold text-ink">{job.location}</span>
+          <span className="rounded-full border border-hairline px-3 py-1 text-xs font-semibold text-ink">{job.type}</span>
+          <span className="rounded-full border border-primary px-3 py-1 text-xs font-semibold text-primary">{job.salaryRange}</span>
         </div>
       </div>
 
       <ApplyStepIndicator step={step} />
 
-      <div className="pt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{STEP_TITLES[step - 1]}</CardTitle>
-            <CardDescription>{STEP_DESCS[step - 1]}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {step === 1 && <ApplyStep1 formData={formData} onChange={onFormDataChange} />}
-            {step === 2 && (
-              <ApplyStep2
-                hasCv={hasCv}
-                isLoadingCv={isLoadingCv}
-                isUploadingCv={isUploadingCv}
-                cvUploadError={cvUploadError}
-                jobTitle={job.title}
-                onUploadCv={handleUploadCv}
-              />
-            )}
-            {step === 3 && (
-              <ApplyStep3Review job={job} formData={formData} isProfileComplete={isProfileComplete} />
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-between border-t bg-muted/20 p-6">
-            <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
-              <ArrowLeftIcon className="mr-2 size-4" /> {step === 1 ? "Batal" : "Kembali"}
+      <Card className="rounded-3xl border-hairline shadow-none">
+        <CardHeader className="border-b border-hairline pb-5">
+          <CardTitle className="text-2xl tracking-tight">{STEP_TITLES[step - 1]}</CardTitle>
+          <CardDescription className="text-base">{STEP_DESCS[step - 1]}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {step === 1 && <ApplyStep1 formData={formData} onChange={onFormDataChange} />}
+          {step === 2 && (
+            <ApplyStep2
+              hasCv={hasCv}
+              isLoadingCv={isLoadingCv}
+              isUploadingCv={isUploadingCv}
+              cvUploadError={cvUploadError}
+              jobTitle={job.title}
+              onUploadCv={handleUploadCv}
+            />
+          )}
+          {step === 3 && (
+            <ApplyStep3Review job={job} formData={formData} isProfileComplete={isProfileComplete} />
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between border-t border-hairline p-6">
+          <Button variant="outline" size="lg" className="rounded-full border-hairline" onClick={handleBack} disabled={isSubmitting}>
+            <ArrowLeftIcon className="mr-2 size-4" /> {step === 1 ? "Batal" : "Kembali"}
+          </Button>
+          {step < 3 ? (
+            <Button size="lg" className="rounded-full px-7" onClick={handleNext} disabled={step === 2 && (isLoadingCv || isUploadingCv || !hasCv)}>
+              Selanjutnya <ArrowRightIcon className="ml-2 size-4" />
             </Button>
-            {step < 3 ? (
-              <Button onClick={handleNext} disabled={step === 2 && (isLoadingCv || isUploadingCv || !hasCv)}>
-                Selanjutnya <ArrowRightIcon className="ml-2 size-4" />
-              </Button>
-            ) : (
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Memproses...</>
-                ) : (
-                  <><SendIcon className="mr-2 size-4" /> Kirim Lamaran</>
-                )}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-      </div>
+          ) : (
+            <Button size="lg" className="rounded-full px-7" onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" /> Memproses...</>
+              ) : (
+                <><SendIcon className="mr-2 size-4" /> Kirim Lamaran</>
+              )}
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   )
 }

@@ -15,9 +15,12 @@ export function ApplyStep2({ hasCv, isLoadingCv, isUploadingCv, cvUploadError, j
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 duration-500 animate-in fade-in slide-in-from-bottom-4">
       <div
-        className="border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center text-center hover:bg-muted/50 transition-colors cursor-pointer"
+        className={[
+          "group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed p-10 text-center transition-colors",
+          hasCv ? "border-primary/40" : "border-hairline hover:border-primary/40",
+        ].join(" ")}
         onClick={() => inputRef.current?.click()}
       >
         <input
@@ -33,48 +36,48 @@ export function ApplyStep2({ hasCv, isLoadingCv, isUploadingCv, cvUploadError, j
         />
         {isLoadingCv || isUploadingCv ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-            <p className="text-sm font-medium">{isUploadingCv ? "Mengunggah CV kamu..." : "Mengecek CV..."}</p>
+            <div className="size-12 animate-spin rounded-full border-[3px] border-primary/20 border-t-primary" />
+            <p className="text-base font-semibold text-ink">{isUploadingCv ? "Mengunggah CV kamu..." : "Mengecek CV..."}</p>
           </div>
         ) : hasCv ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="p-4 bg-primary/10 rounded-full text-primary">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-white">
               <FileTextIcon className="size-8" />
             </div>
             <div>
-              <p className="font-medium text-lg">CV kamu siap dikirim</p>
-              <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
+              <p className="text-xl font-bold tracking-tight text-ink">CV kamu siap dikirim</p>
+              <p className="mt-1 flex items-center justify-center gap-1.5 text-sm text-ink-muted">
                 <CheckCircleIcon className="size-4 text-success" />
-                Bakal dikirim ke HRD & discreen AI
+                Bakal dikirim ke HRD &amp; discreen AI
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
+            <Button variant="outline" size="sm" className="rounded-full border-hairline" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
               Ganti CV
             </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="p-4 bg-muted rounded-full">
-              <UploadCloudIcon className="size-8 text-muted-foreground" />
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-hairline text-muted-foreground transition-colors group-hover:border-primary group-hover:text-primary">
+              <UploadCloudIcon className="size-8" />
             </div>
             <div>
-              <p className="font-medium text-lg">Klik buat upload CV kamu</p>
-              <p className="text-sm text-muted-foreground mt-1">Mendukung PDF, JPG, PNG</p>
+              <p className="text-xl font-bold tracking-tight text-ink">Klik buat upload CV kamu</p>
+              <p className="mt-1 text-sm text-ink-muted">Mendukung PDF, JPG, PNG</p>
             </div>
           </div>
         )}
       </div>
 
-      {cvUploadError && <p className="text-sm text-destructive text-center">{cvUploadError}</p>}
+      {cvUploadError && <p className="text-center text-sm text-destructive">{cvUploadError}</p>}
 
       {hasCv && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-4">
-          <SparklesIcon className="size-5 text-primary shrink-0 mt-0.5" />
+        <div className="flex gap-4 rounded-2xl border border-hairline p-4">
+          <SparklesIcon className="size-5 shrink-0 text-primary" />
           <div className="space-y-1">
-            <h4 className="font-medium text-sm text-primary">Screening AI</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <h4 className="text-sm font-bold text-foreground">Screening AI</h4>
+            <p className="text-sm leading-relaxed text-ink-muted">
               Setelah lamaran dikirim, Direkrut AI bakal cocokin CV kamu sama kualifikasi posisi{" "}
-              <strong>{jobTitle}</strong>. Lanjutkan untuk mengirim lamaran.
+              <strong className="text-ink">{jobTitle}</strong>. Lanjutkan untuk mengirim lamaran.
             </p>
           </div>
         </div>

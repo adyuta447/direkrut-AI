@@ -69,6 +69,7 @@ func (h *Handler) Router() chi.Router {
 		pr.With(appmw.RequireRole("hrd")).Post("/{applicationID}/screen", h.handleScreen)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/screening", h.handleGetScreening)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/cross-role", h.handleCrossRole)
+		pr.With(appmw.RequireRole("hrd"), decisionRateLimit).Post("/{applicationID}/cross-role/offer", h.handleCrossRoleOffer)
 
 		// Pre-screening (kandidat): 3 pertanyaan singkat sebelum wawancara AI
 		// yang lebih mahal -- nyaring pelamar asal apply (lihat gate di
@@ -734,6 +735,96 @@ func (h *Handler) handleCrossRole(w http.ResponseWriter, r *http.Request) {
 	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
 
 	httpx.WriteJSON(w, http.StatusOK, crossRoleResponse{Matches: matches})
+}
+
+type crossRoleOfferRequest struct {
+	JobID string `json:"jobId" validate:"required"`
+}
+
+// handleCrossRoleOffer: HRD menawarkan posisi LAIN ke kandidat. Sengaja TIDAK
+// memindahkan kandidat / bikin lamaran otomatis (saran review: cross-role itu
+// rekomendasi, bukan pemindahan tanpa validasi). Yang terjadi cuma kirim
+// notifikasi + email ajakan; kandidat yang MEMUTUSKAN mau apply atau nggak,
+// dan kalau apply dia lewat alur lamar normal (pre-screening + wawancara AI
+// buat role baru itu) -- jadi selalu ada validasi ulang buat role baru,
+// trust HRD kejaga.
+func (h *Handler) handleCrossRoleOffer(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	var req crossRoleOfferRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+	if req.JobID == appRow.JobID {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "posisi yang ditawarkan sama dengan yang udah dilamar")
+		return
+	}
+
+	// Lowongan target wajib milik company HRD ini & masih tayang -- jangan
+	// bisa nawarin lowongan company lain atau yang udah ditutup.
+	var targetJob appdb.Job
+	if err := h.db.WithContext(ctx).Preload("Company").First(&targetJob, "id = ?", req.JobID).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "lowongan yang ditawarkan gak ketemu")
+		return
+	}
+	if appRow.Job == nil || targetJob.CompanyID != appRow.Job.CompanyID {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "cuma bisa nawarin lowongan di perusahaanmu sendiri")
+		return
+	}
+	if targetJob.Status != "published" {
+		httpx.WriteError(w, http.StatusConflict, "job_not_open", "lowongan yang ditawarkan udah gak dibuka")
+		return
+	}
+
+	// Kalau kandidat udah pernah apply ke lowongan itu, gak perlu ditawarin lagi.
+	var existing appdb.Application
+	if err := h.db.WithContext(ctx).
+		Where("job_id = ? AND candidate_id = ?", req.JobID, appRow.CandidateID).First(&existing).Error; err == nil {
+		httpx.WriteError(w, http.StatusConflict, "already_applied", "kandidat udah pernah melamar posisi ini")
+		return
+	}
+
+	if appRow.Candidate == nil || appRow.Candidate.User == nil {
+		httpx.WriteError(w, http.StatusUnprocessableEntity, "no_candidate", "data kandidat gak lengkap")
+		return
+	}
+
+	companyName := ""
+	if targetJob.Company != nil {
+		companyName = targetJob.Company.Name
+	}
+	title := "Kamu ditawari posisi lain!"
+	body := fmt.Sprintf("Tim HRD %s ngeliat profilmu cocok buat posisi %s. Tertarik? Buka lowongannya dan lamar kalau mau -- kamu tetap lewat proses seleksi buat posisi itu.", companyName, targetJob.Title)
+	if err := notification.Create(ctx, h.db, appRow.Candidate.UserID, "cross_role_offer", title, body); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal kirim tawaran")
+		return
+	}
+
+	// Email best-effort -- gagal kirim gak gagalin tawarannya (notif in-app
+	// udah masuk).
+	if h.mailer != nil {
+		emailBody := fmt.Sprintf(
+			"Halo %s,\n\nBerdasarkan profil dan hasil seleksimu, tim HRD %s melihat potensimu untuk posisi %s. "+
+				"Kalau tertarik, kamu bisa buka lowongan tersebut dan melamar -- prosesnya tetap melalui seleksi untuk posisi itu, "+
+				"jadi kecocokanmu divalidasi ulang secara adil.\n\nKeputusan sepenuhnya ada di kamu. Semangat!",
+			appRow.Candidate.FullName, companyName, targetJob.Title)
+		go func(to, subject, emailContent string) {
+			if err := h.mailer.Send(context.Background(), to, subject, emailContent); err != nil {
+				log.Printf("[application] gagal kirim email tawaran cross-role ke %s: %v", to, err)
+			}
+		}(appRow.Candidate.User.Email, "Peluang posisi baru di "+companyName, emailBody)
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "offered"})
 }
 
 // --- AI interview (pertanyaan digenerate AI, jawaban suara + proctoring kamera) ---

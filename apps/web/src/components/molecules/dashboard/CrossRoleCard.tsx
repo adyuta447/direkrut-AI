@@ -9,18 +9,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogClose, DialogHeader,
   DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
+import { offerCrossRole } from "@/services/aiService"
+import { ApiError } from "@/services/apiClient"
 
 interface CrossRoleItem {
   id: string
+  suggestedJobId: string
   candidateName: string
   originalRole: string
   suggestedRole: string
@@ -36,6 +36,21 @@ const SOLID_BADGE = "border-white/40 bg-white/15 text-white"
 
 export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
   const [notice, setNotice] = useState<string | null>(null)
+  const [isOffering, setIsOffering] = useState(false)
+  const [offered, setOffered] = useState(false)
+
+  const handleOffer = async () => {
+    setIsOffering(true)
+    try {
+      await offerCrossRole(item.id, item.suggestedJobId)
+      setOffered(true)
+      setNotice(`Tawaran posisi ${item.suggestedRole} udah dikirim ke ${item.candidateName}. Kandidat yang mutusin mau lamar atau nggak -- kalau lamar, dia tetap lewat seleksi posisi itu.`)
+    } catch (err) {
+      setNotice(err instanceof ApiError ? err.message : "Gagal kirim tawaran. Coba lagi ya.")
+    } finally {
+      setIsOffering(false)
+    }
+  }
   const isHighlyRelevant = item.label === "Sangat Relevan"
   const bandColor = isHighlyRelevant ? "bg-primary" : "bg-brand-accent-strong"
   const suggestedRoleColor = isHighlyRelevant ? "text-primary" : "text-brand-accent-strong"
@@ -96,39 +111,33 @@ export function CrossRoleCard({ item }: { item: CrossRoleItem }) {
           <span className="truncate">Detail Kandidat</span>
         </Button>
         <Dialog>
-          <DialogTrigger render={<Button className="w-full flex flex-row items-center justify-center gap-2" />}>
+          <DialogTrigger render={<Button className="w-full flex flex-row items-center justify-center gap-2" disabled={offered} />}>
             <IconCheck className="size-4 shrink-0" />
-            <span className="truncate">Tawarkan Posisi</span>
+            <span className="truncate">{offered ? "Tawaran Terkirim" : "Tawarkan Posisi"}</span>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Validasi &amp; Kirim Penawaran</DialogTitle>
+              <DialogTitle>Tawarkan Posisi ke Kandidat</DialogTitle>
               <DialogDescription>
-                Cek draft-nya, terus kirim ke{" "}
+                Kirim ajakan ke{" "}
                 <span className="font-semibold text-foreground">{item.candidateName}</span> buat
-                nawarin posisi{" "}
+                mempertimbangkan posisi{" "}
                 <span className="font-semibold text-foreground">{item.suggestedRole}</span>.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4 space-y-4">
-              <div className="space-y-2">
-                <Label>Subjek Email</Label>
-                <Input defaultValue={`Peluang Karir: Posisi ${item.suggestedRole} di Perusahaan Kami`} />
-              </div>
-              <div className="space-y-2">
-                <Label>Pesan Email</Label>
-                <Textarea
-                  className="min-h-[150px]"
-                  defaultValue={`Halo ${item.candidateName},\n\nBerdasarkan profil dan hasil analisis seleksi Anda, kami melihat potensi besar yang sangat relevan untuk posisi ${item.suggestedRole}. Kami ingin berdiskusi lebih lanjut apakah Anda tertarik untuk menjajaki peluang ini.\n\nMohon konfirmasikan ketertarikan Anda dengan membalas email ini.`}
-                />
+            <div className="py-2 space-y-3">
+              <div className="rounded-2xl border border-hairline bg-surface-1 p-4 text-sm text-ink-muted leading-relaxed">
+                Kandidat <span className="font-medium text-ink">tidak dipindahkan otomatis</span>.
+                Dia akan menerima notifikasi + email ajakan, lalu memutuskan sendiri
+                mau melamar atau nggak. Kalau melamar, kandidat tetap melewati
+                seleksi untuk posisi {item.suggestedRole} (pre-screening &amp;
+                wawancara AI) -- jadi kecocokannya divalidasi ulang secara adil.
               </div>
             </div>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>Batal</DialogClose>
-              <DialogClose
-                render={<Button onClick={() => setNotice("Email penawaran udah terkirim!")} />}
-              >
-                <IconSend className="size-4 mr-2" /> Kirim Email
+              <DialogClose render={<Button onClick={handleOffer} disabled={isOffering} />}>
+                <IconSend className="size-4 mr-2" /> {isOffering ? "Mengirim..." : "Kirim Tawaran"}
               </DialogClose>
             </DialogFooter>
           </DialogContent>
