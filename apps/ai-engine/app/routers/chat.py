@@ -19,7 +19,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.logging import log_ai_call
-from app.prompt_guard import INJECTION_GUARD
+from app.prompt_guard import INJECTION_GUARD, JAILBREAK_REFUSAL, looks_like_prompt_attack, wrap_untrusted
 from app.providers import get_provider_for_task
 from app.rate_limit import limit
 
@@ -55,16 +55,22 @@ async def _stream_chat_response(messages: list[ChatMessage]):
     Chunk terakhir:
     data: {"content": "", "done": true, "provider": "...", "latency_ms": ...}\n\n
     """
-    # Gabungkan history jadi satu prompt (provider complete_stream cuma
-    # terima satu string prompt + system). Kita format conversation
-    # history jadi konteks yang jelas buat model.
-    conversation_parts: list[str] = []
-    for msg in messages[:-1]:  # semua kecuali message terakhir
-        prefix = "User" if msg.role == "user" else "Asisten"
-        conversation_parts.append(f"{prefix}: {msg.content}")
+    for msg in messages:
+        if msg.role == "user" and looks_like_prompt_attack(msg.content):
+            sse_data = json.dumps({"content": JAILBREAK_REFUSAL, "done": False}, ensure_ascii=False)
+            yield f"data: {sse_data}\n\n"
+            done_data = json.dumps({"content": "", "done": True, "provider": "guard", "latency_ms": 0}, ensure_ascii=False)
+            yield f"data: {done_data}\n\n"
+            return
 
-    # Message terakhir (yang baru) jadi prompt utama
-    last_message = messages[-1].content if messages else ""
+    conversation_parts: list[str] = []
+    for msg in messages[:-1]:
+        if msg.role == "user":
+            conversation_parts.append("User: " + wrap_untrusted("PESAN_USER", msg.content))
+        else:
+            conversation_parts.append(f"Asisten: {msg.content}")
+
+    last_message = wrap_untrusted("PESAN_USER_TERBARU", messages[-1].content) if messages else ""
 
     if conversation_parts:
         prompt = (

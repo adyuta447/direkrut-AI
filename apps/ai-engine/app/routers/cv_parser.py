@@ -113,7 +113,7 @@ def _parse_ai_json(raw: str) -> ParsedCV:
             phone=str(data.get("phone", "") or ""),
             age=data.get("age"),
             gender=str(data.get("gender", "") or ""),
-            links=[LinkItem(**l) for l in data.get("links", []) if isinstance(l, dict)],
+            links=[LinkItem(**link) for link in data.get("links", []) if isinstance(link, dict)],
             work_history=[WorkHistoryItem(**h) for h in data.get("work_history", []) if isinstance(h, dict)],
             education=[EducationItem(**e) for e in data.get("education", []) if isinstance(e, dict)],
         )

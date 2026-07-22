@@ -52,9 +52,14 @@ func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
+	email, err := normalizeEmail(req.Email)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "Email harus berupa email yang valid")
+		return
+	}
 
 	ctx := r.Context()
-	if err := h.issuePasswordReset(ctx, req.Email); err != nil {
+	if err := h.issuePasswordReset(ctx, email); err != nil {
 		slog.WarnContext(ctx, "password reset request failed", "err", err)
 	}
 	waitForPasswordResetResponseFloor(ctx, started)
@@ -62,6 +67,10 @@ func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) issuePasswordReset(ctx context.Context, email string) error {
+	email, err := normalizeEmail(email)
+	if err != nil {
+		return err
+	}
 	rawToken, tokenHash, err := jwtutil.NewRefreshToken()
 	if err != nil {
 		return err
@@ -77,7 +86,7 @@ func (h *Handler) issuePasswordReset(ctx context.Context, email string) error {
 	if err := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var user appdb.User
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("email = ?", email).
+			Where("LOWER(email) = ?", email).
 			First(&user).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil

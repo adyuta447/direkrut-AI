@@ -50,6 +50,21 @@ func TestHandleForgotPasswordWhenEmailInvalid(t *testing.T) {
 	}
 }
 
+func TestHandleForgotPasswordRejectsConfusableEmailDomain(t *testing.T) {
+	// Given
+	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000", nil)
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/forgot-password", strings.NewReader(`{"email":"user@gmail.c0m"}`))
+	rec := httptest.NewRecorder()
+
+	// When
+	handler.handleForgotPassword(rec, req)
+
+	// Then
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
 func TestHandleForgotPasswordWhenEmailSenderNotConfigured(t *testing.T) {
 	// Given
 	handler := NewHandler(nil, nil, nil, nil, nil, nil, "http://localhost:3000", nil)
