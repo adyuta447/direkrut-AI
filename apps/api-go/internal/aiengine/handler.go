@@ -11,9 +11,6 @@ import (
 	"github.com/adyuta447/direkrut-ai/api-go/internal/httpx"
 )
 
-// Handler menangani request AI dari frontend, validasi JWT, lalu forward
-// ke ai-engine. Frontend gak pernah langsung manggil ai-engine -- selalu
-// lewat api-go dulu biar ada auth + bisa simpan hasil ke DB.
 type Handler struct {
 	client      *Client
 	requireAuth func(http.Handler) http.Handler

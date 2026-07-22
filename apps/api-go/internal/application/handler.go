@@ -66,6 +66,7 @@ func (h *Handler) Router() chi.Router {
 
 		// AI screening (HRD): parse CV kandidat + hitung match score vs
 		// deskripsi lowongan.
+		pr.With(appmw.RequireRole("hrd")).Get("/sent-decisions", h.handleSentDecisions)
 		pr.With(appmw.RequireRole("hrd")).Post("/{applicationID}/screen", h.handleScreen)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/screening", h.handleGetScreening)
 		pr.With(appmw.RequireRole("hrd")).Get("/{applicationID}/cross-role", h.handleCrossRole)
@@ -237,7 +238,90 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 		}(appRow)
 	}
 
+	// Kabarin HRD pemilik lowongan ada pelamar baru.
+	if appRow.Job != nil {
+		candidateName := "Seorang kandidat"
+		if appRow.Candidate != nil && appRow.Candidate.FullName != "" {
+			candidateName = appRow.Candidate.FullName
+		}
+		h.notifyJobOwner(ctx, appRow.Job.CreatedBy, "new_application",
+			"Pelamar baru masuk",
+			fmt.Sprintf("%s baru aja melamar posisi %s.", candidateName, appRow.Job.Title))
+	}
+
 	httpx.WriteJSON(w, http.StatusCreated, toApplicationResponse(appRow))
+}
+
+// --- Riwayat keputusan/email HRD ke kandidat (buat halaman Kotak Masuk HRD) ---
+
+type sentDecisionResponse struct {
+	ID            string    `json:"id"`
+	ApplicationID string    `json:"applicationId"`
+	CandidateName string    `json:"candidateName"`
+	JobTitle      string    `json:"jobTitle"`
+	ToStatus      string    `json:"toStatus"`
+	Note          string    `json:"note,omitempty"`
+	CreatedAt     time.Time `json:"createdAt"`
+}
+
+type sentDecisionListResponse struct {
+	Items []sentDecisionResponse `json:"items"`
+}
+
+// handleSentDecisions: daftar keputusan (undang wawancara / tolak / dst) yang
+// udah dikirim HRD ke kandidat -- data ASLI dari application_status_history
+// buat lowongan milik company HRD ini. Ganti data dummy di halaman Kotak
+// Masuk HRD. Cuma keputusan yang menghasilkan email/pemberitahuan ke kandidat
+// (interview/rejected/under-review), bukan baris "submitted" awal.
+func (h *Handler) handleSentDecisions(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, http.StatusUnauthorized, "unauthorized", "missing auth context")
+		return
+	}
+	if claims.CompanyID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun HRD ini belum terhubung ke perusahaan")
+		return
+	}
+	ctx := r.Context()
+
+	type row struct {
+		ID            string
+		ApplicationID string
+		ToStatus      string
+		Note          *string
+		CreatedAt     time.Time
+		FullName      string
+		Title         string
+	}
+	var rows []row
+	err := h.db.WithContext(ctx).
+		Table("application_status_history AS ash").
+		Select("ash.id, ash.application_id, ash.to_status, ash.note, ash.created_at, c.full_name, j.title").
+		Joins("JOIN applications a ON a.id = ash.application_id").
+		Joins("JOIN jobs j ON j.id = a.job_id").
+		Joins("JOIN candidates c ON c.id = a.candidate_id").
+		Where("j.company_id = ? AND ash.to_status IN ?", claims.CompanyID, []string{"interview", "rejected", "under-review"}).
+		Order("ash.created_at DESC").
+		Limit(100).
+		Scan(&rows).Error
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil riwayat keputusan")
+		return
+	}
+
+	resp := sentDecisionListResponse{Items: make([]sentDecisionResponse, 0, len(rows))}
+	for _, r := range rows {
+		item := sentDecisionResponse{
+			ID: r.ID, ApplicationID: r.ApplicationID, CandidateName: r.FullName,
+			JobTitle: r.Title, ToStatus: r.ToStatus, CreatedAt: r.CreatedAt,
+		}
+		if r.Note != nil {
+			item.Note = *r.Note
+		}
+		resp.Items = append(resp.Items, item)
+	}
+	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
 func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request) {
@@ -1043,8 +1127,14 @@ func (h *Handler) handleInterviewQuestions(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	// Sertakan judul + requirements (bukan cuma description) biar AI punya
+	// konteks cukup dan gak ngarang pertanyaan di luar bidang posisi.
+	jobDescription := appRow.Job.Description
+	if appRow.Job.Requirements != nil && *appRow.Job.Requirements != "" {
+		jobDescription += "\n\nKualifikasi: " + *appRow.Job.Requirements
+	}
 	resp, err := h.aiClient.GenerateQuestions(ctx, aiengine.GenerateQuestionsRequest{
-		JobDescription: appRow.Job.Description, CVSummary: cvSummary,
+		JobTitle: appRow.Job.Title, JobDescription: jobDescription, CVSummary: cvSummary,
 	})
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal generate pertanyaan interview")
@@ -1211,13 +1301,6 @@ type finalizeInterviewResponse struct {
 	AuthenticityScore   map[string]float64  `json:"authenticityScore,omitempty"`
 }
 
-// handleInterviewFinalize dipanggil kandidat sendiri begitu semua pertanyaan
-// interview udah dijawab. Nilai jawaban lewat ScoreValidation, simpan skor
-// rekomendasi (recommendation_score) sebagai Assessment.Score, lalu -- kayak
-// handleCompleteInterview versi lama -- pindahin status lamaran "submitted"
-// ke "under-review". Idempotent buat status-flip-nya (dipanggil lagi abis
-// status lewat "submitted" gak error, cuma gak flip ulang); scoring-nya
-// sendiri dihitung ulang tiap kali dipanggil (nilai final, gak ada draft).
 func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request) {
 	claims, ok := appmw.ClaimsFromContext(r.Context())
 	if !ok {
@@ -1290,9 +1373,38 @@ func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "interview_completed",
 			"Wawancara AI selesai", "Wawancara AI kamu udah selesai dinilai. Cek hasilnya di halaman lamaran.")
 	}
+	// Kabarin HRD pemilik lowongan bahwa ada kandidat yang baru rampung
+	// wawancara AI -- biar muncul di lonceng notifikasi & bisa segera ditinjau.
+	if appRow.Job != nil {
+		candidateName := "Seorang kandidat"
+		if appRow.Candidate != nil && appRow.Candidate.FullName != "" {
+			candidateName = appRow.Candidate.FullName
+		}
+		h.notifyJobOwner(ctx, appRow.Job.CreatedBy, "interview_completed",
+			"Kandidat selesai wawancara AI",
+			fmt.Sprintf("%s baru aja menyelesaikan wawancara AI untuk posisi %s. Yuk tinjau hasilnya.", candidateName, appRow.Job.Title))
+	}
 
 	resp.Application = toApplicationResponse(*appRow)
 	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+// notifyJobOwner bikin notifikasi in-app buat HRD pemilik lowongan.
+// Job.CreatedBy itu hrd_users.id, sedangkan notifikasi dikunci ke users.id --
+// jadi perlu resolve dulu. Best-effort: gagal resolve/create gak ngerusak
+// alur utama.
+func (h *Handler) notifyJobOwner(ctx context.Context, hrdUserID, notifType, title, body string) {
+	if hrdUserID == "" {
+		return
+	}
+	var hrd appdb.HrdUser
+	if err := h.db.WithContext(ctx).First(&hrd, "id = ?", hrdUserID).Error; err != nil {
+		log.Printf("[application] gagal resolve pemilik lowongan %s buat notifikasi: %v", hrdUserID, err)
+		return
+	}
+	if err := notification.Create(ctx, h.db, hrd.UserID, notifType, title, body); err != nil {
+		log.Printf("[application] gagal bikin notifikasi HRD %s: %v", hrd.UserID, err)
+	}
 }
 
 type interviewItemResponse struct {

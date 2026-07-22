@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ModeToggle } from "@/components/organisms/dashboard/ModeToggle"
+import { NotificationBell } from "@/components/molecules/dashboard/NotificationBell"
 
 const SECTION_TITLES: [prefix: string, title: string][] = [
   ["/candidate/jobs", "Cari Lowongan"],
@@ -41,6 +42,7 @@ export function DashboardHeader() {
         <span className="text-base font-medium">{title}</span>
       </div>
       <div className="flex items-center gap-2 px-4 lg:px-6">
+        <NotificationBell />
         <ModeToggle />
       </div>
     </header>

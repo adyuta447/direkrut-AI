@@ -106,6 +106,26 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
   }, [currentUser?.id, currentUser?.role]);
 
+  // Re-sync sesi lintas-tab. localStorage dibagi antar tab dengan origin yang
+  // sama, jadi kalau user login sebagai KANDIDAT di tab lain, token di tab
+  // HRD ini ikut ketimpa -- tapi React state di sini masih nyimpen user HRD.
+  // Akibatnya request (mis. "Jalankan Screening AI") kekirim pakai token
+  // kandidat -> 403 "insufficient role for this action". Dengerin storage
+  // event biar tab ini nyusul state terbaru (atau ke-logout) dan gak ngirim
+  // aksi HRD dengan token kandidat.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && !e.key.startsWith("direkrut_")) return;
+      const synced = authService.restoreSession();
+      setCurrentUser((prev) => {
+        if (prev?.id === synced?.id && prev?.role === synced?.role) return prev;
+        return synced;
+      });
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     jobService.listJobs().then((fetchedJobs) => {

@@ -288,9 +288,7 @@ func (h *Handler) issueTokenPair(w http.ResponseWriter, r *http.Request, userID,
 	httpx.WriteJSON(w, status, authResponse{AccessToken: accessToken, RefreshToken: rawRefresh})
 }
 
-// revokeAllRefreshTokens dipanggil abis ganti password atau hapus akun --
-// sesi yang lagi aktif di device lain gak boleh tetap jalan pakai kredensial
-// lama.
+
 func (h *Handler) revokeAllRefreshTokens(ctx context.Context, tx *gorm.DB, userID string) error {
 	return tx.WithContext(ctx).Model(&appdb.RefreshToken{}).
 		Where("user_id = ? AND revoked_at IS NULL", userID).

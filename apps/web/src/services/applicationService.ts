@@ -73,6 +73,29 @@ export async function getApplicationById(id: string): Promise<Application | null
   return null;
 }
 
+export interface SentDecision {
+  id: string;
+  applicationId: string;
+  candidateName: string;
+  jobTitle: string;
+  toStatus: string;
+  note?: string;
+  createdAt: string;
+}
+
+/** Riwayat keputusan HRD ke kandidat (undang wawancara/tolak/dst) -- data
+ * asli dari status history, buat halaman Kotak Masuk HRD. */
+export async function listSentDecisions(): Promise<SentDecision[]> {
+  if (!isApiConfigured) return [];
+  try {
+    const data = await apiFetch<{ items: SentDecision[] }>("/v1/applications/sent-decisions");
+    return data.items;
+  } catch (err) {
+    console.error("[applicationService] gagal ambil riwayat keputusan HRD:", err);
+    return [];
+  }
+}
+
 export async function submitApplication(jobId: string): Promise<Application | null> {
   if (isApiConfigured) {
     try {

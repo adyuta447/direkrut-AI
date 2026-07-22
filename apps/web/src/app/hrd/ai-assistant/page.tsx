@@ -13,6 +13,7 @@ type Message = {
   id: string
   role: "user" | "assistant"
   content: string
+  displayContent?: string
   timestamp: Date
 }
 
@@ -46,10 +47,66 @@ function AIAssistantChat() {
   const initialQuery = initialContext?.q || searchParams.get("q")
   const candidateId = initialContext?.candidate || searchParams.get("candidate")
 
-  const candidateContext = React.useMemo(() => {
-    if (!candidateId || !applications) return null
+  // Konteks faktual kandidat: nama + posisi + hasil screening (skor, skill,
+  // ringkasan CV) + transkrip wawancara AI (tanya-jawab + feedback + skor).
+  // Tanpa ini AI cuma tau NAMA doang, jadi jawabannya ngawang. Di-fetch
+  // async begitu candidateId ada, disuntik jadi blok fakta di depan pertanyaan.
+  const [candidateContext, setCandidateContext] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- konteks di-fetch async dari candidateId; reset sinkron pas gak ada kandidat */
+    if (!candidateId || !applications) {
+      setCandidateContext(null)
+      return
+    }
     const candidate = applications.find((a) => a.id === candidateId)
-    return candidate ? `[Konteks Kandidat: ${candidate.applicantName}] ` : null
+    if (!candidate) {
+      setCandidateContext(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const [screening, interview] = await Promise.all([
+        aiService.getScreeningResult(candidateId).catch(() => null),
+        aiService.getInterviewResult(candidateId).catch(() => null),
+      ])
+      if (cancelled) return
+
+      const parts: string[] = [
+        `Nama kandidat: ${candidate.applicantName}`,
+        `Posisi dilamar: ${candidate.jobTitle || "-"}`,
+        `Status lamaran: ${candidate.status}`,
+      ]
+      if (screening) {
+        parts.push(`Skor kecocokan CV (screening AI): ${Math.round(screening.overallScore)}%`)
+        if (screening.workExperienceYears != null) parts.push(`Estimasi pengalaman kerja: ${screening.workExperienceYears} tahun`)
+        if (screening.skills.length) parts.push(`Skill terdeteksi dari CV: ${screening.skills.join(", ")}`)
+        if (screening.cvSummary) parts.push(`Ringkasan CV: ${screening.cvSummary}`)
+        if (screening.matchedEvidence?.length) parts.push(`Bukti kecocokan: ${screening.matchedEvidence.join("; ")}`)
+      } else {
+        parts.push("CV kandidat ini BELUM discreen AI (belum ada skor/ringkasan).")
+      }
+      if (interview && interview.items.length) {
+        if (interview.recommendationScore != null) parts.push(`Skor rekomendasi wawancara AI: ${Math.round(interview.recommendationScore)}`)
+        parts.push(`Jumlah pelanggaran integritas saat wawancara: ${interview.proctoringFlags.length}`)
+        const transcript = interview.items
+          .map((it, i) => `Q${i + 1}: ${it.question}\nJawaban: ${it.answer || "(kosong)"}${it.aiFeedback ? `\nCatatan AI: ${it.aiFeedback}` : ""}`)
+          .join("\n\n")
+        parts.push(`Transkrip wawancara AI:\n${transcript}`)
+      } else {
+        parts.push("Kandidat ini BELUM menyelesaikan wawancara AI.")
+      }
+
+      setCandidateContext(
+        "[DATA KANDIDAT — pakai HANYA fakta di bawah ini buat jawab, jangan mengarang di luar data ini]\n" +
+          parts.join("\n") +
+          "\n[AKHIR DATA KANDIDAT]\n\nPertanyaan HRD: "
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [candidateId, applications])
 
   // Kirim pesan ke AI dan handle streaming response
@@ -126,6 +183,7 @@ function AIAssistantChat() {
     [currentUser?.id]
   )
 
+  // Seed welcome message sekali aja pas mount.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- seeds the welcome message post-hydration to keep SSR/client output matching
     setMessages([
@@ -136,26 +194,33 @@ function AIAssistantChat() {
         timestamp: new Date(),
       },
     ])
+  }, [])
 
-    if (initialQuery && !hasAutoSubmitted.current) {
-      hasAutoSubmitted.current = true
-      const fullContent = candidateContext ? `${candidateContext}${initialQuery}` : initialQuery
-      setTimeout(() => {
-        const userMsg: Message = {
-          id: Date.now().toString(),
-          role: "user",
-          content: fullContent,
-          timestamp: new Date(),
-        }
-        setMessages((prev) => {
-          const updated = [...prev, userMsg]
-          // Trigger AI setelah state update
-          sendToAI(updated)
-          return updated
-        })
-      }, 500)
+  // Auto-submit pertanyaan awal (dari tombol "Tanya AI" di detail kandidat).
+  // Kalau ada candidateId, TUNGGU dulu sampai candidateContext ke-fetch biar
+  // pertanyaan pertama beneran bawa data kandidat (bukan ngawang).
+  useEffect(() => {
+    if (!initialQuery || hasAutoSubmitted.current) return
+    const waitingForContext = Boolean(candidateId) && candidateContext === null
+    if (waitingForContext) return
+
+    hasAutoSubmitted.current = true
+    const fullContent = candidateContext ? `${candidateContext}${initialQuery}` : initialQuery
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: fullContent,
+      // Di UI cuma tampilin pertanyaan aslinya, sembunyiin blok data kandidat.
+      displayContent: initialQuery,
+      timestamp: new Date(),
     }
-  }, [initialQuery, candidateContext, sendToAI])
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- auto-submit pertanyaan awal dari deep-link, sekali jalan (di-guard hasAutoSubmitted)
+    setMessages((prev) => {
+      const updated = [...prev, userMsg]
+      sendToAI(updated)
+      return updated
+    })
+  }, [initialQuery, candidateId, candidateContext, sendToAI])
 
   useEffect(() => {
     if (scrollRef.current) {

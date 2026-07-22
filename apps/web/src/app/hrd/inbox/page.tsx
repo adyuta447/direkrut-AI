@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import {
   Card,
@@ -7,51 +10,40 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { HrdInboxTable } from "@/components/molecules/dashboard/HrdInboxTable"
-
-const MOCK_EMAILS = [
-  {
-    id: "1",
-    candidateName: "Raffi Ahmad",
-    jobTitle: "Senior Frontend Developer",
-    subject: "Undangan Wawancara Teknis",
-    status: "replied" as const,
-    date: "11 Jul 2026, 14:30",
-  },
-  {
-    id: "2",
-    candidateName: "Budi Santoso",
-    jobTitle: "Backend Engineer",
-    subject: "Pemberitahuan Hasil Seleksi (Ditolak)",
-    status: "sent" as const,
-    date: "10 Jul 2026, 09:15",
-  },
-  {
-    id: "3",
-    candidateName: "Siti Aminah",
-    jobTitle: "UI/UX Designer",
-    subject: "Undangan Wawancara HR",
-    status: "read" as const,
-    date: "09 Jul 2026, 16:45",
-  },
-]
+import { listSentDecisions, type SentDecision } from "@/services/applicationService"
 
 export default function InboxPage() {
+  const [decisions, setDecisions] = React.useState<SentDecision[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    let cancelled = false
+    listSentDecisions()
+      .then((items) => { if (!cancelled) setDecisions(items) })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <PageHeader
         title="Kotak Masuk Email"
-        description="Semua email yang udah kamu kirim ke kandidat, lengkap sama statusnya."
+        description="Semua keputusan yang udah kamu kirim ke kandidat, lengkap sama statusnya."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Riwayat Pengiriman Email</CardTitle>
+          <CardTitle>Riwayat Keputusan ke Kandidat</CardTitle>
           <CardDescription>
-            Pantau email yang udah kamu kirim ke kandidat, plus statusnya.
+            Undangan wawancara dan pemberitahuan hasil seleksi yang udah kamu kirim.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <HrdInboxTable emails={MOCK_EMAILS} />
+          {isLoading ? (
+            <div className="py-12 text-center text-sm text-ink-muted">Memuat riwayat...</div>
+          ) : (
+            <HrdInboxTable decisions={decisions} />
+          )}
         </CardContent>
       </Card>
     </div>
