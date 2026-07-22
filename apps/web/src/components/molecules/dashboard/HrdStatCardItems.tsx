@@ -1,6 +1,5 @@
-import { IconTrendingUp, IconMinus } from "@tabler/icons-react"
+import { IconTrendingUp, IconMinus, IconCheck } from "@tabler/icons-react"
 import { daysSinceApplied } from "@/lib/dashboard/extended-data"
-import { getScoreLevel } from "@/lib/dashboard/status"
 import { StatCard } from "@/components/molecules/dashboard/StatCard"
 import { Badge } from "@/components/ui/badge"
 
@@ -15,7 +14,7 @@ interface HrdStatCardItemsProps {
   applications: Application[]
 }
 
-/* Gaya kartu solid yang sama dengan dashboard kandidat. */
+
 const SOLID_CARD = "border-transparent text-white [&_.text-muted-foreground]:text-white/80"
 const SOLID_BADGE = "border-white/40 bg-white/10 text-white"
 
@@ -27,18 +26,9 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
     (a) => daysSinceApplied(a.appliedDate) > 7
   ).length
   const wawancara = applications.filter((a) => a.status === "interview").length
-
-  const applicationsWithScore = applications.filter((a) => a.recommendationScore)
-  const avgScore =
-    applicationsWithScore.length > 0
-      ? Math.round(
-          applicationsWithScore.reduce(
-            (sum, a) => sum + (a.recommendationScore || 0),
-            0
-          ) / applicationsWithScore.length
-        )
-      : undefined
-  const avgLevel = getScoreLevel(avgScore)
+  const belumDiscreen = applications.filter(
+    (a) => a.status !== "rejected" && a.recommendationScore == null
+  ).length
 
   return (
     <>
@@ -94,17 +84,24 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       />
 
       <StatCard
-        label="Rata-rata Kecocokan"
-        value={avgScore ? `${avgScore}%` : "-"}
+        label="Belum Discreen AI"
+        value={belumDiscreen}
         className={`bg-success ${SOLID_CARD}`}
         image="/dashboard/resume.svg"
         badge={
-          <Badge variant="outline" className={SOLID_BADGE}>
-            {avgLevel.label}
-          </Badge>
+          belumDiscreen > 0 ? (
+            <Badge variant="outline" className="border-white/40 bg-white text-warning font-semibold">
+              Perlu Screening
+            </Badge>
+          ) : (
+            <Badge variant="outline" className={SOLID_BADGE}>
+              <IconCheck />
+              Semua Beres
+            </Badge>
+          )
         }
-        footer="Dihitung otomatis sama AI"
-        footerDetail="Udah sesuai kriteria perusahaan"
+        footer={belumDiscreen > 0 ? "Klik buat jalanin screening AI" : "Semua CV udah dianalisis AI"}
+        footerDetail={belumDiscreen > 0 ? `${belumDiscreen} kandidat nunggu dinilai` : "Gak ada yang ketinggalan"}
       />
     </>
   )

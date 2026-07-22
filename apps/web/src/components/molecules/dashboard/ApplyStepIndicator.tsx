@@ -1,4 +1,4 @@
-import { CheckCircleIcon } from "lucide-react"
+import { CheckIcon } from "lucide-react"
 
 const STEP_LABELS = ["Data Diri", "Unggah CV", "Tinjauan"]
 
@@ -8,28 +8,35 @@ interface ApplyStepIndicatorProps {
 
 export function ApplyStepIndicator({ step }: ApplyStepIndicatorProps) {
   return (
-    <div className="flex items-center justify-between relative">
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted rounded-full overflow-hidden">
-        <div className="h-full bg-primary transition-all duration-500" style={{ width: `${((step - 1) / 2) * 100}%` }} />
-      </div>
+    <div className="relative flex items-center justify-between pb-7">
+      {/* Rel dasar + progress terisi (brand blue) */}
+      <div className="absolute left-0 top-4 h-[3px] w-full -translate-y-1/2 rounded-full bg-muted" />
+      <div
+        className="absolute left-0 top-4 h-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-500 ease-out"
+        style={{ width: `${((step - 1) / (STEP_LABELS.length - 1)) * 100}%` }}
+      />
+
       {STEP_LABELS.map((label, idx) => {
         const num = idx + 1
         const isActive = step === num
         const isPast = step > num
         return (
-          <div key={num} className="relative flex flex-col items-center gap-2 bg-background px-2">
+          <div key={num} className="relative z-10 flex flex-col items-center gap-2">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                  : isPast
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+              className={[
+                "flex size-10 items-center justify-center rounded-full text-base font-bold transition-colors",
+                isActive || isPast
+                  ? "bg-primary text-primary-foreground"
+                  : "border-2 border-hairline bg-background text-muted-foreground",
+              ].join(" ")}
+            >
+              {isPast ? <CheckIcon className="size-5 stroke-3" /> : num}
+            </div>
+            <span
+              className={`absolute -bottom-7 whitespace-nowrap text-sm font-semibold tracking-tight transition-colors ${
+                isActive ? "text-foreground" : isPast ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              {isPast ? <CheckCircleIcon className="size-4" /> : num}
-            </div>
-            <span className={`text-xs font-medium absolute -bottom-6 whitespace-nowrap ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
               {label}
             </span>
           </div>

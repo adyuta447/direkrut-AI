@@ -241,6 +241,16 @@ export async function getCrossRoleRecommendations(applicationId: string): Promis
   return data.matches;
 }
 
+/** HRD menawarkan posisi lain ke kandidat -- backend cuma kirim
+ * notifikasi + email ajakan, TIDAK memindahkan kandidat. Kandidat yang
+ * memutuskan mau melamar (lewat seleksi role baru) atau nggak. */
+export async function offerCrossRole(applicationId: string, jobId: string): Promise<void> {
+  await apiFetch(`/v1/applications/${applicationId}/cross-role/offer`, {
+    method: "POST",
+    body: JSON.stringify({ jobId }),
+  });
+}
+
 // --- Pre-screening (3 pertanyaan singkat sebelum wawancara AI yang lebih mahal) ---
 
 export interface PreScreenAnswer {

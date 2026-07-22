@@ -389,38 +389,48 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   const readyToStart = hasAgreed && mediaStream !== null
 
   const renderSetup = () => (
-    <div className="flex flex-col h-screen max-w-5xl mx-auto p-6 md:p-12 animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Persiapan Wawancara AI</h1>
-        <p className="text-muted-foreground mt-2">Posisi: {job.title} di {job.company}</p>
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-8 md:px-8">
+      <div className="mb-6">
+        <div className="mb-3 flex items-center gap-2 text-ink-muted">
+          <SparklesIcon className="size-4 text-primary" />
+          <span className="text-sm font-semibold">Wawancara AI</span>
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Persiapan Wawancara AI</h1>
+        <p className="mt-2 text-base text-muted-foreground">Posisi: <span className="font-semibold text-foreground">{job.title}</span> di {job.company}</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 flex-1">
-        <div className="space-y-6">
-          <div className="bg-muted aspect-video rounded-2xl overflow-hidden relative border border-border">
+      <div className="grid flex-1 gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <div className="relative aspect-video overflow-hidden rounded-3xl border border-hairline bg-muted">
             {mediaStream ? (
               <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-black/90 gap-3 px-6 text-center">
-                <CameraIcon className="size-12 opacity-50" />
-                <p>{mediaError ? mediaError : "Kamera & mikrofon wajib diaktifkan buat mulai wawancara"}</p>
-                <Button size="sm" onClick={requestMedia}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/90 px-6 text-center text-white/70">
+                <div className="flex size-14 items-center justify-center rounded-2xl border border-white/20">
+                  <CameraIcon className="size-7" />
+                </div>
+                <p className="text-sm">{mediaError ? mediaError : "Kamera & mikrofon wajib diaktifkan buat mulai wawancara"}</p>
+                <Button size="sm" className="rounded-full" onClick={requestMedia}>
                   {mediaError ? "Coba Lagi" : "Aktifkan Kamera & Mikrofon"}
                 </Button>
               </div>
             )}
             {mediaStream && (
-              <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/60 text-white px-3 py-1.5 rounded-full text-xs">
-                <MicIcon className="size-3 text-success" /> Audio Terdeteksi
+              <div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-success" />
+                </span>
+                <MicIcon className="size-3" /> Audio Terdeteksi
               </div>
             )}
           </div>
 
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-4">
-            <ShieldCheckIcon className="size-6 text-primary shrink-0 mt-0.5" />
+          <div className="flex gap-4 rounded-2xl border border-hairline p-4">
+            <ShieldCheckIcon className="size-5 shrink-0 text-primary" />
             <div className="space-y-1">
-              <h4 className="font-semibold text-primary">Integritas & Privasi</h4>
-              <p className="text-sm text-foreground/80 leading-relaxed">
+              <h4 className="text-sm font-bold text-foreground">Integritas &amp; Privasi</h4>
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 Kamera kamu wajib nyala selama sesi berlangsung -- sistem bakal ngecek frame kamera secara berkala buat verifikasi cuma kamu sendiri yang ikut wawancara. Jawabanmu direkam lewat mikrofon dan ditranskrip AI.
               </p>
             </div>
@@ -428,48 +438,42 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
         </div>
 
         <div className="flex flex-col">
-          <div className="flex-1 space-y-6">
-            <h3 className="text-xl font-bold">Aturan Wawancara</h3>
+          <div className="flex-1 space-y-4">
+            <h3 className="text-xl font-bold tracking-tight">Aturan Wawancara</h3>
 
-            <ul className="space-y-4">
-              <li className="flex gap-3 items-start">
-                <CheckCircleIcon className="size-5 text-success shrink-0 mt-0.5" />
-                <p className="text-sm">Pastikan Anda berada di ruangan yang tenang dan memiliki pencahayaan yang baik.</p>
-              </li>
-              <li className="flex gap-3 items-start">
-                <CameraIcon className="size-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm">Kamera wajib nyala sepanjang sesi. Pastikan cuma Anda sendiri yang terlihat di frame.</p>
-              </li>
-              <li className="flex gap-3 items-start">
-                <AlertTriangleIcon className="size-5 text-warning shrink-0 mt-0.5" />
-                <p className="text-sm"><strong>DILARANG</strong> membuka tab atau aplikasi lain. Sistem proctoring kami akan mencatat peringatan (warning) jika Anda meninggalkan halaman ini.</p>
-              </li>
+            <ul className="space-y-3">
+              {[
+                { icon: CheckCircleIcon, tone: "text-success", text: <>Pastikan kamu berada di ruangan yang tenang dan pencahayaannya baik.</> },
+                { icon: CameraIcon, tone: "text-primary", text: <>Kamera wajib nyala sepanjang sesi. Pastikan cuma kamu sendiri yang terlihat di frame.</> },
+                { icon: AlertTriangleIcon, tone: "text-warning", text: <><strong>Dilarang</strong> membuka tab atau aplikasi lain. Sistem proctoring bakal mencatat peringatan kalau kamu meninggalkan halaman ini.</> },
+              ].map((rule, i) => (
+                <li key={i} className="flex items-start gap-3 rounded-2xl border border-hairline p-3.5">
+                  <rule.icon className={`size-5 shrink-0 ${rule.tone}`} />
+                  <p className="pt-0.5 text-sm text-foreground/85">{rule.text}</p>
+                </li>
+              ))}
             </ul>
 
-            <div className="pt-6 mt-6 border-t">
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <div className="mt-0.5">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-primary text-primary focus:ring-primary"
-                    checked={hasAgreed}
-                    onChange={(e) => setHasAgreed(e.target.checked)}
-                  />
-                </div>
-                <span className="text-sm select-none group-hover:text-foreground text-muted-foreground transition-colors">
-                  Saya menyetujui aturan di atas dan <strong>setuju</strong> rekaman
-                  suara, transkrip jawaban, dan cuplikan frame kamera saya
-                  diproses oleh layanan AI untuk penilaian wawancara ini. Hasilnya
-                  hanya dilihat HRD perusahaan terkait, dan keputusan akhir tetap
-                  dibuat manusia -- bukan AI.
-                </span>
-              </label>
-            </div>
+            <label className="mt-2 flex cursor-pointer items-start gap-3 rounded-2xl border border-hairline p-4">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-5 rounded border-primary text-primary focus:ring-primary"
+                checked={hasAgreed}
+                onChange={(e) => setHasAgreed(e.target.checked)}
+              />
+              <span className="select-none text-sm leading-relaxed text-muted-foreground">
+                Saya menyetujui aturan di atas dan <strong className="text-foreground">setuju</strong> rekaman
+                suara, transkrip jawaban, dan cuplikan frame kamera saya
+                diproses oleh layanan AI untuk penilaian wawancara ini. Hasilnya
+                hanya dilihat HRD perusahaan terkait, dan keputusan akhir tetap
+                dibuat manusia -- bukan AI.
+              </span>
+            </label>
           </div>
 
           <Button
             size="lg"
-            className="w-full mt-8 py-6 text-base font-bold shadow-lg"
+            className="mt-6 w-full rounded-full py-6 text-base font-bold"
             disabled={!readyToStart}
             onClick={() => setInterviewState("prescreen")}
           >

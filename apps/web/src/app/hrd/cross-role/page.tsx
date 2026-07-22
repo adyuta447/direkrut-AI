@@ -3,7 +3,7 @@
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { IconAlertCircle, IconSearch, IconSparkles } from "@tabler/icons-react";
+import { IconSearch, IconSparkles } from "@tabler/icons-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { getCrossRoleRecommendations, type CrossRoleMatch } from "@/services/aiService";
 import { ApiError } from "@/services/apiClient";
@@ -23,6 +23,7 @@ import {
   CrossRoleAnalyticsCharts,
 } from "@/components/molecules/dashboard/CrossRoleAnalyticsPanel";
 import { CrossRoleCard } from "@/components/molecules/dashboard/CrossRoleCard";
+import { InfoBanner } from "@/components/molecules/dashboard/InfoBanner";
 
 const COLORS = [
   "var(--chart-1)",
@@ -99,6 +100,7 @@ export default function CrossRoleRecommendationPage() {
         const label = isHighlyRelevant ? "Sangat Relevan" : "Potensi Adaptasi Cepat";
         return {
           id: app.id,
+          suggestedJobId: m.jobId,
           candidateName: app.applicantName,
           originalRole: app.jobTitle,
           suggestedRole: m.jobTitle,
@@ -225,33 +227,20 @@ export default function CrossRoleRecommendationPage() {
         />
       )}
 
-      <div className="relative overflow-hidden rounded-3xl bg-primary p-6 text-white">
-        <div className="flex items-start gap-4 max-w-2xl">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive">
-            <IconAlertCircle className="size-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-[17px]">
-              Cara Kerja AI Cross-Role
-            </h3>
-            <p className="text-sm text-white/85 mt-1">
-              AI cocokin ringkasan CV kandidat yang udah discreen sama
-              deskripsi lowongan aktif <strong>lainnya</strong> di company ini
-              -- cuma match dengan skor &ge; 50% DAN bukti kecocokan konkret
-              yang ditampilin. Butuh minimal 2 lowongan aktif di company kamu
-              biar ada posisi alternatif buat dicocokin.
-            </p>
-          </div>
-        </div>
-        <Image
-          src="/dashboard/profile/skills.svg"
-          alt=""
-          width={200}
-          height={150}
-          unoptimized
-          className="pointer-events-none absolute right-6 top-1/2 hidden h-20 w-auto -translate-y-1/2 select-none sm:block"
-        />
-      </div>
+      <InfoBanner
+        icon={IconSparkles}
+        title="Cara Kerja AI Cross-Role"
+        description={
+          <>
+            AI cocokin ringkasan CV kandidat yang udah discreen sama deskripsi
+            lowongan aktif <strong className="text-ink">lainnya</strong> di
+            company ini -- cuma match dengan skor{" "}
+            <strong className="text-ink">&ge; 50%</strong> dan bukti kecocokan
+            konkret yang ditampilin. Butuh minimal 2 lowongan aktif di company
+            kamu biar ada posisi alternatif buat dicocokin.
+          </>
+        }
+      />
 
       <div className="flex flex-col md:flex-row gap-4 w-full">
         <div className="relative flex-1">

@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import { IconFileText, IconCheck, IconX } from "@tabler/icons-react"
+import { IconFileText, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +18,7 @@ import { getExtendedData } from "@/lib/dashboard/extended-data"
 import { CandidateContactGrid } from "@/components/molecules/dashboard/CandidateContactGrid"
 import { CandidateCharts } from "@/components/molecules/dashboard/CandidateCharts"
 import { CandidateDetailAnalysis } from "@/components/molecules/dashboard/CandidateDetailAnalysis"
-import { CandidateDetailCV } from "@/components/molecules/dashboard/CandidateDetailCV"
+import { InterviewLogCard, PortfolioCard } from "@/components/molecules/dashboard/CandidateDetailCV"
 import type { Application } from "@/lib/types"
 
 export default function CandidateDetailPage() {
@@ -105,18 +105,20 @@ export default function CandidateDetailPage() {
               </Avatar>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-bold leading-[1.1] tracking-[-0.02em]">{candidate.applicantName}</h1>
+                  <h1 className="text-3xl font-bold leading-[1.1] tracking-[-0.02em]">{candidate.applicantName}</h1>
                   <Badge variant={candidate.status === "interview" ? "default" : candidate.status === "rejected" ? "destructive" : "secondary"} className="capitalize">
                     {candidate.status === "under-review" ? "Administrasi" : candidate.status}
                   </Badge>
-                  <Badge variant="outline" className={isFreshGrad ? "text-info border-info/30 bg-info/10" : "text-primary border-primary/30 bg-primary/10"}>
+                  <Badge variant="outline" className={isFreshGrad ? "border-info text-info" : "border-primary text-primary"}>
                     {isFreshGrad ? "Fresh Graduate" : "Professional"}
                   </Badge>
                   {candidate.isJobHopper && (
-                    <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">⚠️ Indikasi Job Hopping</Badge>
+                    <Badge variant="outline" className="gap-1 border-destructive text-destructive">
+                      <IconAlertTriangle className="size-3.5" /> Indikasi Job Hopping
+                    </Badge>
                   )}
                 </div>
-                <p className="mt-1 font-medium text-muted-foreground">{candidate.jobTitle}</p>
+                <p className="mt-1 text-base font-medium text-muted-foreground">{candidate.jobTitle}</p>
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row shrink-0">
@@ -152,10 +154,10 @@ export default function CandidateDetailPage() {
             <CandidateDetailAnalysis candidate={candidate} />
           </TabsContent>
           <TabsContent value="transkrip" className="py-6">
-            <CandidateDetailCV candidate={candidate} />
+            <InterviewLogCard candidate={candidate} />
           </TabsContent>
           <TabsContent value="ringkasan" className="py-6">
-            <CandidateDetailCV candidate={candidate} />
+            <PortfolioCard candidate={candidate} />
           </TabsContent>
         </Tabs>
       </div>
