@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
-from typing import Any, Awaitable, Callable, TypeVar, cast
+from typing import Any, Awaitable, Callable, TypeVar
 
 from app.config import get_settings
 
@@ -190,7 +190,7 @@ class GroqProvider(AIProvider):
             temperature=0.2,
             stream=True,
         )
-        async for chunk in cast(AsyncIterator[Any], stream):
+        async for chunk in stream:
             delta = chunk.choices[0].delta
             if delta.content:
                 yield delta.content
