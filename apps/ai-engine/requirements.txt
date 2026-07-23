@@ -33,5 +33,5 @@ tokenizers==0.20.1
 numpy==1.26.4
 
 # Utilitas
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 httpx==0.27.2
