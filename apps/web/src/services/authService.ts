@@ -7,12 +7,9 @@ import { apiFetch, isApiConfigured, setAuthTokens, clearAuthTokens, setCachedUse
  * request selanjutnya (create job, submit lamaran, dst) otomatis ke-attach
  * Authorization header (lihat apiClient.ts).
  *
- * Fallback ke mock CUMA buat backend yang beneran gak kejangkau (network
- * error, atau NEXT_PUBLIC_API_BASE_URL emang belum diset) -- kalau
- * backend-nya nyambung dan NOLAK (401 salah kredensial, 409 email
- * kepake, dst / ApiError), error itu dilempar apa adanya ke pemanggil.
- * Tanpa pembeda ini, kredensial ngasal bisa "login" lewat fallback tanpa
- * pernah beneran register.
+ * Register/login harus selalu lewat backend. Kalau API gak dikonfigurasi atau
+ * gak kejangkau, error dilempar apa adanya supaya UI gak pernah membuat akun
+ * lokal yang terlihat sukses padahal tidak tersimpan di database.
  *
  * Gak ada endpoint /v1/auth/me di backend, jadi `name` sesudah login cuma
  * placeholder dari prefix email (persis kayak mock lama) -- nama lengkap
@@ -59,27 +56,28 @@ function buildUserFromToken(accessToken: string, email: string, name?: string): 
   };
 }
 
+function normalizeEmailInput(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export async function login(email: string, password: string): Promise<AuthResult> {
-  if (isApiConfigured) {
-    try {
-      const { accessToken, refreshToken } = await apiFetch<TokenPair>("/v1/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-      setAuthTokens(accessToken, refreshToken);
-      const result = buildUserFromToken(accessToken, email);
-      setCachedUser(result.user);
-      return result;
-    } catch (err) {
-      if (err instanceof ApiError) throw err;
-      console.error("[authService] backend gak kejangkau, fallback ke mock:", err);
-    }
+  if (!isApiConfigured) {
+    throw new Error("Backend auth belum terhubung. Set NEXT_PUBLIC_API_BASE_URL.");
   }
-  const accessToken = "mock-token";
-  setAuthTokens(accessToken, "mock-refresh-token");
-  const result = { user: { id: crypto.randomUUID(), name: email.split("@")[0], email, role: "candidate" as const }, accessToken };
-  setCachedUser(result.user);
-  return result;
+  const normalizedEmail = normalizeEmailInput(email);
+  try {
+    const { accessToken, refreshToken } = await apiFetch<TokenPair>("/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: normalizedEmail, password }),
+    });
+    setAuthTokens(accessToken, refreshToken);
+    const result = buildUserFromToken(accessToken, normalizedEmail);
+    setCachedUser(result.user);
+    return result;
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    throw new Error("Gagal terhubung ke server auth. Coba lagi nanti.");
+  }
 }
 
 export async function register(
@@ -89,32 +87,29 @@ export async function register(
   role: UserRole,
   companyName?: string
 ): Promise<AuthResult> {
-  if (isApiConfigured) {
-    try {
-      const { accessToken, refreshToken } = await apiFetch<TokenPair>("/v1/auth/register", {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-          ...(role === "hrd" ? { companyName } : {}),
-        }),
-      });
-      setAuthTokens(accessToken, refreshToken);
-      const result = buildUserFromToken(accessToken, email, name);
-      setCachedUser(result.user);
-      return result;
-    } catch (err) {
-      if (err instanceof ApiError) throw err;
-      console.error("[authService] backend gak kejangkau, fallback ke mock:", err);
-    }
+  if (!isApiConfigured) {
+    throw new Error("Backend auth belum terhubung. Set NEXT_PUBLIC_API_BASE_URL.");
   }
-  const accessToken = "mock-token";
-  setAuthTokens(accessToken, "mock-refresh-token");
-  const result = { user: { id: crypto.randomUUID(), name, email, role }, accessToken };
-  setCachedUser(result.user);
-  return result;
+  const normalizedEmail = normalizeEmailInput(email);
+  try {
+    const { accessToken, refreshToken } = await apiFetch<TokenPair>("/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        email: normalizedEmail,
+        password,
+        role,
+        ...(role === "hrd" ? { companyName } : {}),
+      }),
+    });
+    setAuthTokens(accessToken, refreshToken);
+    const result = buildUserFromToken(accessToken, normalizedEmail, name);
+    setCachedUser(result.user);
+    return result;
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    throw new Error("Gagal terhubung ke server auth. Coba lagi nanti.");
+  }
 }
 
 export function logout(): void {
@@ -134,7 +129,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
 export async function changeEmail(newEmail: string): Promise<void> {
   await apiFetch<{ email: string }>("/v1/auth/me/email", {
     method: "PATCH",
-    body: JSON.stringify({ newEmail }),
+    body: JSON.stringify({ newEmail: normalizeEmailInput(newEmail) }),
   });
 }
 
@@ -148,7 +143,7 @@ export async function deleteAccount(password: string): Promise<void> {
 export async function requestPasswordReset(email: string): Promise<void> {
   await apiFetch<{ status: string }>("/v1/auth/forgot-password", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email: normalizeEmailInput(email) }),
   });
 }
 

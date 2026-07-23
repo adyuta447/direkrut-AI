@@ -41,7 +41,13 @@ export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisPr
       const result = await screenApplication(candidate.id)
       setScreening(result)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal jalanin screening AI.")
+      if (err instanceof ApiError && err.status === 403) {
+        // Biasanya sesi ketimpa login kandidat di tab lain (token kandidat
+        // kepakai buat aksi HRD). Kasih arahan yang jelas, bukan pesan mentah.
+        setError("Sesi kamu kelihatannya berganti (mungkin login di tab lain). Logout terus login ulang sebagai HRD, lalu coba lagi.")
+      } else {
+        setError(err instanceof ApiError ? err.message : "Gagal jalanin screening AI.")
+      }
     } finally {
       setIsScreening(false)
     }

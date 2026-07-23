@@ -57,6 +57,9 @@ export interface Application {
   validationStatus: "pending" | "in-progress" | "completed";
   validationResponses?: ValidationResponse[];
   recommendationScore?: number;
+  /** Hasil WAWANCARA AI -- sumbernya beda dari recommendationScore (screening CV). */
+  interviewScore?: number;
+  interviewStatus?: string;
   status: "submitted" | "under-review" | "interview" | "rejected";
   appliedDate: string;
   cvViewed?: boolean;

@@ -128,12 +128,7 @@ export default function ApplicationDetailPage() {
         </TabsContent>
 
         <TabsContent value="posisi" className="space-y-6 py-4">
-          <AppDetailJobInfo
-            job={job}
-            isFreshGrad={isFreshGrad}
-            hasCategory={!!application.category}
-            companyJobs={companyJobs}
-          />
+          <AppDetailJobInfo job={job} companyJobs={companyJobs} />
         </TabsContent>
 
         <TabsContent value="statistik" className="py-4">

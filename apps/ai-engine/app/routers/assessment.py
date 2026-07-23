@@ -50,6 +50,7 @@ class TranscribeInterviewResponse(BaseModel):
 
 
 class GenerateQuestionsRequest(BaseModel):
+    job_title: str = ""
     job_description: str
     cv_summary: str | None = None
 
@@ -158,11 +159,23 @@ async def transcribe_interview(payload: TranscribeInterviewRequest) -> Transcrib
 
 
 _QUESTIONS_SYSTEM_PROMPT = (
-    "Kamu adalah pewawancara HR yang berpengalaman selama 10 tahun lebih. Diberikan deskripsi lowongan (dan opsional "
-    "ringkasan CV kandidat), buat 4-5 pertanyaan interview yang relevan -- "
-    "campuran teknis dan perilaku, spesifik ke lowongan ini, bukan pertanyaan "
-    "generik. Balas HANYA dengan JSON valid, tanpa markdown code fence, "
-    'berbentuk: {"questions": ["pertanyaan 1", "pertanyaan 2", ...]}'
+    "Kamu adalah pewawancara HR profesional berpengalaman 10+ tahun. Diberikan "
+    "JUDUL POSISI, deskripsi lowongan, dan opsional ringkasan CV kandidat, buat "
+    "4-5 pertanyaan interview yang relevan.\n"
+    "ATURAN PENTING:\n"
+    "1. Pertanyaan WAJIB spesifik dan sesuai dengan JUDUL POSISI serta bidang "
+    "profesionalnya. Contoh: posisi 'Product Manager' -> tanya soal roadmap "
+    "produk, prioritas fitur, stakeholder, metrik; posisi 'Backend Engineer' "
+    "-> tanya soal arsitektur, database, API. \n"
+    "2. JANGAN PERNAH mengarang tugas atau pertanyaan di luar lingkup posisi "
+    "yang tertulis. DILARANG menanyakan pekerjaan kasar/rendahan (mis. "
+    "'bisa mengepel?', 'bisa bersih-bersih?') kecuali JUDUL POSISI-nya memang "
+    "office boy/cleaning service. Kalau ragu soal bidangnya, berpegang pada "
+    "JUDUL POSISI, jangan berasumsi.\n"
+    "3. Campur pertanyaan teknis dan perilaku, spesifik ke posisi ini, bukan "
+    "pertanyaan generik.\n"
+    "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
+    '{"questions": ["pertanyaan 1", "pertanyaan 2", ...]}'
     "\n\n" + INJECTION_GUARD
 )
 
@@ -187,11 +200,15 @@ def _parse_questions_json(raw: str) -> GenerateQuestionsResponse:
 
 @router.post("/generate-questions", response_model=GenerateQuestionsResponse)
 async def generate_questions(payload: GenerateQuestionsRequest) -> GenerateQuestionsResponse:
-    cache_key = make_cache_key("generate_questions", payload.job_description, payload.cv_summary or "")
+    cache_key = make_cache_key("generate_questions", payload.job_title, payload.job_description, payload.cv_summary or "")
 
     async def compute() -> dict:
         provider = GroqProvider()
-        prompt = wrap_untrusted("DESKRIPSI_LOWONGAN", payload.job_description)
+        # Judul posisi ditaruh PALING DEPAN sebagai jangkar utama -- ini yang
+        # bikin model gak ngarang tugas di luar bidang (mis. Product Manager
+        # gak ditanya soal ngepel).
+        prompt = wrap_untrusted("JUDUL_POSISI", payload.job_title or "(tidak disebutkan)")
+        prompt += "\n\n" + wrap_untrusted("DESKRIPSI_LOWONGAN", payload.job_description)
         if payload.cv_summary:
             prompt += "\n\n" + wrap_untrusted("RINGKASAN_CV_KANDIDAT", payload.cv_summary)
 

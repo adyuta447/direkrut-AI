@@ -22,7 +22,7 @@ export function JobList({
   onPageChange,
 }: JobListProps) {
   return (
-    <div className="flex-1 w-full lg:max-w-lg space-y-3">
+    <div className="w-full lg:w-2/5 lg:shrink-0 space-y-3">
       {jobs.map((job) => {
         const isActive = selectedJob === job.id || (!selectedJob && activeJobId === job.id);
         return (

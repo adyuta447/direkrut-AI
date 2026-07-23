@@ -25,6 +25,8 @@ import (
 
 var validate = validator.New()
 
+var errEmailTaken = errors.New("auth: email already taken")
+
 type Handler struct {
 	db                     *gorm.DB
 	issuer                 *jwtutil.Issuer
@@ -117,6 +119,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
+	email, err := normalizeEmail(req.Email)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "Email harus berupa email yang valid")
+		return
+	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -133,7 +140,14 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	)
 
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		user := appdb.User{Email: req.Email, PasswordHash: string(hash), Role: req.Role, Status: "active"}
+		var existing appdb.User
+		if err := tx.Where("LOWER(email) = ?", email).First(&existing).Error; err == nil {
+			return errEmailTaken
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		user := appdb.User{Email: email, PasswordHash: string(hash), Role: req.Role, Status: "active"}
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
@@ -160,7 +174,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if txErr != nil {
-		if errors.Is(txErr, gorm.ErrDuplicatedKey) {
+		if errors.Is(txErr, errEmailTaken) || errors.Is(txErr, gorm.ErrDuplicatedKey) {
 			httpx.WriteError(w, http.StatusConflict, "email_taken", "email ini udah kepake")
 			return
 		}
@@ -177,10 +191,15 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
+	email, err := normalizeEmail(req.Email)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "Email harus berupa email yang valid")
+		return
+	}
 
 	ctx := r.Context()
 	var user appdb.User
-	if err := h.db.WithContext(ctx).Where("email = ?", req.Email).First(&user).Error; err != nil {
+	if err := h.db.WithContext(ctx).Where("LOWER(email) = ?", email).First(&user).Error; err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials", "email atau password salah")
 		return
 	}
@@ -288,9 +307,6 @@ func (h *Handler) issueTokenPair(w http.ResponseWriter, r *http.Request, userID,
 	httpx.WriteJSON(w, status, authResponse{AccessToken: accessToken, RefreshToken: rawRefresh})
 }
 
-// revokeAllRefreshTokens dipanggil abis ganti password atau hapus akun --
-// sesi yang lagi aktif di device lain gak boleh tetap jalan pakai kredensial
-// lama.
 func (h *Handler) revokeAllRefreshTokens(ctx context.Context, tx *gorm.DB, userID string) error {
 	return tx.WithContext(ctx).Model(&appdb.RefreshToken{}).
 		Where("user_id = ? AND revoked_at IS NULL", userID).
@@ -358,18 +374,23 @@ func (h *Handler) handleChangeEmail(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", httpx.ValidationMessage(err))
 		return
 	}
+	email, err := normalizeEmail(req.NewEmail)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "Email baru harus berupa email yang valid")
+		return
+	}
 
 	ctx := r.Context()
 	var existing appdb.User
-	if err := h.db.WithContext(ctx).Where("email = ?", req.NewEmail).First(&existing).Error; err == nil {
+	if err := h.db.WithContext(ctx).Where("LOWER(email) = ?", email).First(&existing).Error; err == nil {
 		httpx.WriteError(w, http.StatusConflict, "email_taken", "email ini udah kepake")
 		return
 	}
-	if err := h.db.WithContext(ctx).Model(&appdb.User{}).Where("id = ?", claims.UserID).Update("email", req.NewEmail).Error; err != nil {
+	if err := h.db.WithContext(ctx).Model(&appdb.User{}).Where("id = ?", claims.UserID).Update("email", email).Error; err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ganti email")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]string{"email": req.NewEmail})
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"email": email})
 }
 
 type deleteAccountRequest struct {

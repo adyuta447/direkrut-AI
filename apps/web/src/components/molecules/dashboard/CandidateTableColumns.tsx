@@ -170,6 +170,24 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
     cell: ({ row }) => <ScoreBadge score={row.original.recommendationScore} />,
   },
   {
+    accessorKey: "interviewScore",
+    header: ({ column }) => <SortableHeader label="Wawancara AI" column={column} />,
+    cell: ({ row }) => {
+      const { interviewStatus, interviewScore } = row.original
+      if (interviewStatus !== "completed") {
+        return <span className="text-sm text-muted-foreground">Belum wawancara</span>
+      }
+      return (
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span className="text-base font-bold tabular-nums text-primary">
+            {Math.round(interviewScore ?? 0)}
+          </span>
+          <span className="text-xs text-muted-foreground">skor AI</span>
+        </div>
+      )
+    },
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => <SortableHeader label="Status" column={column} />,
     cell: ({ row }) => <StatusBadge status={row.original.status} />,

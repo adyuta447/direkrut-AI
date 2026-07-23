@@ -12,6 +12,8 @@ interface ApiApplication {
   appliedAt: string;
   updatedAt: string;
   recommendationScore?: number;
+  interviewScore?: number;
+  interviewStatus?: string;
   candidateProfile?: CandidateProfileSummary;
 }
 
@@ -30,6 +32,8 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
     recommendationScore: a.recommendationScore,
+    interviewScore: a.interviewScore,
+    interviewStatus: a.interviewStatus,
     candidateProfile: a.candidateProfile,
     email: a.candidateProfile?.email,
     phone: a.candidateProfile?.phone,
@@ -71,6 +75,29 @@ export async function getApplicationById(id: string): Promise<Application | null
     }
   }
   return null;
+}
+
+export interface SentDecision {
+  id: string;
+  applicationId: string;
+  candidateName: string;
+  jobTitle: string;
+  toStatus: string;
+  note?: string;
+  createdAt: string;
+}
+
+/** Riwayat keputusan HRD ke kandidat (undang wawancara/tolak/dst) -- data
+ * asli dari status history, buat halaman Kotak Masuk HRD. */
+export async function listSentDecisions(): Promise<SentDecision[]> {
+  if (!isApiConfigured) return [];
+  try {
+    const data = await apiFetch<{ items: SentDecision[] }>("/v1/applications/sent-decisions");
+    return data.items;
+  } catch (err) {
+    console.error("[applicationService] gagal ambil riwayat keputusan HRD:", err);
+    return [];
+  }
 }
 
 export async function submitApplication(jobId: string): Promise<Application | null> {

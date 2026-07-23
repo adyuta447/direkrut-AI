@@ -9,6 +9,7 @@ interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  displayContent?: string
   timestamp: Date
 }
 
@@ -56,7 +57,7 @@ export function AIAssistantMessages({
                   from={isUser ? "user" : "ai"}
                   className="max-w-none animate-in fade-in slide-in-from-bottom-2 break-words break-all whitespace-pre-wrap"
                 >
-                  {msg.content}
+                  {msg.displayContent ?? msg.content}
                 </ChatBubble>
               </div>
             </div>

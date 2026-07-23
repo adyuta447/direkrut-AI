@@ -1,9 +1,3 @@
-// Package aiengine berisi HTTP client yang manggil ai-engine (Python/FastAPI)
-// dari api-go. Semua request dikirim dengan header X-Internal-Api-Key buat
-// autentikasi server-to-server (lihat ai-engine/app/security.py).
-//
-// Client ini BUKAN dipanggil langsung dari frontend -- frontend manggil
-// handler.go di package ini, yang validasi JWT dulu baru forward ke ai-engine.
 package aiengine
 
 import (
@@ -16,14 +10,12 @@ import (
 	"time"
 )
 
-// Client adalah HTTP client ke ai-engine.
 type Client struct {
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
 }
 
-// NewClient bikin client baru. baseURL contoh: "http://localhost:8000".
 func NewClient(baseURL, apiKey string) *Client {
 	return &Client{
 		baseURL: baseURL,
@@ -34,8 +26,6 @@ func NewClient(baseURL, apiKey string) *Client {
 	}
 }
 
-// IsConfigured cek apakah AI engine sudah di-configure (base URL + API key
-// harus terisi). Biar handler bisa return 503 yang jelas daripada panic.
 func (c *Client) IsConfigured() bool {
 	return c.baseURL != "" && c.apiKey != ""
 }
@@ -171,6 +161,7 @@ type MatchResponse struct {
 }
 
 type GenerateQuestionsRequest struct {
+	JobTitle       string  `json:"job_title"`
 	JobDescription string  `json:"job_description"`
 	CVSummary      *string `json:"cv_summary,omitempty"`
 }
@@ -206,8 +197,6 @@ type ChatRequest struct {
 	SessionID string        `json:"session_id"`
 	Messages  []ChatMessage `json:"messages"`
 }
-
-// --- API Methods ---
 
 func (c *Client) ParseCV(ctx context.Context, req ParseCVRequest) (*ParseCVResponse, error) {
 	var resp ParseCVResponse
@@ -269,9 +258,6 @@ type GenerateFeedbackResponse struct {
 	Feedback string `json:"feedback"`
 }
 
-// GenerateFeedback: email feedback pengembangan buat kandidat yang ditolak
-// (poin nilai tambah produk -- kandidat selalu dapet arahan, bukan cuma
-// penolakan).
 func (c *Client) GenerateFeedback(ctx context.Context, req GenerateFeedbackRequest) (*GenerateFeedbackResponse, error) {
 	var resp GenerateFeedbackResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/generate-feedback", req, &resp); err != nil {

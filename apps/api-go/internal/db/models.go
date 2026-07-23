@@ -213,6 +213,12 @@ type Application struct {
 	// kandidat nampilin skor screening AI langsung tanpa fetch per-baris.
 	// Cuma dibaca, gak pernah di-set saat Create/Update Application.
 	ScoringResult *ScoringResult `gorm:"foreignKey:ApplicationID;references:ID"`
+	// Has-many assessment (track_type "ai_interview" / "pre_screening").
+	// Dipakai Preload berkondisi biar listing HRD bisa nampilin hasil
+	// WAWANCARA AI juga -- sebelumnya skor wawancara cuma nyangkut di tabel
+	// assessments dan gak pernah ikut ke response, jadi dashboard HRD gak
+	// pernah berubah walau kandidat udah selesai wawancara.
+	Assessments []Assessment `gorm:"foreignKey:ApplicationID;references:ID"`
 }
 
 func (Application) TableName() string { return "applications" }

@@ -47,20 +47,20 @@ export default function CandidateDashboardPage() {
           <StatCard
             label="Lamaran Terkirim"
             value={total}
-            className="bg-primary border-transparent text-white [&_.text-muted-foreground]:text-white/80"
+            className="bg-surface-soft border-transparent text-white [&_.text-muted-foreground]:text-white/80"
             image="/dashboard/paper.svg"
             footerDetail="Semua yang udah kamu kirim"
           />
           <StatCard
             label="Tahap Administrasi"
             value={administrasi}
-            className="bg-[color-mix(in_oklch,var(--warning),black_20%)] border-transparent text-white [&_.text-muted-foreground]:text-white/80"
+            className="bg-surface-soft border-transparent text-white [&_.text-muted-foreground]:text-white/80"
             image="/dashboard/administrasi.svg"
             footerDetail="Lagi dicek sama HRD"
           />
           <StatCard
             label="Wawancara"
-            className="bg-brand-accent-strong border-transparent text-white [&_.text-muted-foreground]:text-white/80"
+            className="bg-surface-soft border-transparent text-white [&_.text-muted-foreground]:text-white/80"
             value={wawancara}
             image="/dashboard/conference.svg"
             footerDetail={wawancara > 0 ? "Gas, siapin dirimu!" : "Belum ada jadwal"}

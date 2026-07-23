@@ -24,6 +24,14 @@ boto3==1.35.61
 # Ekstraksi teks PDF buat CV parsing -- pure Python, gak butuh system dep
 pypdf==5.1.0
 
+# Serving classifier kategori CV lokal (model ONNX hasil fine-tune di Colab,
+# lihat ml/train_cv_classifier.py + app/routers/cv_classifier.py). SENGAJA
+# onnxruntime (CPU, puluhan MB) BUKAN torch (~2GB) biar image tetap ramping &
+# muat di dyno yang sekarang -- ini yang bikin fitur ini murah di Heroku.
+onnxruntime==1.19.2
+tokenizers==0.20.1
+numpy==1.26.4
+
 # Utilitas
 python-dotenv==1.0.1
 httpx==0.27.2

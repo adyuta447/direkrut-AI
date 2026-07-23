@@ -1,4 +1,7 @@
-import { MailOpenIcon, SendIcon, ReplyIcon } from "lucide-react"
+import Link from "next/link"
+import { CheckIcon, XIcon, ClockIcon } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+import { id } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,67 +12,75 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-interface Email {
-  id: string
-  candidateName: string
-  jobTitle: string
-  subject: string
-  status: "sent" | "read" | "replied"
-  date: string
-}
+import type { SentDecision } from "@/services/applicationService"
 
 interface HrdInboxTableProps {
-  emails: Email[]
+  decisions: SentDecision[]
 }
 
-function EmailStatusBadge({ status }: { status: Email["status"] }) {
-  if (status === "sent") {
+// Petakan status keputusan -> label & badge yang jelas buat HRD.
+function DecisionBadge({ status }: { status: string }) {
+  if (status === "interview") {
     return (
-      <Badge variant="outline" className="text-muted-foreground">
-        <SendIcon className="mr-1 h-3 w-3" /> Terkirim
+      <Badge variant="outline" className="border-success text-success">
+        <CheckIcon className="mr-1 size-3" /> Diundang Wawancara
       </Badge>
     )
   }
-  if (status === "read") {
+  if (status === "rejected") {
     return (
-      <Badge variant="secondary" className="bg-info/10 text-info border-info/20">
-        <MailOpenIcon className="mr-1 h-3 w-3" /> Dibaca
+      <Badge variant="outline" className="border-destructive text-destructive">
+        <XIcon className="mr-1 size-3" /> Ditolak
       </Badge>
     )
   }
   return (
-    <Badge variant="default" className="bg-success/10 text-success border-success/20">
-      <ReplyIcon className="mr-1 h-3 w-3" /> Dibalas
+    <Badge variant="outline" className="border-warning text-warning">
+      <ClockIcon className="mr-1 size-3" /> Sedang Ditinjau
     </Badge>
   )
 }
 
-export function HrdInboxTable({ emails }: HrdInboxTableProps) {
+const SUBJECT: Record<string, string> = {
+  interview: "Undangan Wawancara",
+  rejected: "Pemberitahuan Hasil Seleksi",
+  "under-review": "Lamaran Sedang Ditinjau",
+}
+
+export function HrdInboxTable({ decisions }: HrdInboxTableProps) {
+  if (decisions.length === 0) {
+    return (
+      <div className="py-12 text-center text-sm text-ink-muted">
+        Belum ada keputusan yang dikirim ke kandidat. Undang atau tolak kandidat dari halaman detail buat mulai.
+      </div>
+    )
+  }
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Kandidat</TableHead>
           <TableHead>Posisi</TableHead>
-          <TableHead>Subjek Email</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Tanggal</TableHead>
+          <TableHead>Subjek</TableHead>
+          <TableHead>Keputusan</TableHead>
+          <TableHead>Waktu</TableHead>
           <TableHead className="text-right">Aksi</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {emails.map((email) => (
-          <TableRow key={email.id}>
-            <TableCell className="font-medium">{email.candidateName}</TableCell>
-            <TableCell>{email.jobTitle}</TableCell>
-            <TableCell className="truncate max-w-[200px]">{email.subject}</TableCell>
+        {decisions.map((d) => (
+          <TableRow key={d.id}>
+            <TableCell className="font-medium">{d.candidateName}</TableCell>
+            <TableCell>{d.jobTitle}</TableCell>
+            <TableCell className="max-w-55 truncate">{d.note || SUBJECT[d.toStatus] || "Pemberitahuan"}</TableCell>
             <TableCell>
-              <EmailStatusBadge status={email.status} />
+              <DecisionBadge status={d.toStatus} />
             </TableCell>
-            <TableCell>{email.date}</TableCell>
+            <TableCell className="whitespace-nowrap text-ink-muted">
+              {formatDistanceToNow(new Date(d.createdAt), { addSuffix: true, locale: id })}
+            </TableCell>
             <TableCell className="text-right">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" render={<Link href={`/hrd/candidates/${d.applicationId}`} />}>
                 Lihat Detail
               </Button>
             </TableCell>
