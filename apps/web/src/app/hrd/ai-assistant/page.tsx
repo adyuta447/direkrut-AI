@@ -46,6 +46,7 @@ function AIAssistantChat() {
 
   const initialQuery = initialContext?.q || searchParams.get("q")
   const candidateId = initialContext?.candidate || searchParams.get("candidate")
+  const chatSessionId = `session-${currentUser?.id || "anon"}`
 
   // Konteks faktual kandidat: nama + posisi + hasil screening (skor, skill,
   // ringkasan CV) + transkrip wawancara AI (tanya-jawab + feedback + skor).
@@ -134,7 +135,7 @@ function AIAssistantChat() {
 
       try {
         await aiService.streamChat(
-          `session-${currentUser?.id || "anon"}`,
+          chatSessionId,
           chatMessages,
           (chunk) => {
             if (chunk.error) {
@@ -180,7 +181,7 @@ function AIAssistantChat() {
         setIsTyping(false)
       }
     },
-    [currentUser?.id]
+    [chatSessionId]
   )
 
   // Seed welcome message sekali aja pas mount.

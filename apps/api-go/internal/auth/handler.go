@@ -25,6 +25,8 @@ import (
 
 var validate = validator.New()
 
+var errEmailTaken = errors.New("auth: email already taken")
+
 type Handler struct {
 	db                     *gorm.DB
 	issuer                 *jwtutil.Issuer
@@ -138,6 +140,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	)
 
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing appdb.User
+		if err := tx.Where("LOWER(email) = ?", email).First(&existing).Error; err == nil {
+			return errEmailTaken
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
 		user := appdb.User{Email: email, PasswordHash: string(hash), Role: req.Role, Status: "active"}
 		if err := tx.Create(&user).Error; err != nil {
 			return err
@@ -165,7 +174,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if txErr != nil {
-		if errors.Is(txErr, gorm.ErrDuplicatedKey) {
+		if errors.Is(txErr, errEmailTaken) || errors.Is(txErr, gorm.ErrDuplicatedKey) {
 			httpx.WriteError(w, http.StatusConflict, "email_taken", "email ini udah kepake")
 			return
 		}
@@ -297,7 +306,6 @@ func (h *Handler) issueTokenPair(w http.ResponseWriter, r *http.Request, userID,
 	}
 	httpx.WriteJSON(w, status, authResponse{AccessToken: accessToken, RefreshToken: rawRefresh})
 }
-
 
 func (h *Handler) revokeAllRefreshTokens(ctx context.Context, tx *gorm.DB, userID string) error {
 	return tx.WithContext(ctx).Model(&appdb.RefreshToken{}).
