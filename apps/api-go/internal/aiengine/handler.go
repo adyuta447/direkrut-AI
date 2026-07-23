@@ -43,9 +43,6 @@ func (h *Handler) ensureConfigured(w http.ResponseWriter) bool {
 	return true
 }
 
-// handleChatStream proxy SSE stream dari ai-engine ke browser.
-// Browser mengirim POST dengan JSON body, api-go forward ke ai-engine,
-// lalu pipe stream response langsung ke browser tanpa buffering.
 func (h *Handler) handleChatStream(w http.ResponseWriter, r *http.Request) {
 	if !h.ensureConfigured(w) {
 		return

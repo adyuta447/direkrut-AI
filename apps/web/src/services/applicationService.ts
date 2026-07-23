@@ -12,6 +12,8 @@ interface ApiApplication {
   appliedAt: string;
   updatedAt: string;
   recommendationScore?: number;
+  interviewScore?: number;
+  interviewStatus?: string;
   candidateProfile?: CandidateProfileSummary;
 }
 
@@ -30,6 +32,8 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
     recommendationScore: a.recommendationScore,
+    interviewScore: a.interviewScore,
+    interviewStatus: a.interviewStatus,
     candidateProfile: a.candidateProfile,
     email: a.candidateProfile?.email,
     phone: a.candidateProfile?.phone,

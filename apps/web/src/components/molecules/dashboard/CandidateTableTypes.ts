@@ -6,6 +6,8 @@ export interface Candidate {
   jobTitle: string
   resumeLink?: string
   recommendationScore?: number
+  interviewScore?: number
+  interviewStatus?: string
   status: string
   appliedDate: string
   jobId: string

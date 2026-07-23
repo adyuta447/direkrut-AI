@@ -12,7 +12,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "DirekrutAI — Platform Rekrutmen Cerdas",
+  title: "DirekrutAI — Platform Direkrut AI",
   description:
     "Ubah proses rekrutmen Anda dengan analisis CV berbasis AI, validasi keterampilan otomatis, dan pencocokan kandidat yang cerdas.",
 };

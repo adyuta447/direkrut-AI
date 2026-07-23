@@ -16,9 +16,9 @@ export interface StatusMeta {
 
 /** Sumber tunggal label + gaya status lamaran (glossary copywriting). */
 export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
-  submitted: { label: "Terkirim", variant: "outline", color: "var(--muted-foreground)", solidClass: "bg-muted-foreground" },
-  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--warning)", solidClass: "bg-[color-mix(in_oklch,var(--warning),black_15%)]" },
-  interview: { label: "Wawancara", variant: "default", color: "var(--info)", solidClass: "bg-info" },
+  submitted: { label: "Terkirim", variant: "outline", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
+  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
+  interview: { label: "Wawancara", variant: "default", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
   rejected: { label: "Ditolak", variant: "outline", color: "var(--destructive)", solidClass: "bg-destructive" },
 };
 
@@ -36,8 +36,8 @@ export interface ScoreLevel {
 
 /** Skor rekomendasi AI -> level (cutoff 75/55, sebelumnya terduplikasi 3x). */
 export function getScoreLevel(score?: number): ScoreLevel {
-  if (!score) return { label: "—", variant: "outline", color: "var(--muted-foreground)", solidClass: "bg-muted-foreground" };
-  if (score >= 75) return { label: "Memenuhi Syarat", variant: "default", color: "var(--success)", solidClass: "bg-success" };
-  if (score >= 55) return { label: "Perlu Dikembangkan", variant: "secondary", color: "var(--warning)", solidClass: "bg-[color-mix(in_oklch,var(--warning),black_15%)]" };
+  if (!score) return { label: "—", variant: "outline", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
+  if (score >= 75) return { label: "Memenuhi Syarat", variant: "default", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
+  if (score >= 55) return { label: "Perlu Dikembangkan", variant: "secondary", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
   return { label: "Tidak Sesuai", variant: "destructive", color: "var(--destructive)", solidClass: "bg-destructive" };
 }

@@ -22,7 +22,7 @@ from app.cache import ping as redis_ping
 from app.config import get_settings
 from app.errors import register_error_handlers
 from app.logging import RequestIDMiddleware, configure_logging
-from app.routers import assessment, chat, cv_parser, vector_search
+from app.routers import assessment, chat, cv_classifier, cv_parser, vector_search
 from app.security import require_internal_key
 
 
@@ -47,6 +47,7 @@ app.include_router(cv_parser.router, prefix="/v1/cv-parser", tags=["cv-parser"],
 app.include_router(vector_search.router, prefix="/v1/vector-search", tags=["vector-search"], dependencies=_internal_only)
 app.include_router(assessment.router, prefix="/v1/assessment", tags=["assessment"], dependencies=_internal_only)
 app.include_router(chat.router, prefix="/v1/chat", tags=["chat"], dependencies=_internal_only)
+app.include_router(cv_classifier.router, prefix="/v1/cv-classifier", tags=["cv-classifier"], dependencies=_internal_only)
 
 
 @app.get("/healthz")

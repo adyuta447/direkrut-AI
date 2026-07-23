@@ -128,6 +128,11 @@ type applicationResponse struct {
 	UpdatedAt           time.Time                `json:"updatedAt"`
 	RecommendationScore *float64                 `json:"recommendationScore,omitempty"`
 	CandidateProfile    *candidateProfileSummary `json:"candidateProfile,omitempty"`
+	// Hasil WAWANCARA AI -- beda sumber dari RecommendationScore (yang dari
+	// screening CV). Tanpa dua field ini, dashboard HRD gak pernah nunjukin
+	// bahwa kandidat udah selesai wawancara.
+	InterviewScore  *float64 `json:"interviewScore,omitempty"`
+	InterviewStatus string   `json:"interviewStatus,omitempty"`
 }
 
 func toApplicationResponse(a appdb.Application) applicationResponse {
@@ -159,6 +164,13 @@ func toApplicationResponse(a appdb.Application) applicationResponse {
 	if a.ScoringResult != nil {
 		score := a.ScoringResult.OverallScore
 		resp.RecommendationScore = &score
+	}
+	for _, as := range a.Assessments {
+		if as.TrackType == "ai_interview" {
+			resp.InterviewStatus = as.Status
+			resp.InterviewScore = as.Score
+			break
+		}
 	}
 	return resp
 }
@@ -331,7 +343,8 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ctx := r.Context()
-	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult")
+	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").
+		Preload("Assessments", "track_type = ?", "ai_interview")
 
 	switch claims.Role {
 	case "candidate":
@@ -391,7 +404,8 @@ func (h *Handler) loadVisibleApplication(w http.ResponseWriter, r *http.Request)
 	appID := chi.URLParam(r, "applicationID")
 
 	var appRow appdb.Application
-	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").First(&appRow, "id = ?", appID).Error; err != nil {
+	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").
+		Preload("Assessments", "track_type = ?", "ai_interview").First(&appRow, "id = ?", appID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran gak ditemukan")
 		return nil, false
 	}
