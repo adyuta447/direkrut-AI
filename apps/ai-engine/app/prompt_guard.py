@@ -37,6 +37,13 @@ JAILBREAK_REFUSAL = (
     "membantu soal rekrutmen, analisis kandidat, dan proses HR."
 )
 
+HR_SCOPE_REFUSAL = (
+    "Aku hanya bisa membantu kebutuhan HR dan rekrutmen di Direkrut AI, seperti "
+    "analisis kandidat, screening CV, strategi hiring, pertanyaan interview, "
+    "rubrik evaluasi, dan komunikasi kandidat. Aku tidak membantu permintaan "
+    "ngoding, debugging, atau pembuatan aplikasi umum di luar konteks kerja HRD."
+)
+
 _JAILBREAK_PATTERNS = tuple(
     re.compile(pattern, re.IGNORECASE | re.DOTALL)
     for pattern in (
@@ -55,6 +62,15 @@ _JAILBREAK_PATTERNS = tuple(
         r"(\[system\]|\[developer\]|</?system\b|</?developer\b|<\|vq_\d+\|>|<\|eos\|>)",
         r"\b(base64|rot13|hex|encoded|decode)\b.{0,120}\b(prompt|instruction|policy|jailbreak|safety)\b",
         r"\b(pretend|roleplay|simulate)\b.{0,120}\b(unrestricted|unfiltered|rebel|evil|no policy|without policy|jailbreak)\b",
+    )
+)
+
+_CODING_REQUEST_PATTERNS = tuple(
+    re.compile(pattern, re.IGNORECASE | re.DOTALL)
+    for pattern in (
+        r"\b(buatkan?|bikin|tuliskan?|generate|write|create|implement|coding|ngoding)\b.{0,100}\b(kode|code|skrip|script|program|fungsi|function|class|endpoint|api|sql|query|regex|python|javascript|typescript|golang|java|php|react|nextjs|nodejs|docker|kubernetes|bash|shell)\b",
+        r"\b(debug|fix|perbaiki|refactor|compile|deploy|jalankan|run)\b.{0,100}\b(error|bug|kode|code|skrip|script|app|aplikasi|website|frontend|backend|api)\b",
+        r"\b(kode|code|skrip|script|program|fungsi|function|class)\b.{0,80}\b(python|javascript|typescript|golang|java|php|react|nextjs|nodejs|sql|bash|shell|docker)\b",
     )
 )
 
@@ -89,6 +105,18 @@ _SQUEEZED_MARKERS = (
     "janganmenolak",
     "abaikaninstruksi",
 )
+_HRD_WORK_PRODUCT_MARKERS = (
+    "pertanyaaninterview",
+    "soalinterview",
+    "rubrikinterview",
+    "rubrikevaluasi",
+    "kriteriaseleksi",
+    "jobdescription",
+    "deskripsipekerjaan",
+    "skillmatrix",
+    "kompetensikandidat",
+)
+_HRD_QUESTION_MARKER = "pertanyaan hrd:"
 
 
 def _normalize_for_detection(content: str) -> tuple[str, str]:
@@ -104,6 +132,21 @@ def looks_like_prompt_attack(content: str) -> bool:
     return any(marker in squeezed for marker in _SQUEEZED_MARKERS) or any(
         pattern.search(compact) for pattern in _JAILBREAK_PATTERNS
     )
+
+
+def looks_out_of_scope_for_hrd(content: str) -> bool:
+    intent = _extract_user_intent(content)
+    compact, squeezed = _normalize_for_detection(intent)
+    if any(marker in squeezed for marker in _HRD_WORK_PRODUCT_MARKERS):
+        return False
+    return any(pattern.search(compact) for pattern in _CODING_REQUEST_PATTERNS)
+
+
+def _extract_user_intent(content: str) -> str:
+    marker_index = content.lower().rfind(_HRD_QUESTION_MARKER)
+    if marker_index == -1:
+        return content
+    return content[marker_index + len(_HRD_QUESTION_MARKER) :]
 
 
 def wrap_untrusted(label: str, content: str) -> str:
