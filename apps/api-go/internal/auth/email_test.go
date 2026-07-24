@@ -82,10 +82,34 @@ func TestHandleRegisterRejectsDuplicateEmailWithDifferentCase(t *testing.T) {
 	}
 }
 
+func TestHandleLoginRejectsConfusableEmailDomain(t *testing.T) {
+	handler := newAuthTestHandler(t)
+
+	registerResponse := performRegister(handler, `{
+		"name":"User Test",
+		"email":"user@gmail.com",
+		"password":"password123",
+		"role":"hrd",
+		"companyName":"Direkrut"
+	}`)
+	if registerResponse.Code != http.StatusCreated {
+		t.Fatalf("register status = %d, want %d: %s", registerResponse.Code, http.StatusCreated, registerResponse.Body.String())
+	}
+
+	loginResponse := performLogin(handler, `{
+		"email":"user@gmail.c0m",
+		"password":"password123"
+	}`)
+	if loginResponse.Code != http.StatusBadRequest {
+		t.Fatalf("login status = %d, want %d: %s", loginResponse.Code, http.StatusBadRequest, loginResponse.Body.String())
+	}
+}
+
 func newAuthTestHandler(t *testing.T) *Handler {
 	t.Helper()
 
-	gdb, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+	dbName := strings.NewReplacer("/", "_", " ", "_").Replace(t.Name())
+	gdb, err := gorm.Open(sqlite.Open("file:"+dbName+"?mode=memory&cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
@@ -102,5 +126,12 @@ func performRegister(handler *Handler, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/auth/register", strings.NewReader(body))
 	rec := httptest.NewRecorder()
 	handler.handleRegister(rec, req)
+	return rec
+}
+
+func performLogin(handler *Handler, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(body))
+	rec := httptest.NewRecorder()
+	handler.handleLogin(rec, req)
 	return rec
 }
