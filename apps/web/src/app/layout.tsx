@@ -27,6 +27,7 @@ export default function RootLayout({
       lang="id"
       className={cn("font-sans", jakarta.variable)}
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>

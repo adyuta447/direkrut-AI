@@ -7,6 +7,7 @@ import {
   SettingsHrdTabSystem,
 } from "@/components/molecules/dashboard/SettingsHrdTabs"
 import { SettingsHrdTabBilling } from "@/components/molecules/dashboard/SettingsHrdTabBilling"
+import { SettingsHrdTabAiScoring } from "@/components/molecules/dashboard/SettingsHrdTabAiScoring"
 
 export default function SettingsPage() {
   return (
@@ -18,14 +19,19 @@ export default function SettingsPage() {
       />
 
       <Tabs defaultValue="account" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
+        <TabsList className="bg-muted/50 p-1 flex-wrap h-auto">
           <TabsTrigger value="account" className="px-6">Akun</TabsTrigger>
+          <TabsTrigger value="ai-scoring" className="px-6">Bobot AI Screening</TabsTrigger>
           <TabsTrigger value="system" className="px-6">Sistem &amp; Tampilan</TabsTrigger>
           <TabsTrigger value="billing" className="px-6">Paket &amp; Upgrade</TabsTrigger>
         </TabsList>
 
         <TabsContent value="account" className="space-y-4">
           <SettingsHrdTabAccount />
+        </TabsContent>
+
+        <TabsContent value="ai-scoring" className="space-y-4">
+          <SettingsHrdTabAiScoring />
         </TabsContent>
 
         <TabsContent value="system" className="space-y-4">

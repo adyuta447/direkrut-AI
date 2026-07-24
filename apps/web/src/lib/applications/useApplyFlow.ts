@@ -37,8 +37,12 @@ export function useApplyFlow(job: Job | undefined) {
     let cancelled = false
     getMyProfile().then((profile) => {
       if (!cancelled) {
-        setHasCv(Boolean(profile?.cvFileUrl))
+        const has = Boolean(profile?.cvFileUrl)
+        setHasCv(has)
         setIsLoadingCv(false)
+        if (isProfileComplete && !has) {
+          setStep(2) // paksa ke langkah upload CV meskipun profil lengkap
+        }
       }
     })
     return () => {

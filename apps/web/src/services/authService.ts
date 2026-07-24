@@ -57,7 +57,15 @@ function buildUserFromToken(accessToken: string, email: string, name?: string): 
 }
 
 function normalizeEmailInput(email: string): string {
-  return email.trim().toLowerCase();
+  const normalized = email.trim().toLowerCase();
+  const at = normalized.lastIndexOf("@");
+  const domain = at >= 0 ? normalized.slice(at + 1) : "";
+  const dot = domain.lastIndexOf(".");
+  const tld = dot >= 0 ? domain.slice(dot + 1) : "";
+  if (!tld || /[^a-z]/.test(tld)) {
+    throw new ApiError(400, "Email harus berupa email yang valid", "invalid_request");
+  }
+  return normalized;
 }
 
 export async function login(email: string, password: string): Promise<AuthResult> {

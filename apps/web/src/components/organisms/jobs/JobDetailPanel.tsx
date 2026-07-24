@@ -9,9 +9,10 @@ interface JobDetailPanelProps {
   job: Job;
   applyHref?: string;
   className?: string;
+  applicationStatus?: string;
 }
 
-export function JobDetailPanel({ job, applyHref, className }: JobDetailPanelProps) {
+export function JobDetailPanel({ job, applyHref, className, applicationStatus }: JobDetailPanelProps) {
   return (
     <div
       className={cn(
@@ -19,7 +20,7 @@ export function JobDetailPanel({ job, applyHref, className }: JobDetailPanelProp
         className
       )}
     >
-      <JobDetailHeader job={job} applyHref={applyHref} />
+      <JobDetailHeader job={job} applyHref={applyHref} applicationStatus={applicationStatus} />
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="mb-8">

@@ -17,10 +17,19 @@ type Message = {
   timestamp: Date
 }
 
+function initialAssistantMessage(): Message {
+  return {
+    id: "1",
+    role: "assistant",
+    content: "Halo! Aku Asisten AI kamu. Ada yang bisa dibantu soal rekrutmen, analisis pelamar, atau jadwal wawancara?",
+    timestamp: new Date(),
+  }
+}
+
 export function FloatingAIAssistant() {
   const { currentUser, applications } = useDashboard()
   const { isOpen, pendingQuery, close, toggle, clearPendingQuery } = useAIAssistantWidget()
-  const [messages, setMessages] = React.useState<Message[]>([])
+  const [messages, setMessages] = React.useState<Message[]>(() => [initialAssistantMessage()])
   const [inputValue, setInputValue] = React.useState("")
   const [isTyping, setIsTyping] = React.useState(false)
   const scrollRef = React.useRef<HTMLDivElement>(null)
@@ -33,18 +42,19 @@ export function FloatingAIAssistant() {
   // Konteks faktual kandidat (skor screening + transkrip wawancara) -- sama
   // persis dengan yang dipakai halaman lama, cuma sumbernya sekarang dari
   // pendingQuery widget, bukan search params route.
-  const [candidateContext, setCandidateContext] = React.useState<string | null>(null)
+  const candidate = React.useMemo(
+    () => (candidateId && applications ? applications.find((app) => app.id === candidateId) ?? null : null),
+    [candidateId, applications],
+  )
+  const [loadedCandidateContext, setLoadedCandidateContext] = React.useState<{
+    candidateId: string
+    value: string
+  } | null>(null)
+  const candidateContext = candidateId && loadedCandidateContext?.candidateId === candidateId ? loadedCandidateContext.value : null
 
   React.useEffect(() => {
-    if (!candidateId || !applications) {
-      setCandidateContext(null)
-      return
-    }
-    const candidate = applications.find((a) => a.id === candidateId)
-    if (!candidate) {
-      setCandidateContext(null)
-      return
-    }
+    if (!candidateId || !candidate) return
+
     let cancelled = false
     ;(async () => {
       const [screening, interview] = await Promise.all([
@@ -78,16 +88,18 @@ export function FloatingAIAssistant() {
         parts.push("Kandidat ini BELUM menyelesaikan wawancara AI.")
       }
 
-      setCandidateContext(
-        "[DATA KANDIDAT — pakai HANYA fakta di bawah ini buat jawab, jangan mengarang di luar data ini]\n" +
+      setLoadedCandidateContext({
+        candidateId,
+        value:
+          "[DATA KANDIDAT — pakai HANYA fakta di bawah ini buat jawab, jangan mengarang di luar data ini]\n" +
           parts.join("\n") +
-          "\n[AKHIR DATA KANDIDAT]\n\nPertanyaan HRD: "
-      )
+          "\n[AKHIR DATA KANDIDAT]\n\nPertanyaan HRD: ",
+      })
     })()
     return () => {
       cancelled = true
     }
-  }, [candidateId, applications])
+  }, [candidateId, candidate])
 
   const sendToAI = React.useCallback(
     async (allMessages: Message[]) => {
@@ -145,16 +157,16 @@ export function FloatingAIAssistant() {
     [chatSessionId]
   )
 
-  React.useEffect(() => {
-    setMessages([
-      {
-        id: "1",
-        role: "assistant",
-        content: "Halo! Aku Asisten AI kamu. Ada yang bisa dibantu soal rekrutmen, analisis pelamar, atau jadwal wawancara?",
-        timestamp: new Date(),
-      },
-    ])
-  }, [])
+  const appendUserMessage = React.useCallback(
+    (userMsg: Message) => {
+      setMessages((prev) => {
+        const updated = [...prev, userMsg]
+        void sendToAI(updated)
+        return updated
+      })
+    },
+    [sendToAI],
+  )
 
   // Auto-submit pertanyaan yang "dititipkan" dari halaman lain (mis. tombol
   // Tanya AI di detail kandidat). Kalau ada candidateId, tunggu context-nya
@@ -164,7 +176,6 @@ export function FloatingAIAssistant() {
     const waitingForContext = Boolean(pendingQuery.candidateId) && candidateContext === null
     if (waitingForContext) return
 
-    hasAutoSubmitted.current = true
     const fullContent = candidateContext ? `${candidateContext}${pendingQuery.q}` : pendingQuery.q
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -173,13 +184,15 @@ export function FloatingAIAssistant() {
       displayContent: pendingQuery.q,
       timestamp: new Date(),
     }
-    setMessages((prev) => {
-      const updated = [...prev, userMsg]
-      sendToAI(updated)
-      return updated
-    })
-    clearPendingQuery()
-  }, [isOpen, pendingQuery, candidateContext, sendToAI, clearPendingQuery])
+    const timer = window.setTimeout(() => {
+      if (hasAutoSubmitted.current) return
+
+      hasAutoSubmitted.current = true
+      appendUserMessage(userMsg)
+      clearPendingQuery()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [isOpen, pendingQuery, candidateContext, appendUserMessage, clearPendingQuery])
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -207,11 +220,7 @@ export function FloatingAIAssistant() {
     }
 
     setInputValue("")
-    setMessages((prev) => {
-      const updated = [...prev, userMsg]
-      sendToAI(updated)
-      return updated
-    })
+    appendUserMessage(userMsg)
   }
 
   return (

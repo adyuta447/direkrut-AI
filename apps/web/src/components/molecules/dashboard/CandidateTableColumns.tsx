@@ -13,7 +13,7 @@ import {
 } from "@tabler/icons-react"
 import { type ColumnDef } from "@tanstack/react-table"
 import { getExtendedData } from "@/lib/dashboard/extended-data"
-import { ScoreBadge, StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
+import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 import { CandidateTableCellViewer } from "@/components/molecules/dashboard/CandidateDrawerContent"
@@ -166,8 +166,27 @@ export const candidateColumns: ColumnDef<Candidate>[] = [
   },
   {
     accessorKey: "recommendationScore",
-    header: ({ column }) => <SortableHeader label="Profil Keahlian AI" column={column} />,
-    cell: ({ row }) => <ScoreBadge score={row.original.recommendationScore} />,
+    header: ({ column }) => <SortableHeader label="Skor AI" column={column} />,
+    cell: ({ row }) => {
+      const score = row.original.recommendationScore
+      const aiCategory = row.original.aiCategory
+      const pct = score != null ? Math.round(score) : null
+      if (pct == null) return <span className="text-[11px] text-muted-foreground italic">Belum discreen</span>
+      const color = pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-rose-400"
+      const textColor = pct >= 75 ? "text-emerald-700" : pct >= 50 ? "text-amber-600" : "text-rose-600"
+      const catLabel = aiCategory || (pct >= 75 ? "Sangat Sesuai" : pct >= 60 ? "Sesuai" : pct >= 40 ? "Perlu Dipertimbangkan" : "Perlu Pengembangan")
+      return (
+        <div className="flex flex-col gap-1 min-w-[110px] py-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-[13px] font-bold ${textColor}`}>{pct}%</span>
+            <span className={`text-[10px] font-medium ${textColor} opacity-80`}>{catLabel}</span>
+          </div>
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+      )
+    },
   },
   {
     accessorKey: "interviewScore",

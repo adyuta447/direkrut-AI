@@ -13,6 +13,12 @@
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down"
   },
+  "resolutions": {
+    "@hono/node-server": "^2.0.5",
+    "fast-uri": "^3.1.4",
+    "postcss": "^8.5.12",
+    "sharp": "^0.35.0"
+  },
   "devDependencies": {
     "turbo": "^2.1.3"
   },

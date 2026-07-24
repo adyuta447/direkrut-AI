@@ -30,6 +30,26 @@ export interface Job {
   applicantCount: number;
   status?: "active" | "inactive" | "review" | "draft";
   timeline?: { from: string; to: string };
+  // Structured AI Evidence-Based Scoring fields
+  requiredSkills?: string[];
+  preferredSkills?: string[];
+  keyResponsibilities?: string;
+  minExperienceYears?: number;
+  educationRequirement?: string;
+  candidateType?: "any" | "fresh_graduate" | "professional";
+}
+
+/** Konfigurasi bobot AI screening (per-company atau per-job) */
+export interface ScoringWeightConfig {
+  weightSkillMatch: number;
+  weightExperience: number;
+  weightEducation: number;
+  weightResponsibilities: number;
+  weightAdditional: number;
+  isCustom: boolean;
+  /** Hanya ada di respons per-company */
+  defaultProfessional?: Omit<ScoringWeightConfig, "isCustom" | "defaultProfessional" | "defaultFreshGraduate">;
+  defaultFreshGraduate?: Omit<ScoringWeightConfig, "isCustom" | "defaultProfessional" | "defaultFreshGraduate">;
 }
 
 export interface CandidateProfileSummary {

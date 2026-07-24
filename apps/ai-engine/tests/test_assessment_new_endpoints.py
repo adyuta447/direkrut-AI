@@ -93,7 +93,7 @@ def test_generate_feedback_rejects_request_with_no_key(monkeypatch: pytest.Monke
     assert res.status_code == 401
 
 
-def test_cv_classifier_softmax_and_gated() -> None:
+def test_cv_classifier_softmax_and_gated(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.routers.cv_classifier import _softmax
 
     p = _softmax([3.0, 1.0, 0.0])
@@ -101,5 +101,6 @@ def test_cv_classifier_softmax_and_gated() -> None:
     assert p[0] == max(p)
 
     # Endpoint terdaftar & digembok internal key (sama kayak endpoint lain).
+    monkeypatch.setenv("INTERNAL_API_KEY", "correct-secret")
     res = client.post("/v1/cv-classifier/classify", json={"text": "Software Engineer 5 tahun Go"})
     assert res.status_code == 401

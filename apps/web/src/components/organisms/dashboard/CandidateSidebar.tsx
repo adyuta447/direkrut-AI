@@ -35,6 +35,7 @@ const navMain = [
 ]
 
 const navSecondary = [
+  { title: "Ke Landing Page", url: "/", icon: <LayoutDashboardIcon /> },
   { title: "Bantuan & Dukungan", url: "/candidate/settings", icon: <HelpCircleIcon /> },
   { title: "Pengaturan Akun", url: "/candidate/settings", icon: <Settings2Icon /> },
 ]

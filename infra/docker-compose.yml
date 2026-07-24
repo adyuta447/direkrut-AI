@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: direkrut
       POSTGRES_DB: direkrut_ai
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

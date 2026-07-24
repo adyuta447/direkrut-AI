@@ -173,10 +173,10 @@ export default function CandidateProfilePage() {
 
   const handleCVUpload = async (file: File) => {
     setIsUploading(true)
-    // registerAsOfficialCv=false: CV di halaman profil cuma buat bantu AI
-    // ngisiin profil (personal branding) -- BUKAN CV lamaran yang dikirim ke
-    // HRD/discreen. CV resmi buat lamaran diupload di alur apply.
-    const objectKey = await uploadCV(file, false)
+    // registerAsOfficialCv=true: CV di halaman profil sekarang didaftarkan
+    // sebagai CV resmi lamaran yang akan dikirim ke HRD & discreen, supaya
+    // kandidat tidak bingung kenapa disuruh upload lagi saat apply.
+    const objectKey = await uploadCV(file, true)
     setIsUploading(false)
     if (!objectKey) {
       notify("Gagal upload CV. Coba lagi ya.")
