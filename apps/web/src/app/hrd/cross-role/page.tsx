@@ -5,7 +5,10 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { IconSearch, IconSparkles } from "@tabler/icons-react";
 import { useDashboard } from "@/context/DashboardContext";
-import { getCrossRoleRecommendations, type CrossRoleMatch } from "@/services/aiService";
+import {
+  getCrossRoleRecommendations,
+  type CrossRoleMatch,
+} from "@/services/aiService";
 import { ApiError } from "@/services/apiClient";
 import { TypingDots } from "@/components/atoms/shared/TypingDots";
 import { Button } from "@/components/ui/button";
@@ -56,7 +59,9 @@ export default function CrossRoleRecommendationPage() {
   const [filterLabel, setFilterLabel] = useState("Semua Kategori");
   const [filterRole, setFilterRole] = useState("Semua Posisi Usulan");
   const [showChart, setShowChart] = useState(false);
-  const [matchesByApp, setMatchesByApp] = useState<Record<string, MatchState>>({});
+  const [matchesByApp, setMatchesByApp] = useState<Record<string, MatchState>>(
+    {},
+  );
 
   // Kandidat yang udah discreen (recommendationScore keisi lewat
   // ScoringResult) -- itu prasyarat buat cross-role, backend reuse
@@ -75,7 +80,10 @@ export default function CrossRoleRecommendationPage() {
       const matches = await getCrossRoleRecommendations(applicationId);
       setMatchesByApp((prev) => ({ ...prev, [applicationId]: matches }));
     } catch (err) {
-      console.error("[cross-role] gagal ambil rekomendasi:", err instanceof ApiError ? err.message : err);
+      console.error(
+        "[cross-role] gagal ambil rekomendasi:",
+        err instanceof ApiError ? err.message : err,
+      );
       setMatchesByApp((prev) => ({ ...prev, [applicationId]: "error" }));
     }
   }, []);
@@ -97,7 +105,9 @@ export default function CrossRoleRecommendationPage() {
       if (!Array.isArray(state)) return [];
       return state.map((m) => {
         const isHighlyRelevant = m.score >= 70;
-        const label = isHighlyRelevant ? "Sangat Relevan" : "Potensi Adaptasi Cepat";
+        const label = isHighlyRelevant
+          ? "Sangat Relevan"
+          : "Potensi Adaptasi Cepat";
         return {
           id: app.id,
           suggestedJobId: m.jobId,
@@ -108,9 +118,10 @@ export default function CrossRoleRecommendationPage() {
           variant: isHighlyRelevant ? "default" : "secondary",
           reason: `Skor kecocokan ${Math.round(m.score)}% antara CV ${app.applicantName} dengan kualifikasi posisi ${m.jobTitle}, dihitung AI dari kemiripan skill & pengalaman.`,
           evidenceType: "cv",
-          evidence: m.matchedEvidence.length > 0
-            ? m.matchedEvidence.join(" • ")
-            : "Kecocokan berdasarkan kemiripan semantik ringkasan CV dengan deskripsi lowongan.",
+          evidence:
+            m.matchedEvidence.length > 0
+              ? m.matchedEvidence.join(" • ")
+              : "Kecocokan berdasarkan kemiripan semantik ringkasan CV dengan deskripsi lowongan.",
           emailed: false,
         };
       });
@@ -121,7 +132,12 @@ export default function CrossRoleRecommendationPage() {
     () =>
       screenedApplications.filter((app) => {
         const state = matchesByApp[app.id];
-        return state === undefined || state === "loading" || state === "error" || (Array.isArray(state) && state.length === 0);
+        return (
+          state === undefined ||
+          state === "loading" ||
+          state === "error" ||
+          (Array.isArray(state) && state.length === 0)
+        );
       }),
     [screenedApplications, matchesByApp],
   );
@@ -135,7 +151,10 @@ export default function CrossRoleRecommendationPage() {
     [crossRoleList],
   );
 
-  const filtersActive = searchTerm.trim() !== "" || filterLabel !== "Semua Kategori" || filterRole !== "Semua Posisi Usulan";
+  const filtersActive =
+    searchTerm.trim() !== "" ||
+    filterLabel !== "Semua Kategori" ||
+    filterRole !== "Semua Posisi Usulan";
 
   const filteredList = crossRoleList.filter((item) => {
     const matchSearch =
@@ -231,14 +250,7 @@ export default function CrossRoleRecommendationPage() {
         icon={IconSparkles}
         title="Cara Kerja AI Cross-Role"
         description={
-          <>
-            AI cocokin ringkasan CV kandidat yang udah discreen sama deskripsi
-            lowongan aktif <strong className="text-ink">lainnya</strong> di
-            company ini -- cuma match dengan skor{" "}
-            <strong className="text-ink">&ge; 50%</strong> dan bukti kecocokan
-            konkret yang ditampilin. Butuh minimal 2 lowongan aktif di company
-            kamu biar ada posisi alternatif buat dicocokin.
-          </>
+          "Kandidat yang lolos screening langsung dicocokin ke lowongan lain di perusahaan kamu, kalau relevan AI nunjukin kecocokannya beserta alasannya jadi kamu bisa nemuin posisi yang paling pas tanpa mulai dari nol lagi."
         }
       />
 
@@ -290,40 +302,50 @@ export default function CrossRoleRecommendationPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {filteredList.map((item, idx) => (
-          <CrossRoleCard key={`${item.id}-${item.suggestedRole}-${idx}`} item={item} />
+          <CrossRoleCard
+            key={`${item.id}-${item.suggestedRole}-${idx}`}
+            item={item}
+          />
         ))}
 
-        {!filtersActive && pendingApplications.map((app) => {
-          const state = matchesByApp[app.id];
-          return (
-            <div
-              key={app.id}
-              className="rounded-3xl border border-dashed border-hairline bg-surface-1 p-6 flex flex-col items-center justify-center text-center gap-3 min-h-45"
-            >
-              <p className="font-semibold text-ink">{app.applicantName}</p>
-              <p className="text-xs text-ink-muted">Lamaran: {app.jobTitle}</p>
-              {state === "loading" ? (
-                <div className="flex items-center gap-2 text-ink-muted text-sm">
-                  <TypingDots /> Nyari lowongan lain yang cocok...
-                </div>
-              ) : state === "error" ? (
-                <>
-                  <p className="text-sm text-destructive">Gagal ambil rekomendasi.</p>
-                  <Button size="sm" onClick={() => runCrossRole(app.id)}>Coba lagi</Button>
-                </>
-              ) : Array.isArray(state) ? (
-                <p className="text-sm text-ink-muted">
-                  Belum ada posisi lain yang cukup cocok. Pastikan ada lowongan
-                  aktif lain di company kamu selain yang dia lamar.
+        {!filtersActive &&
+          pendingApplications.map((app) => {
+            const state = matchesByApp[app.id];
+            return (
+              <div
+                key={app.id}
+                className="rounded-3xl border border-dashed border-hairline bg-surface-1 p-6 flex flex-col items-center justify-center text-center gap-3 min-h-45"
+              >
+                <p className="font-semibold text-ink">{app.applicantName}</p>
+                <p className="text-xs text-ink-muted">
+                  Lamaran: {app.jobTitle}
                 </p>
-              ) : (
-                <Button size="sm" onClick={() => runCrossRole(app.id)}>
-                  <IconSparkles className="size-4 mr-1.5" /> Cari Rekomendasi
-                </Button>
-              )}
-            </div>
-          );
-        })}
+                {state === "loading" ? (
+                  <div className="flex items-center gap-2 text-ink-muted text-sm">
+                    <TypingDots /> Nyari lowongan lain yang cocok...
+                  </div>
+                ) : state === "error" ? (
+                  <>
+                    <p className="text-sm text-destructive">
+                      Gagal ambil rekomendasi.
+                    </p>
+                    <Button size="sm" onClick={() => runCrossRole(app.id)}>
+                      Coba lagi
+                    </Button>
+                  </>
+                ) : Array.isArray(state) ? (
+                  <p className="text-sm text-ink-muted">
+                    Belum ada posisi lain yang cukup cocok. Pastikan ada
+                    lowongan aktif lain di company kamu selain yang dia lamar.
+                  </p>
+                ) : (
+                  <Button size="sm" onClick={() => runCrossRole(app.id)}>
+                    <IconSparkles className="size-4 mr-1.5" /> Cari Rekomendasi
+                  </Button>
+                )}
+              </div>
+            );
+          })}
 
         {filteredList.length === 0 && pendingApplications.length === 0 && (
           <div className="col-span-full flex flex-col items-center rounded-2xl bg-surface-1 py-10 px-6 text-center">

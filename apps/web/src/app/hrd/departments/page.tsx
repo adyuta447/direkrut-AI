@@ -1,90 +1,98 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import Image from "next/image"
-import { IconBuildingSkyscraper, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react"
-import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
-import { SearchInput } from "@/components/molecules/dashboard/SearchInput"
-import { DepartmentFormDialog } from "@/components/molecules/dashboard/DepartmentFormDialog"
-import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
-import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
-import { Button } from "@/components/ui/button"
-import { useDashboard } from "@/context/DashboardContext"
-import { Department } from "@/lib/types"
+import { useMemo, useState } from "react";
+import Image from "next/image";
+import {
+  IconBuildingSkyscraper,
+  IconEdit,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
+import { PageHeader } from "@/components/molecules/dashboard/PageHeader";
+import { SearchInput } from "@/components/molecules/dashboard/SearchInput";
+import { DepartmentFormDialog } from "@/components/molecules/dashboard/DepartmentFormDialog";
+import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog";
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog";
+import { Button } from "@/components/ui/button";
+import { useDashboard } from "@/context/DashboardContext";
+import { Department } from "@/lib/types";
 
-const BANDS = ["bg-primary", "bg-success", "bg-brand-accent-strong", "bg-info", "bg-warning"]
+const BANDS = [
+  "bg-primary",
+  "bg-success",
+  "bg-brand-accent-strong",
+  "bg-info",
+  "bg-warning",
+];
 
 export default function DepartmentsPage() {
-  const { departments, myJobs, addDepartment, updateDepartment, deleteDepartment } = useDashboard()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingDept, setEditingDept] = useState<Department | null>(null)
-  const [deletingDept, setDeletingDept] = useState<Department | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
-  const [noticeImage, setNoticeImage] = useState("/status/success.svg")
+  const {
+    departments,
+    myJobs,
+    addDepartment,
+    updateDepartment,
+    deleteDepartment,
+  } = useDashboard();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [deletingDept, setDeletingDept] = useState<Department | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [noticeImage, setNoticeImage] = useState("/status/success.svg");
 
   const jobCountByDept = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const job of myJobs) counts[job.department] = (counts[job.department] ?? 0) + 1
-    return counts
-  }, [myJobs])
+    const counts: Record<string, number> = {};
+    for (const job of myJobs)
+      counts[job.department] = (counts[job.department] ?? 0) + 1;
+    return counts;
+  }, [myJobs]);
 
   const filteredDepartments = departments.filter((d) =>
-    d.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    d.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   const handleOpenCreate = () => {
-    setEditingDept(null)
-    setFormOpen(true)
-  }
+    setEditingDept(null);
+    setFormOpen(true);
+  };
 
   const handleOpenEdit = (dept: Department) => {
-    setEditingDept(dept)
-    setFormOpen(true)
-  }
+    setEditingDept(dept);
+    setFormOpen(true);
+  };
 
   const handleSubmit = (values: { name: string; description: string }) => {
     if (editingDept) {
-      updateDepartment(editingDept.id, values)
-      setNoticeImage("/status/success.svg")
-      setNotice("Departemen berhasil diperbarui")
+      updateDepartment(editingDept.id, values);
+      setNoticeImage("/status/success.svg");
+      setNotice("Departemen berhasil diperbarui");
     } else {
       addDepartment({
         id: crypto.randomUUID(),
         ...values,
-      })
-      setNoticeImage("/status/success.svg")
-      setNotice("Departemen baru udah ditambahin")
+      });
+      setNoticeImage("/status/success.svg");
+      setNotice("Departemen baru udah ditambahin");
     }
-  }
+  };
 
   const handleDelete = () => {
-    if (!deletingDept) return
-    const inUse = jobCountByDept[deletingDept.name] > 0
+    if (!deletingDept) return;
+    const inUse = jobCountByDept[deletingDept.name] > 0;
     if (inUse) {
-      setNoticeImage("/status/warning.svg")
-      setNotice(`Belum bisa dihapus, masih dipakai ${jobCountByDept[deletingDept.name]} lowongan`)
-      return
+      setNoticeImage("/status/warning.svg");
+      setNotice(
+        `Belum bisa dihapus, masih dipakai ${jobCountByDept[deletingDept.name]} lowongan`,
+      );
+      return;
     }
-    deleteDepartment(deletingDept.id)
-    setNoticeImage("/status/success.svg")
-    setNotice("Departemen udah dihapus")
-  }
+    deleteDepartment(deletingDept.id);
+    setNoticeImage("/status/success.svg");
+    setNotice("Departemen udah dihapus");
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main w-full">
-      <PageHeader
-        size="lg"
-        eyebrow="Struktur Tim"
-        title="Departemen"
-        description="Rapikan divisi di sini biar pilihan departemen di form lowongan selalu sesuai."
-        action={
-          <Button onClick={handleOpenCreate} className="h-11 px-6 text-base">
-            <IconPlus className="size-4 mr-2" /> Tambah Departemen
-          </Button>
-        }
-      />
-
       <div className="max-w-md">
         <SearchInput
           className="rounded-full border-hairline bg-canvas h-12"
@@ -106,9 +114,13 @@ export default function DepartmentsPage() {
           />
           <h2 className="text-2xl font-bold text-ink">Belum Ada Departemen</h2>
           <p className="mt-1 max-w-sm text-ink-muted">
-            Tambah departemen pertama biar form lowongan punya pilihan yang rapi.
+            Tambah departemen pertama biar form lowongan punya pilihan yang
+            rapi.
           </p>
-          <Button onClick={handleOpenCreate} className="mt-6 h-11 px-6 text-base">
+          <Button
+            onClick={handleOpenCreate}
+            className="mt-6 h-11 px-6 text-base"
+          >
             <IconPlus className="size-4 mr-2" /> Tambah Departemen
           </Button>
         </div>
@@ -122,14 +134,18 @@ export default function DepartmentsPage() {
             unoptimized
             className="pointer-events-none mb-5 h-28 w-auto select-none"
           />
-          <p className="text-[17px] font-semibold text-ink">Nggak ketemu departemennya</p>
-          <p className="mt-1 text-sm text-ink-muted">Coba kata kunci lain ya.</p>
+          <p className="text-[17px] font-semibold text-ink">
+            Nggak ketemu departemennya
+          </p>
+          <p className="mt-1 text-sm text-ink-muted">
+            Coba kata kunci lain ya.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {filteredDepartments.map((dept, index) => {
-            const count = jobCountByDept[dept.name] ?? 0
-            const band = BANDS[index % BANDS.length]
+            const count = jobCountByDept[dept.name] ?? 0;
+            const band = BANDS[index % BANDS.length];
             return (
               <div
                 key={dept.id}
@@ -144,12 +160,15 @@ export default function DepartmentsPage() {
                       {count} Lowongan
                     </span>
                   </div>
-                  <h3 className="mt-4 text-xl font-bold leading-snug">{dept.name}</h3>
+                  <h3 className="mt-4 text-xl font-bold leading-snug">
+                    {dept.name}
+                  </h3>
                 </div>
 
                 <div className="flex flex-1 flex-col justify-between gap-4 p-6">
                   <p className="text-sm text-ink-muted line-clamp-3">
-                    {dept.description || "Belum ada deskripsi buat departemen ini."}
+                    {dept.description ||
+                      "Belum ada deskripsi buat departemen ini."}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -170,7 +189,7 @@ export default function DepartmentsPage() {
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
@@ -191,7 +210,11 @@ export default function DepartmentsPage() {
         onConfirm={handleDelete}
       />
 
-      <NoticeDialog message={notice} image={noticeImage} onClose={() => setNotice(null)} />
+      <NoticeDialog
+        message={notice}
+        image={noticeImage}
+        onClose={() => setNotice(null)}
+      />
     </div>
-  )
+  );
 }
