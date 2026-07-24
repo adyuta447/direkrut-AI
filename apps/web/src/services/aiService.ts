@@ -10,7 +10,6 @@ import { apiFetch, isApiConfigured, getAuthToken, ApiError } from "./apiClient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-// --- Types ---
 
 export interface ChatMessage {
   role: "user" | "assistant";

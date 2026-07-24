@@ -4,8 +4,6 @@ import {
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { DetailSection } from "@/components/molecules/dashboard/DetailSection"
 import { StatTile } from "@/components/molecules/dashboard/StatTile"
@@ -14,14 +12,12 @@ import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 import { getScreeningResult, screenApplication, type ScreeningResult } from "@/services/aiService"
 import { ApiError } from "@/services/apiClient"
 import { getScoreLevel } from "@/lib/dashboard/status"
-import { useAIAssistantWidget } from "@/context/AIAssistantWidgetContext"
 
 interface CandidateDetailAnalysisProps {
   candidate: Application & ExtendedCandidateData
 }
 
 export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisProps) {
-  const { open: openAIAssistant } = useAIAssistantWidget()
   const [screening, setScreening] = React.useState<ScreeningResult | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const [isScreening, setIsScreening] = React.useState(false)
@@ -130,39 +126,6 @@ export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisPr
             {error && <p className="text-sm text-destructive">{error}</p>}
           </>
         )}
-
-        <Separator className="bg-hairline" />
-
-        <DetailSection title="Asisten AI Interaktif" icon={IconSparkles}>
-          <p className="-mt-1 text-base text-ink-muted">Mau tau lebih dalam soal profil, pengalaman, atau wawancara kandidat ini? Tanya aja ke Asisten AI.</p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.currentTarget)
-              const q = formData.get("q")
-              if (q) {
-                openAIAssistant(String(q), candidate.id)
-                e.currentTarget.reset()
-              }
-            }}
-            className="flex flex-col sm:flex-row gap-3 pt-1"
-          >
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <IconSparkles className="size-5 text-primary" />
-              </div>
-              <Input
-                name="q"
-                placeholder={`Tanya lebih lanjut soal ${candidate.applicantName}...`}
-                className="h-12 rounded-full border-hairline bg-canvas pl-12 pr-4 text-base shadow-none focus-visible:border-primary"
-                required
-              />
-            </div>
-            <Button type="submit" className="h-12 rounded-full px-6 sm:w-auto w-full">
-              Tanya AI
-            </Button>
-          </form>
-        </DetailSection>
       </CardContent>
     </Card>
   )

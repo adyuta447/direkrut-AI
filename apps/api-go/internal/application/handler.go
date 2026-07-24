@@ -685,12 +685,27 @@ type screeningResponse struct {
 	Skills              []string `json:"skills"`
 	WorkExperienceYears *float64 `json:"workExperienceYears"`
 	OverallScore        float64  `json:"overallScore"`
-	// SimilarityScore/MatchedEvidence cuma keisi pas response ini datang
-	// langsung dari POST /screen yang baru ngitung -- gak dipersist (gak ada
-	// kolom buat evidence bullets di scoring_results), jadi GET /screening
-	// abis reload halaman nampilin skor angka aja tanpa bullet penjelasnya.
+	// SimilarityScore cuma keisi pas response ini datang langsung dari POST
+	// /screen yang baru ngitung -- gak dipersist (gak dipakai FE, overallScore
+	// udah cukup buat tampilan). MatchedEvidence DIPERSIST (kolom
+	// scoring_results.matched_evidence), jadi tetep muncul abis reload.
 	SimilarityScore float64  `json:"similarityScore,omitempty"`
 	MatchedEvidence []string `json:"matchedEvidence,omitempty"`
+}
+
+// unmarshalMatchedEvidence: baca bullet-bullet bukti kecocokan yang
+// tersimpen di scoring_results.matched_evidence -- nil/gagal parse cukup
+// balikin slice kosong (evidence emang best-effort, jangan gagalin
+// keseluruhan respons screening cuma gara-gara ini).
+func unmarshalMatchedEvidence(raw json.RawMessage) []string {
+	if len(raw) == 0 {
+		return nil
+	}
+	var evidence []string
+	if err := json.Unmarshal(raw, &evidence); err != nil {
+		return nil
+	}
+	return evidence
 }
 
 // handleScreen idempotent: kalau lamaran ini udah pernah discreen, balikin
@@ -706,7 +721,10 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 
 	var existingScore appdb.ScoringResult
 	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingScore).Error; err == nil {
-		resp := screeningResponse{OverallScore: existingScore.OverallScore}
+		resp := screeningResponse{
+			OverallScore:    existingScore.OverallScore,
+			MatchedEvidence: unmarshalMatchedEvidence(existingScore.MatchedEvidence),
+		}
 		var existingParse appdb.CVParseResult
 		if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error; err == nil {
 			var parsed aiengine.ParseCVResponse
@@ -790,13 +808,14 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (
 	}
 	overallScore := match.SimilarityScore * 100
 	modelUsed := "groq+gemini"
+	evidenceJSON, _ := json.Marshal(match.MatchedEvidence)
 	scoreResult := appdb.ScoringResult{
 		ApplicationID: appRow.ID, OverallScore: overallScore, SkillMatchScore: &overallScore,
-		ModelUsed: &modelUsed, ScoredAt: time.Now(),
+		ModelUsed: &modelUsed, ScoredAt: time.Now(), MatchedEvidence: evidenceJSON,
 	}
 	if err := h.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "application_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"overall_score", "skill_match_score", "model_used", "scored_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"overall_score", "skill_match_score", "model_used", "scored_at", "matched_evidence"}),
 	}).Create(&scoreResult).Error; err != nil {
 		return nil, fmt.Errorf("gagal simpan hasil skor: %w", err)
 	}
@@ -819,7 +838,10 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran ini belum discreen")
 		return
 	}
-	resp := screeningResponse{OverallScore: scoreResult.OverallScore}
+	resp := screeningResponse{
+		OverallScore:    scoreResult.OverallScore,
+		MatchedEvidence: unmarshalMatchedEvidence(scoreResult.MatchedEvidence),
+	}
 	var parseResult appdb.CVParseResult
 	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
 		var parsed aiengine.ParseCVResponse

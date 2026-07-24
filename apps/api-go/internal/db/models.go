@@ -309,6 +309,10 @@ type ScoringResult struct {
 	SkillMatchScore *float64  `gorm:"column:skill_match_score"`
 	ModelUsed       *string   `gorm:"column:model_used"`
 	ScoredAt        time.Time `gorm:"column:scored_at"`
+	// Bullet-bullet bukti kecocokan CV vs lowongan dari AI matching (lihat
+	// aiengine.MatchCandidate) -- disimpen biar tab "Bukti Kecocokan" di
+	// dashboard HRD tetep muncul abis reload, gak cuma pas baru discreen.
+	MatchedEvidence json.RawMessage `gorm:"column:matched_evidence;type:jsonb"`
 }
 
 func (ScoringResult) TableName() string { return "scoring_results" }

@@ -1,14 +1,11 @@
-import { Button } from "@/components/ui/button"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 
 interface CandidateContactGridProps {
   candidate: Application & ExtendedCandidateData
-  onToggleChart: () => void
-  showChart: boolean
 }
 
-export function CandidateContactGrid({ candidate, onToggleChart, showChart }: CandidateContactGridProps) {
+export function CandidateContactGrid({ candidate }: CandidateContactGridProps) {
   // Semua nilai dari profil asli kandidat -- yang belum diisi tampil "—",
   // bukan data karangan.
   const rows = [
@@ -22,22 +19,15 @@ export function CandidateContactGrid({ candidate, onToggleChart, showChart }: Ca
   ]
 
   return (
-    <>
-      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-hairline pt-6 lg:grid-cols-4">
-        {rows.map((item) => (
-          <div key={item.label} className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted">
-              {item.label}
-            </span>
-            <span className="truncate text-base font-semibold text-ink">{item.val}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 flex justify-center border-t border-hairline pt-6">
-        <Button variant="outline" size="lg" onClick={onToggleChart} className="rounded-full border-hairline">
-          {showChart ? "Sembunyikan Analisis" : "Cek Analisis Kandidat"}
-        </Button>
-      </div>
-    </>
+    <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-hairline pt-6 lg:grid-cols-4">
+      {rows.map((item) => (
+        <div key={item.label} className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted">
+            {item.label}
+          </span>
+          <span className="truncate text-base font-semibold text-ink">{item.val}</span>
+        </div>
+      ))}
+    </div>
   )
 }

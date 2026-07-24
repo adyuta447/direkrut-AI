@@ -26,7 +26,6 @@ import type { Application } from "@/lib/types"
 export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>()
   const { applications, myJobs } = useDashboard()
-  const [showChart, setShowChart] = React.useState(false)
 
   // Diambil langsung by-id (bukan cuma applications.find dari context) --
   // context butuh waktu buat fetch lamaran asli pas mount, jadi deep-link
@@ -153,10 +152,10 @@ export default function CandidateDetailPage() {
             </div>
           </div>
 
-          <CandidateContactGrid candidate={candidate} showChart={showChart} onToggleChart={() => setShowChart(!showChart)} />
+          <CandidateContactGrid candidate={candidate} />
         </CardContent>
       </Card>
-      {showChart && <CandidateCharts weightData={chartData.weight} radarData={chartData.radar} softSkillData={chartData.softSkill} />}
+      <CandidateCharts weightData={chartData.weight} radarData={chartData.radar} softSkillData={chartData.softSkill} />
 
       <div className="mt-4">
         <Tabs defaultValue="analisis" className="w-full">

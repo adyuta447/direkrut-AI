@@ -16,7 +16,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import type { Job } from "@/lib/types"
@@ -37,14 +36,21 @@ export function JobCard({ job, onEdit }: JobCardProps) {
   const { updateJob, deleteJob } = useDashboard()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false)
 
   const statusMeta = JOB_STATUS_META[job.status ?? "inactive"] ?? JOB_STATUS_META.inactive
+  const isActive = job.status === "active"
 
-  const handleToggleStatus = async (checked: boolean) => {
+  const handleToggleStatus = async () => {
+    const nextActive = !isActive
+    setIsTogglingStatus(true)
     try {
-      await updateJob(job.id, { status: checked ? "active" : "inactive" })
+      await updateJob(job.id, { status: nextActive ? "active" : "inactive" })
+      setNotice(nextActive ? "Lowongan berhasil diaktifkan" : "Lowongan berhasil dinonaktifkan")
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Gagal ubah status lowongan, coba lagi ya")
+    } finally {
+      setIsTogglingStatus(false)
     }
   }
 
@@ -85,14 +91,15 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl bg-surface-1 px-4 py-3">
-          <span className="text-sm font-medium text-ink">Aktifkan Lowongan</span>
-          <Switch
-            checked={job.status === "active"}
-            onCheckedChange={handleToggleStatus}
-            className="data-[state=checked]:bg-success"
-          />
-        </div>
+        <Button
+          type="button"
+          variant={isActive ? "outline" : "default"}
+          className={isActive ? "w-full border-hairline text-destructive hover:text-destructive hover:bg-destructive/10" : "w-full"}
+          disabled={isTogglingStatus}
+          onClick={handleToggleStatus}
+        >
+          {isTogglingStatus ? "Memproses..." : isActive ? "Nonaktifkan Lowongan" : "Aktifkan Lowongan"}
+        </Button>
       </CardContent>
 
       <CardFooter className="flex flex-col sm:flex-row justify-between items-center border-t border-hairline pt-4 gap-4">
