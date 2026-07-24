@@ -93,6 +93,18 @@ export default function DepartmentsPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8 @container/main w-full">
+      <PageHeader
+        size="lg"
+        eyebrow="Struktur Tim"
+        title="Departemen"
+        description="Rapikan divisi di sini biar pilihan departemen di form lowongan selalu sesuai."
+        action={
+          <Button onClick={handleOpenCreate} className="h-11 px-6 text-base">
+            <IconPlus className="size-4 mr-2" /> Tambah Departemen
+          </Button>
+        }
+      />
+
       <div className="max-w-md">
         <SearchInput
           className="rounded-full border-hairline bg-canvas h-12"
