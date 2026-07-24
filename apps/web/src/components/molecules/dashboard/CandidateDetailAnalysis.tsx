@@ -19,6 +19,8 @@ import {
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"

@@ -89,6 +89,8 @@ class AIProvider(ABC):
 
 
 class OpenAIProvider(AIProvider):
+    COMPLETE_MODEL = "gpt-4o-mini"
+
     async def complete(self, prompt: str, *, system: str | None = None) -> str:
         # TODO: panggil OpenAI Chat Completions API begitu ada API key buat ditest.
         raise NotImplementedError

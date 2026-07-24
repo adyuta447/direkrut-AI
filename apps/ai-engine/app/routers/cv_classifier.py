@@ -66,8 +66,8 @@ class _Model:
             feed["token_type_ids"] = [enc.type_ids]
         import numpy as np
 
-        feed = {k: np.array(v, dtype=np.int64) for k, v in feed.items()}
-        logits = self.session.run(None, feed)[0][0].tolist()
+        np_feed = {k: np.array(v, dtype=np.int64) for k, v in feed.items()}
+        logits = self.session.run(None, np_feed)[0][0].tolist()
         probs = _softmax(logits)
         ranked = sorted(
             (CategoryScore(category=self.id2label[i], score=round(p, 4)) for i, p in enumerate(probs)),

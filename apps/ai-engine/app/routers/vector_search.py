@@ -13,6 +13,7 @@ import json
 import logging
 import math
 import time
+from typing import TypedDict
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -75,6 +76,21 @@ class LLMAssessment(BaseModel):
     source_section: str | None # misal: "Work Experience"
     reasoning: str # 1-2 kalimat netral
     score: float = 0.0 # Field diisi oleh Python, bukan LLM
+
+class _CategoryResult(TypedDict):
+    """Bentuk antara raw_comp_results sebelum dinormalisasi jadi ComponentScore
+    -- eksplisit di sini biar mypy bisa narrow per-key (bukan union semua tipe
+    value dalam satu dict longgar)."""
+
+    score: float
+    weight: float
+    weighted_score: float
+    assessments: list["LLMAssessment"]
+    matched_count: int
+    partial_count: int
+    missing_count: int
+    status: str
+
 
 class ComponentScore(BaseModel):
     score: float # 0 - 100
@@ -406,11 +422,11 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
         else:
             weights = _get_default_weights(llm_candidate_track)
 
-        component_scores = {}
+        component_scores: dict[str, ComponentScore] = {}
         total_valid_weight = 0.0
         
         # Calculate raw component scores
-        raw_comp_results = {}
+        raw_comp_results: dict[str, _CategoryResult] = {}
         for cat in categories:
             cat_assessments = [a for a in assessments_obj if a.category == cat]
             req_scores = [a.score for a in cat_assessments if a.importance in ("REQUIRED", "HARD_CONSTRAINT")]
@@ -428,6 +444,11 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
             elif req_avg is not None:
                 final_score = req_avg
             else:
+                # Kalau bukan dua cabang di atas, req_avg pasti None -- dan
+                # baris "if not req_scores and not pref_scores: continue" di
+                # atas udah jamin minimal satu dari keduanya ada, jadi
+                # pref_avg pasti bukan None di sini.
+                assert pref_avg is not None
                 final_score = pref_avg
                 
             w_key = cat_to_weightkey[cat]
@@ -447,6 +468,7 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
             raw_comp_results[w_key] = {
                 "score": round(final_score, 2),
                 "weight": w_val,
+                "weighted_score": 0.0,
                 "assessments": cat_assessments,
                 "matched_count": matched_count,
                 "partial_count": partial_count,

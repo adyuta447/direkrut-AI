@@ -115,11 +115,13 @@ export function SettingsHrdTabAiScoring() {
             </div>
           </div>
         ) : (
-          <div className="mb-6 rounded-xl bg-surface-1 border border-hairline p-4 flex gap-3 text-sm text-ink-muted">
-            <IconInfoCircle className="size-5 shrink-0 text-ink mt-0.5" />
-            <div>
-              <strong className="block mb-0.5 text-ink">Menggunakan bobot bawaan DirekrutAI</strong>
-              Saat ini AI menilai kandidat menggunakan standar bobot algoritma kami. Kamu bisa menyesuaikannya di bawah.
+          <div className="mb-6 rounded-2xl bg-primary p-5 flex gap-4 text-white">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <IconInfoCircle className="size-5" />
+            </span>
+            <div className="text-sm">
+              <strong className="block mb-0.5 text-base font-semibold">Menggunakan bobot bawaan DirekrutAI</strong>
+              <span className="text-white/80">Saat ini AI menilai kandidat menggunakan standar bobot algoritma kami. Kamu bisa menyesuaikannya di bawah.</span>
             </div>
           </div>
         )}
