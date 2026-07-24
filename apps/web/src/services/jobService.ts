@@ -26,6 +26,7 @@ interface ApiJob {
   minExperienceYears?: number;
   educationRequirement?: string;
   candidateType?: string;
+  applicantCount?: number;
 }
 
 interface ApiJobListResponse {
@@ -147,7 +148,7 @@ function mapApiJobToJob(apiJob: ApiJob): Job {
       addSuffix: true,
       locale: id,
     }),
-    applicantCount: 0,
+    applicantCount: apiJob.applicantCount ?? 0,
     status: STATUS_FROM_API[apiJob.status] ?? "active",
     // Map the new fields
     requiredSkills: apiJob.requiredSkills ?? [],
@@ -171,6 +172,21 @@ export async function listJobs(): Promise<Job[]> {
   return [];
 }
 
+/** Lowongan MILIK company HRD yang login, semua status (draft/published/
+ * closed) -- beda dari listJobs() yang cuma published lintas-company (buat
+ * portal publik/kandidat). Dipakai halaman Manajemen Lowongan HRD. */
+export async function listMyJobs(): Promise<Job[]> {
+  if (isApiConfigured) {
+    try {
+      const data = await apiFetch<ApiJobListResponse>("/v1/jobs/mine");
+      return data.items.map(mapApiJobToJob);
+    } catch (err) {
+      console.error("[jobService] gagal ambil daftar lowongan milik sendiri dari API:", err);
+    }
+  }
+  return [];
+}
+
 export async function getJobById(id: string): Promise<Job | null> {
   if (isApiConfigured) {
     try {
@@ -183,45 +199,32 @@ export async function getJobById(id: string): Promise<Job | null> {
   return null;
 }
 
+// createJob/updateJob/deleteJob melempar ApiError kalau API gagal (mis. 403
+// "bukan lowongan milikmu") -- sebelumnya di-catch-and-fallback ke objek
+// mock lokal, jadi UI kelihatan "berhasil" (job hilang/berubah di state)
+// padahal di server GAGAL. Efeknya job "yang udah dihapus" muncul lagi
+// begitu di-refresh, karena emang gak pernah kehapus beneran.
 export async function createJob(job: Omit<Job, "id" | "applicantCount">): Promise<Job> {
-  if (isApiConfigured) {
-    try {
-      const apiJob = await apiFetch<ApiJob>("/v1/jobs", {
-        method: "POST",
-        body: JSON.stringify(buildJobWriteRequest(job)),
-      });
-      return mapApiJobToJob(apiJob);
-    } catch (err) {
-      console.error("[jobService] gagal buat lowongan lewat API, fallback ke mock:", err);
-    }
-  }
-  return { ...job, id: `job-${Date.now()}`, applicantCount: 0 };
+  if (!isApiConfigured) return { ...job, id: `job-${Date.now()}`, applicantCount: 0 };
+  const apiJob = await apiFetch<ApiJob>("/v1/jobs", {
+    method: "POST",
+    body: JSON.stringify(buildJobWriteRequest(job)),
+  });
+  return mapApiJobToJob(apiJob);
 }
 
 export async function updateJob(id: string, job: Omit<Job, "id" | "applicantCount">): Promise<Job> {
-  if (isApiConfigured) {
-    try {
-      const apiJob = await apiFetch<ApiJob>(`/v1/jobs/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(buildJobWriteRequest(job)),
-      });
-      return mapApiJobToJob(apiJob);
-    } catch (err) {
-      console.error("[jobService] gagal update lowongan lewat API, fallback ke mock:", err);
-    }
-  }
-  return { ...job, id, applicantCount: 0 };
+  if (!isApiConfigured) return { ...job, id, applicantCount: 0 };
+  const apiJob = await apiFetch<ApiJob>(`/v1/jobs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(buildJobWriteRequest(job)),
+  });
+  return mapApiJobToJob(apiJob);
 }
 
 export async function deleteJob(id: string): Promise<void> {
-  if (isApiConfigured) {
-    try {
-      await apiFetch<void>(`/v1/jobs/${id}`, { method: "DELETE" });
-      return;
-    } catch (err) {
-      console.error("[jobService] gagal hapus lowongan lewat API, cuma dihapus di state lokal:", err);
-    }
-  }
+  if (!isApiConfigured) return;
+  await apiFetch<void>(`/v1/jobs/${id}`, { method: "DELETE" });
 }
 
 // --- API Scoring Weights ---

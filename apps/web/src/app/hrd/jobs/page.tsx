@@ -16,12 +16,10 @@ import { EditJobSheet } from "@/components/organisms/dashboard/EditJobSheet"
 import { useJobManagementFilters } from "@/lib/jobs/useJobManagementFilters"
 import type { Job } from "@/lib/types"
 
-const BANDS = ["bg-primary", "bg-success", "bg-brand-accent-strong", "bg-info", "bg-warning"]
-
 export default function JobManagementPage() {
-  const { jobs, departments } = useDashboard()
+  const { myJobs, departments } = useDashboard()
   const { searchTerm, setSearchTerm, activeTab, setActiveTab, groupedByDept, toggleGroup, isGroupOpen, tabCounts } =
-    useJobManagementFilters(jobs, departments)
+    useJobManagementFilters(myJobs, departments)
 
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
@@ -75,7 +73,6 @@ export default function JobManagementPage() {
             key={group.id}
             name={group.name}
             jobsInGroup={group.jobsInGroup}
-            band={BANDS[departments.findIndex((d) => d.id === group.id) % BANDS.length] ?? BANDS[0]}
             isOpen={isGroupOpen(group.id)}
             onToggle={() => toggleGroup(group.id)}
             onEdit={handleOpenEdit}

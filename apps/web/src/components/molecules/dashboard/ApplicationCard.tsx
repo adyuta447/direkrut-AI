@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
 import type { Application, Job } from "@/lib/types"
 
-const STEPS = ["Terkirim", "Administrasi", "Wawancara AI", "Keputusan Akhir"]
+const STEPS = ["Terkirim", "Administrasi", "Wawancara Teknis", "Wawancara Selesai", "Keputusan Akhir"]
 
 const STAGE_HELPER: Record<string, string> = {
   submitted: "Lamaranmu udah masuk dan bakal segera dicek tim rekrutmen. Pantau terus progresnya di sini ya.",
-  "under-review": "Profil kamu lagi dicek tim HRD di tahap administrasi. Kalau lolos, kamu bakal diundang ke Wawancara AI.",
-  interview: "Selamat, kamu lolos ke tahap Wawancara AI! 🎉 Cek email atau buka detail lamaran buat mulai sesinya.",
+  "under-review": "Profil kamu lagi dicek tim HRD di tahap administrasi. Kalau lolos, kamu bakal diundang ke wawancara teknis.",
+  interview: "Selamat, kamu lolos ke tahap wawancara teknis! 🎉 Cek email atau buka detail lamaran buat info jadwalnya.",
+  interview_completed: "Wawancara teknismu udah selesai. Tim HRD lagi nentuin keputusan akhir.",
+  accepted: "Selamat, kamu diterima! 🎉 Tim HRD bakal hubungin kamu buat langkah selanjutnya.",
   rejected: "Kali ini belum jodoh — prosesnya nggak bisa kami lanjutkan. Masih banyak posisi lain yang nunggu kamu!",
 }
 
@@ -21,7 +23,8 @@ function getStageIndex(status: string) {
   if (status === "submitted") return 0
   if (status === "under-review") return 1
   if (status === "interview") return 2
-  if (status === "rejected") return 3
+  if (status === "interview_completed") return 3
+  if (status === "accepted" || status === "rejected") return 4
   return 0
 }
 
@@ -45,6 +48,7 @@ function ApplicationProgressBar({ app }: { app: Application }) {
             const isCompleted = idx <= currentStageIndex
             const isCurrent = idx === currentStageIndex
             const isRejectedEnd = isCurrent && app.status === "rejected"
+            const isAcceptedEnd = isCurrent && app.status === "accepted"
             return (
               <div key={label} className="flex flex-col items-center gap-2 text-center">
                 <div
@@ -52,10 +56,12 @@ function ApplicationProgressBar({ app }: { app: Application }) {
                     "flex size-6 items-center justify-center rounded-full border-4 border-card",
                     isRejectedEnd
                       ? "bg-destructive"
+                      : isAcceptedEnd
+                      ? "bg-success"
                       : isCompleted
                       ? "bg-primary"
                       : "bg-muted-foreground/30",
-                    isCurrent && !isRejectedEnd && "ring-4 ring-brand-accent/30",
+                    isCurrent && !isRejectedEnd && !isAcceptedEnd && "ring-4 ring-brand-accent/30",
                   )}
                 >
                   {isCompleted && <div className="size-2 rounded-full bg-card" />}

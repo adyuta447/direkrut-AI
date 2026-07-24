@@ -33,13 +33,13 @@ export type { Candidate }
 const AI_VISIBILITY: VisibilityState = {
   whatsapp: false, experience: false, lastPosition: false,
   education: false, gender: false,
-  jobTitle: true, recommendationScore: true, status: true,
+  jobTitle: true, recommendationScore: true, interviewScore: true, status: true,
 }
 
 const DETAIL_VISIBILITY: VisibilityState = {
   whatsapp: true, experience: true, lastPosition: true,
   education: true, gender: true,
-  jobTitle: false, recommendationScore: false, status: false,
+  jobTitle: false, recommendationScore: false, interviewScore: false, status: false,
 }
 
 function useTabFilter(
@@ -51,6 +51,8 @@ function useTabFilter(
     const STATUS_MAP: Record<string, string> = {
       administrasi: "under-review",
       wawancara: "interview",
+      "wawancara-selesai": "interview_completed",
+      diterima: "accepted",
       ditolak: "rejected",
     }
     const statusValue = STATUS_MAP[activeTab]
@@ -117,7 +119,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead key={header.id} colSpan={header.colSpan} className="h-9 py-2">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -137,7 +139,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="py-2">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

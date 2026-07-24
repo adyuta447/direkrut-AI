@@ -31,6 +31,7 @@ export function useApplyFlow(job: Job | undefined) {
   const [isUploadingCv, setIsUploadingCv] = React.useState(false)
   const [cvUploadError, setCvUploadError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [submitError, setSubmitError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     let cancelled = false
@@ -72,9 +73,15 @@ export function useApplyFlow(job: Job | undefined) {
   const handleSubmit = async () => {
     if (!job) return
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       await applyToJob(job.id)
       setStep(4)
+    } catch (err) {
+      // Termasuk kasus lowongan udah dinonaktifin/dihapus HRD sesaat sebelum
+      // kandidat submit -- backend nolak (404/409), pesannya ditampilin apa
+      // adanya di sini, BUKAN dianggap sukses (lihat applicationService.submitApplication).
+      setSubmitError(err instanceof Error ? err.message : "Gagal ngirim lamaran, coba lagi ya")
     } finally {
       setIsSubmitting(false)
     }
@@ -89,6 +96,7 @@ export function useApplyFlow(job: Job | undefined) {
     isUploadingCv,
     cvUploadError,
     isSubmitting,
+    submitError,
     isProfileComplete,
     handleNext,
     handleBack,

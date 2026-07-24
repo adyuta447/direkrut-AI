@@ -1,66 +1,17 @@
 import Link from "next/link"
 import { CheckCircleIcon } from "lucide-react"
-import { IconBriefcase, IconUsers } from "@tabler/icons-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Job } from "@/lib/types"
 
 interface AppDetailJobInfoProps {
   job: Job
-  isFreshGrad: boolean
-  hasCategory: boolean
   companyJobs: Job[]
 }
 
-export function AppDetailJobInfo({ job, isFreshGrad, hasCategory, companyJobs }: AppDetailJobInfoProps) {
+export function AppDetailJobInfo({ job, companyJobs }: AppDetailJobInfoProps) {
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Deskripsi Pekerjaan</CardTitle>
-          <CardDescription>{job.title} di {job.company}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {job.description || `Kami mencari individu yang berdedikasi dan kompeten untuk bergabung sebagai ${job.title} di ${job.company}.`}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 rounded-2xl border p-4">
-              <h4 className="flex items-center gap-2 text-sm font-semibold">
-                <IconUsers className="size-4 text-primary" /> Terbuka untuk
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {(isFreshGrad || !hasCategory) && <Badge variant="secondary">Fresh Graduate</Badge>}
-                <Badge variant="secondary">Professional</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {job.requirements?.[0] || "Terbuka untuk semua jenjang karir yang memenuhi kualifikasi"}
-              </p>
-            </div>
-            <div className="space-y-2 rounded-2xl border p-4">
-              <h4 className="flex items-center gap-2 text-sm font-semibold">
-                <IconBriefcase className="size-4 text-primary" /> Detail Posisi
-              </h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tipe Pekerjaan</span>
-                  <span className="font-medium">{job.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lokasi</span>
-                  <span className="font-medium">{job.location}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Kisaran Gaji</span>
-                  <span className="font-medium">{job.salaryRange || "Kompetitif"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold leading-[1.1] tracking-[-0.02em] md:text-2xl">Persyaratan &amp; Kualifikasi</CardTitle>

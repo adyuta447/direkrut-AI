@@ -11,7 +11,10 @@ interface ApiApplication {
   status: string;
   appliedAt: string;
   updatedAt: string;
+  interviewScheduledAt?: string;
   recommendationScore?: number;
+  interviewScore?: number;
+  interviewStatus?: string;
   candidateProfile?: CandidateProfileSummary;
 }
 
@@ -29,7 +32,10 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     validationStatus: "pending",
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
+    interviewScheduledAt: a.interviewScheduledAt,
     recommendationScore: a.recommendationScore,
+    interviewScore: a.interviewScore,
+    interviewStatus: a.interviewStatus,
     candidateProfile: a.candidateProfile,
     email: a.candidateProfile?.email,
     phone: a.candidateProfile?.phone,
@@ -96,41 +102,45 @@ export async function listSentDecisions(): Promise<SentDecision[]> {
   }
 }
 
+// Lempar ApiError kalau gagal (mis. lowongan udah ditutup/dihapus, atau udah
+// pernah dilamar) -- sebelumnya di-catch-and-fallback ke objek mock lokal,
+// jadi kandidat kelihatan "berhasil melamar" (lompat ke layar sukses) padahal
+// di server GAGAL, termasuk buat lowongan yang udah dinonaktifin/dihapus HRD.
 export async function submitApplication(jobId: string): Promise<Application | null> {
-  if (isApiConfigured) {
-    try {
-      const apiApp = await apiFetch<ApiApplication>("/v1/applications", {
-        method: "POST",
-        body: JSON.stringify({ jobId }),
-      });
-      return mapApiApplicationToApplication(apiApp);
-    } catch (err) {
-      console.error("[applicationService] gagal submit lamaran lewat API, fallback ke mock lokal:", err);
-    }
-  }
-  return null;
+  if (!isApiConfigured) return null;
+  const apiApp = await apiFetch<ApiApplication>("/v1/applications", {
+    method: "POST",
+    body: JSON.stringify({ jobId }),
+  });
+  return mapApiApplicationToApplication(apiApp);
 }
 
+// Lempar ApiError kalau gagal (mis. lamaran udah ditolak & dikunci backend)
+// -- pemanggilnya (DecisionDialog) butuh tau itu buat nampilin pesan yang
+// benar, bukan optimis nunjukin "terkirim" padahal ditolak backend.
 export async function updateApplicationStatus(
   id: string,
   status: Application["status"],
   note?: string,
-  email?: { subject: string; body: string }
+  email?: { subject: string; body: string },
+  interviewScheduledAt?: string
 ): Promise<Application | null> {
-  if (isApiConfigured) {
-    try {
-      const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status,
-          note,
-          ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
-        }),
-      });
-      return mapApiApplicationToApplication(apiApp);
-    } catch (err) {
-      console.error("[applicationService] gagal update status lamaran lewat API, fallback ke mock lokal:", err);
-    }
-  }
-  return null;
+  if (!isApiConfigured) return null;
+  const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status,
+      note,
+      ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
+      ...(interviewScheduledAt ? { interviewScheduledAt } : {}),
+    }),
+  });
+  return mapApiApplicationToApplication(apiApp);
+}
+
+// Cuma boleh buat lamaran yang udah final (ditolak / lolos wawancara) --
+// backend nolak (409) kalau statusnya masih berjalan, lihat handleDeleteApplication.
+export async function deleteApplication(id: string): Promise<void> {
+  if (!isApiConfigured) return;
+  await apiFetch<void>(`/v1/applications/${id}`, { method: "DELETE" });
 }

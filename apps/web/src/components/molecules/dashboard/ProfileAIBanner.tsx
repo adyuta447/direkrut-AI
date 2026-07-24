@@ -28,7 +28,7 @@ export function ProfileAIBanner({ isUploading, isSimulatingAI, onFileSelected }:
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   return (
-    <Card className="rounded-3xl border border-hairline bg-primary text-white shadow-none ring-0 overflow-hidden relative">
+    <Card className="rounded-3xl border border-hairline bg-badge-neutral text-white shadow-none ring-0 overflow-hidden relative">
       <div className="absolute top-0 right-0 p-4 opacity-15">
         <BotIcon className="size-24 text-white" />
       </div>

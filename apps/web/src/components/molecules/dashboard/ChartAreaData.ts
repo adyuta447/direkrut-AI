@@ -21,7 +21,7 @@ export function buildAreaChartData(applications: Application[]): ChartDataPoint[
     if (!day) return
     const entry = byDay.get(day) ?? { total: 0, wawancara: 0 }
     entry.total += 1
-    if (app.status === "interview") entry.wawancara += 1
+    if (app.status === "interview" || app.status === "interview_completed" || app.status === "accepted") entry.wawancara += 1
     byDay.set(day, entry)
   })
   return Array.from(byDay.entries())

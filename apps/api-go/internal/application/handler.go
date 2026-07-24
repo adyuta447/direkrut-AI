@@ -63,6 +63,7 @@ func (h *Handler) Router() chi.Router {
 		pr.Get("/", h.handleListApplications)
 		pr.Get("/{applicationID}", h.handleGetApplication)
 		pr.With(appmw.RequireRole("hrd"), decisionRateLimit).Patch("/{applicationID}/status", h.handleUpdateStatus)
+		pr.With(appmw.RequireRole("hrd")).Delete("/{applicationID}", h.handleDeleteApplication)
 
 		// AI screening (HRD): parse CV kandidat + hitung match score vs
 		// deskripsi lowongan.
@@ -106,34 +107,41 @@ func (h *Handler) ensureAIConfigured(w http.ResponseWriter) bool {
 // halaman profilnya) yang ditampilin di tabel/detail dashboard HRD --
 // pengganti data sintetis dari hash nama yang dulu dipakai FE.
 type candidateProfileSummary struct {
-	Location       string           `json:"location,omitempty"`
-	Gender         string           `json:"gender,omitempty"`
-	Age            *int             `json:"age,omitempty"`
-	Headline       string           `json:"headline,omitempty"`
-	Phone          string           `json:"phone,omitempty"`
-	Email          string           `json:"email,omitempty"`
-	Experience     []map[string]any `json:"experience,omitempty"`
-	Education      []map[string]any `json:"education,omitempty"`
+	Location   string           `json:"location,omitempty"`
+	Gender     string           `json:"gender,omitempty"`
+	Age        *int             `json:"age,omitempty"`
+	Headline   string           `json:"headline,omitempty"`
+	Phone      string           `json:"phone,omitempty"`
+	Email      string           `json:"email,omitempty"`
+	Experience []map[string]any `json:"experience,omitempty"`
+	Education  []map[string]any `json:"education,omitempty"`
 }
 
 type applicationResponse struct {
-	ID                  string                   `json:"id"`
-	JobID               string                   `json:"jobId"`
-	JobTitle            string                   `json:"jobTitle,omitempty"`
-	CompanyName         string                   `json:"companyName,omitempty"`
-	CandidateID         string                   `json:"candidateId"`
-	CandidateName       string                   `json:"candidateName,omitempty"`
-	Status              string                   `json:"status"`
-	AppliedAt           time.Time                `json:"appliedAt"`
-	UpdatedAt           time.Time                `json:"updatedAt"`
-	RecommendationScore *float64                 `json:"recommendationScore,omitempty"`
-	CandidateProfile    *candidateProfileSummary `json:"candidateProfile,omitempty"`
+	ID                   string                   `json:"id"`
+	JobID                string                   `json:"jobId"`
+	JobTitle             string                   `json:"jobTitle,omitempty"`
+	CompanyName          string                   `json:"companyName,omitempty"`
+	CandidateID          string                   `json:"candidateId"`
+	CandidateName        string                   `json:"candidateName,omitempty"`
+	Status               string                   `json:"status"`
+	AppliedAt            time.Time                `json:"appliedAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
+	InterviewScheduledAt *time.Time               `json:"interviewScheduledAt,omitempty"`
+	RecommendationScore  *float64                 `json:"recommendationScore,omitempty"`
+	CandidateProfile     *candidateProfileSummary `json:"candidateProfile,omitempty"`
+	// Hasil WAWANCARA AI -- beda sumber dari RecommendationScore (yang dari
+	// screening CV). Tanpa dua field ini, dashboard HRD gak pernah nunjukin
+	// bahwa kandidat udah selesai wawancara.
+	InterviewScore  *float64 `json:"interviewScore,omitempty"`
+	InterviewStatus string   `json:"interviewStatus,omitempty"`
 }
 
 func toApplicationResponse(a appdb.Application) applicationResponse {
 	resp := applicationResponse{
 		ID: a.ID, JobID: a.JobID, CandidateID: a.CandidateID,
 		Status: a.Status, AppliedAt: a.AppliedAt, UpdatedAt: a.UpdatedAt,
+		InterviewScheduledAt: a.InterviewScheduledAt,
 	}
 	if a.Job != nil {
 		resp.JobTitle = a.Job.Title
@@ -159,6 +167,13 @@ func toApplicationResponse(a appdb.Application) applicationResponse {
 	if a.ScoringResult != nil {
 		score := a.ScoringResult.OverallScore
 		resp.RecommendationScore = &score
+	}
+	for _, as := range a.Assessments {
+		if as.TrackType == "ai_interview" {
+			resp.InterviewStatus = as.Status
+			resp.InterviewScore = as.Score
+			break
+		}
 	}
 	return resp
 }
@@ -190,8 +205,19 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 
 	ctx := r.Context()
 
-	if err := h.db.WithContext(ctx).First(&appdb.Job{}, "id = ?", req.JobID).Error; err != nil {
+	// Cek status juga, bukan cuma eksistensi -- client kandidat bisa nyimpen
+	// data lowongan yang udah basi (list publik cuma di-fetch sekali per
+	// sesi, lihat DashboardContext di FE), jadi tombol "Lamar" masih bisa
+	// kepencet buat lowongan yang baru aja dinonaktifin/ditutup HRD. Baris
+	// ini jadi penjaga terakhir di server biar gak ada lamaran nyangkut ke
+	// lowongan yang udah gak dibuka, apapun state di browser kandidat.
+	var jobRow appdb.Job
+	if err := h.db.WithContext(ctx).First(&jobRow, "id = ?", req.JobID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lowongan gak ditemukan")
+		return
+	}
+	if jobRow.Status != "published" {
+		httpx.WriteError(w, http.StatusConflict, "job_not_open", "lowongan ini udah gak dibuka lagi, gak bisa dilamar")
 		return
 	}
 
@@ -314,7 +340,8 @@ func (h *Handler) handleSentDecisions(w http.ResponseWriter, r *http.Request) {
 		Joins("JOIN applications a ON a.id = ash.application_id").
 		Joins("JOIN jobs j ON j.id = a.job_id").
 		Joins("JOIN candidates c ON c.id = a.candidate_id").
-		Where("j.company_id = ? AND ash.to_status IN ?", claims.CompanyID, []string{"interview", "rejected", "under-review"}).
+		Where("j.company_id = ? AND ash.to_status IN ?", claims.CompanyID,
+			[]string{"interview", "interview_completed", "accepted", "rejected", "under-review"}).
 		Order("ash.created_at DESC").
 		Limit(100).
 		Scan(&rows).Error
@@ -344,7 +371,8 @@ func (h *Handler) handleListApplications(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ctx := r.Context()
-	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult")
+	query := h.db.WithContext(ctx).Model(&appdb.Application{}).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").
+		Preload("Assessments", "track_type = ?", "ai_interview")
 
 	switch claims.Role {
 	case "candidate":
@@ -404,7 +432,8 @@ func (h *Handler) loadVisibleApplication(w http.ResponseWriter, r *http.Request)
 	appID := chi.URLParam(r, "applicationID")
 
 	var appRow appdb.Application
-	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").First(&appRow, "id = ?", appID).Error; err != nil {
+	if err := h.db.WithContext(r.Context()).Preload("Job.Company").Preload("Candidate.User").Preload("ScoringResult").
+		Preload("Assessments", "track_type = ?", "ai_interview").First(&appRow, "id = ?", appID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran gak ditemukan")
 		return nil, false
 	}
@@ -436,8 +465,12 @@ func (h *Handler) handleGetApplication(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateStatusRequest struct {
-	Status string `json:"status" validate:"required,oneof=submitted under-review interview rejected"`
+	Status string `json:"status" validate:"required,oneof=submitted under-review interview interview_completed accepted rejected"`
 	Note   string `json:"note"`
+	// Cuma dipakai (dan ditulis) pas Status == "interview" -- HRD ngundang +
+	// milih jadwal dalam satu aksi yang sama. Opsional: HRD boleh pindahin
+	// status ke "interview" dulu, isi jadwalnya belakangan lewat request lain.
+	InterviewScheduledAt *time.Time `json:"interviewScheduledAt"`
 	// EmailSubject/EmailBody opsional -- kalau diisi (HRD ngirim lewat
 	// EmailPreviewPanel di dashboard), dipakai apa adanya buat email ke
 	// kandidat. Dibatesin panjangnya biar gak disalahgunain buat flood
@@ -468,10 +501,47 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Lamaran yang udah diterima itu keputusan final -- gak ada jalan buka
+	// lagi kayak "rejected" (gak ada trigger alami buat "batal diterima").
+	if appRow.Status == "accepted" {
+		httpx.WriteError(w, http.StatusConflict, "already_decided",
+			"lamaran ini udah diterima -- gak bisa diubah lagi")
+		return
+	}
+
+	// Lamaran yang udah ditolak dikunci -- HRD gak bisa kirim keputusan
+	// (email) lagi ke kandidat yang sama biar gak boros traffic/biaya kirim.
+	// Satu-satunya jalan buka lagi: kandidat ngulang wawancara AI (assessment
+	// ai_interview-nya diselesaikan ULANG setelah waktu penolakan terakhir).
+	if appRow.Status == "rejected" {
+		var lastRejection appdb.ApplicationStatusHistory
+		rejErr := h.db.WithContext(ctx).
+			Where("application_id = ? AND to_status = ?", appRow.ID, "rejected").
+			Order("created_at DESC").First(&lastRejection).Error
+
+		var assessment appdb.Assessment
+		asmErr := h.db.WithContext(ctx).
+			Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").
+			First(&assessment).Error
+
+		retookInterview := rejErr == nil && asmErr == nil &&
+			assessment.CompletedAt != nil && assessment.CompletedAt.After(lastRejection.CreatedAt)
+
+		if !retookInterview {
+			httpx.WriteError(w, http.StatusConflict, "already_rejected",
+				"lamaran ini udah ditolak -- gak bisa kirim keputusan lagi kecuali kandidat ngulang wawancara AI")
+			return
+		}
+	}
+
 	fromStatus := appRow.Status
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
-			Update("status", req.Status).Error; err != nil {
+		updates := map[string]any{"status": req.Status}
+		if req.InterviewScheduledAt != nil {
+			updates["interview_scheduled_at"] = req.InterviewScheduledAt
+		}
+		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).Updates(updates).Error; err != nil {
 			return err
 		}
 		history := appdb.ApplicationStatusHistory{
@@ -486,6 +556,9 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appRow.Status = req.Status
+	if req.InterviewScheduledAt != nil {
+		appRow.InterviewScheduledAt = req.InterviewScheduledAt
+	}
 	// Notifikasi + email kandidat -- keduanya best-effort, gagal ngirim gak
 	// boleh gagalin update status-nya sendiri (udah kepake duluan).
 	if appRow.Candidate != nil && appRow.Job != nil {
@@ -495,6 +568,17 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		}
 		title := "Status lamaran diperbarui"
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
+		if req.InterviewScheduledAt != nil {
+			body += fmt.Sprintf("\n\nJadwal wawancara: %s", req.InterviewScheduledAt.Format("02/01/2006 15:04"))
+		}
+		// Kalau HRD nulis pesan sendiri (subjek+isi email di dialog keputusan),
+		// itu pesan ASLI yang harus kandidat liat di Kotak Masuk in-app-nya --
+		// sebelumnya cuma baris generik di atas yang kekirim, jadi detail &
+		// rekomendasi yang HRD tulis serasa "gak pernah nyampe" walau emailnya
+		// sendiri sebenarnya kekirim.
+		if req.EmailBody != "" {
+			body = req.EmailBody
+		}
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_status", title, body)
 
 		if req.EmailSubject != "" && req.EmailBody != "" && appRow.Candidate.User != nil {
@@ -575,11 +659,61 @@ func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
 
 	if err := h.mailer.Send(ctx, appRow.Candidate.User.Email, subject, resp.Feedback); err != nil {
 		log.Printf("[application] gagal kirim email feedback penolakan ke %s: %v", appRow.Candidate.User.Email, err)
+		// Tetep lanjut bikin notifikasi in-app di bawah -- itu jalur yang gak
+		// tergantung SMTP, jadi kandidat tetep keliatan feedback-nya walau
+		// pengiriman email gagal.
+	}
+	// Isi notifikasi = feedback ASLI (bukan cuma "cek email"), biar kandidat
+	// yang gak buka/gak nerima emailnya tetep bisa liat feedback-nya di
+	// Kotak Masuk in-app.
+	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_feedback",
+		"Feedback pengembangan dari lamaranmu", resp.Feedback)
+}
+
+// handleDeleteApplication: HRD hapus permanen data lamaran yang udah final
+// (ditolak, atau lolos wawancara) -- bukan buat lamaran yang masih jalan
+// (submitted/under-review/interview belum diputus), biar HRD gak kepencet
+// hapus kandidat yang masih diproses. Beda dari handleDeleteJob (yang blokir
+// hapus kalau ada anak baris), application_status_history SELALU punya
+// minimal 1 baris sejak lamaran dibuat (lihat handleSubmitApplication) --
+// jadi di sini kita cascade-delete anak2nya sendiri dalam transaksi,
+// bukan nolak hapusnya, soalnya kalau nolak gak akan pernah bisa kehapus.
+func (h *Handler) handleDeleteApplication(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
 		return
 	}
-	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_feedback",
-		"Feedback pengembangan dari lamaranmu",
-		fmt.Sprintf("Kami kirim feedback + saran pengembangan buat lamaranmu di posisi %s lewat email. Semangat terus!", appRow.Job.Title))
+	if appRow.Status != "rejected" && appRow.Status != "accepted" {
+		httpx.WriteError(w, http.StatusConflict, "must_be_decided",
+			"lamaran ini harus diterima atau ditolak dulu sebelum bisa dihapus")
+		return
+	}
+
+	ctx := r.Context()
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("assessment_id IN (SELECT id FROM assessments WHERE application_id = ?)", appRow.ID).
+			Delete(&appdb.AssessmentItem{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.Assessment{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.CVParseResult{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.ScoringResult{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.ApplicationStatusHistory{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&appdb.Application{}, "id = ?", appRow.ID).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus lamaran")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // --- AI screening (CV parse + job-match score) ---
@@ -601,6 +735,23 @@ type screeningResponse struct {
 	RecommendationStatus  *string                            `json:"recommendationStatus,omitempty"`
 	EvidenceCoverage      *string                            `json:"evidenceCoverage,omitempty"`
 	KeyGaps               []string                           `json:"keyGaps,omitempty"`
+	SimilarityScore       float64                            `json:"similarityScore,omitempty"`
+	MatchedEvidence       []string                           `json:"matchedEvidence,omitempty"`
+}
+
+// unmarshalMatchedEvidence: baca bullet-bullet bukti kecocokan yang
+// tersimpen di scoring_results.matched_evidence -- nil/gagal parse cukup
+// balikin slice kosong (evidence emang best-effort, jangan gagalin
+// keseluruhan respons screening cuma gara-gara ini).
+func unmarshalMatchedEvidence(raw json.RawMessage) []string {
+	if len(raw) == 0 {
+		return nil
+	}
+	var evidence []string
+	if err := json.Unmarshal(raw, &evidence); err != nil {
+		return nil
+	}
+	return evidence
 }
 
 // handleScreen idempotent: kalau lamaran ini udah pernah discreen, balikin
@@ -618,15 +769,40 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 	var existingScore appdb.ScoringResult
 	if !force && h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingScore).Error == nil {
 		resp := screeningResponse{
-			OverallScore:   existingScore.OverallScore,
-			Category:       existingScore.Category,
-			CandidateTrack: existingScore.CandidateTrack,
-			Reasoning:      existingScore.Reasoning,
+			OverallScore:         existingScore.OverallScore,
+			MatchedEvidence:      unmarshalMatchedEvidence(existingScore.MatchedEvidence),
+			Category:             existingScore.Category,
+			CandidateTrack:       existingScore.CandidateTrack,
+			Reasoning:            existingScore.Reasoning,
+			EligibilityStatus:    existingScore.EligibilityStatus,
+			RecommendationStatus: existingScore.RecommendationStatus,
+			EvidenceCoverage:     existingScore.EvidenceCoverage,
+		}
+		if existingScore.MatchScore != nil {
+			resp.MatchScore = existingScore.MatchScore
 		}
 		if existingScore.QuotesJSON != nil {
 			var q []string
 			if json.Unmarshal([]byte(*existingScore.QuotesJSON), &q) == nil {
 				resp.Quotes = q
+			}
+		}
+		if existingScore.ComponentScores != nil {
+			var cs map[string]aiengine.ComponentScore
+			if json.Unmarshal([]byte(*existingScore.ComponentScores), &cs) == nil {
+				resp.ComponentScores = cs
+			}
+		}
+		if existingScore.WeightsUsed != nil {
+			var w aiengine.WeightConfig
+			if json.Unmarshal([]byte(*existingScore.WeightsUsed), &w) == nil {
+				resp.WeightsUsed = &w
+			}
+		}
+		if existingScore.KeyGapsJSON != nil {
+			var kg []string
+			if json.Unmarshal([]byte(*existingScore.KeyGapsJSON), &kg) == nil {
+				resp.KeyGaps = kg
 			}
 		}
 		var existingParse appdb.CVParseResult
@@ -798,6 +974,9 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application, f
 		keyGapsJSON = &kgStr
 	}
 
+	// Placeholder for MatchedEvidence to satisfy prod schema
+	evidenceJSON := []byte("[]")
+
 	scoreResult := appdb.ScoringResult{
 		ApplicationID:        appRow.ID,
 		OverallScore:         overallScore,
@@ -815,6 +994,7 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application, f
 		RecommendationStatus: &match.RecommendationStatus,
 		EvidenceCoverage:     &match.EvidenceCoverage,
 		KeyGapsJSON:          keyGapsJSON,
+		MatchedEvidence:      evidenceJSON,
 	}
 	if err := h.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "application_id"}},
@@ -823,6 +1003,7 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application, f
 			"reasoning", "quotes_json", "model_used", "scored_at",
 			"component_scores", "weights_used", "eligibility_status",
 			"match_score", "recommendation_status", "evidence_coverage", "key_gaps_json",
+			"matched_evidence",
 		}),
 	}).Create(&scoreResult).Error; err != nil {
 		return nil, fmt.Errorf("gagal simpan hasil skor: %w", err)
@@ -862,6 +1043,7 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := screeningResponse{
+<<<<<<< HEAD
 		OverallScore:         scoreResult.OverallScore,
 		Category:             scoreResult.Category,
 		CandidateTrack:       scoreResult.CandidateTrack,
@@ -901,6 +1083,11 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 	fws := scoreResult.OverallScore
 	resp.FinalWeightedScore = &fws
 
+=======
+		OverallScore:    scoreResult.OverallScore,
+		MatchedEvidence: unmarshalMatchedEvidence(scoreResult.MatchedEvidence),
+	}
+>>>>>>> prod
 	var parseResult appdb.CVParseResult
 	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
 		var parsed aiengine.ParseCVResponse
@@ -1048,8 +1235,6 @@ func (h *Handler) handleCrossRoleOffer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Lowongan target wajib milik company HRD ini & masih tayang -- jangan
-	// bisa nawarin lowongan company lain atau yang udah ditutup.
 	var targetJob appdb.Job
 	if err := h.db.WithContext(ctx).Preload("Company").First(&targetJob, "id = ?", req.JobID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lowongan yang ditawarkan gak ketemu")
@@ -1064,7 +1249,6 @@ func (h *Handler) handleCrossRoleOffer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Kalau kandidat udah pernah apply ke lowongan itu, gak perlu ditawarin lagi.
 	var existing appdb.Application
 	if err := h.db.WithContext(ctx).
 		Where("job_id = ? AND candidate_id = ?", req.JobID, appRow.CandidateID).First(&existing).Error; err == nil {
@@ -1738,7 +1922,11 @@ func statusLabel(status string) string {
 	case "under-review":
 		return "Administrasi"
 	case "interview":
-		return "Wawancara"
+		return "Sedang Wawancara Teknis"
+	case "interview_completed":
+		return "Sudah Wawancara Teknis"
+	case "accepted":
+		return "Diterima"
 	case "rejected":
 		return "Ditolak"
 	default:

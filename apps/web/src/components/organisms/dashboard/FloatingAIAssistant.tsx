@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect, useCallback, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { IconSparkles, IconX } from "@tabler/icons-react"
 import { useDashboard } from "@/context/DashboardContext"
-import { AIAssistantHeader } from "@/components/molecules/dashboard/AIAssistantHeader"
+import { useAIAssistantWidget } from "@/context/AIAssistantWidgetContext"
 import { AIAssistantMessages } from "@/components/molecules/dashboard/AIAssistantMessages"
 import { AIAssistantInput } from "@/components/molecules/dashboard/AIAssistantInput"
+import { Button } from "@/components/ui/button"
 import * as aiService from "@/services/aiService"
 
 type Message = {
@@ -17,44 +17,25 @@ type Message = {
   timestamp: Date
 }
 
-function AIAssistantChat() {
+export function FloatingAIAssistant() {
   const { currentUser, applications } = useDashboard()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputValue, setInputValue] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const hasAutoSubmitted = useRef(false)
-  const abortRef = useRef<AbortController | null>(null)
+  const { isOpen, pendingQuery, close, toggle, clearPendingQuery } = useAIAssistantWidget()
+  const [messages, setMessages] = React.useState<Message[]>([])
+  const [inputValue, setInputValue] = React.useState("")
+  const [isTyping, setIsTyping] = React.useState(false)
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const hasAutoSubmitted = React.useRef(false)
+  const abortRef = React.useRef<AbortController | null>(null)
 
-  const searchParams = useSearchParams()
-  const [initialContext, setInitialContext] = useState<{ q: string; candidate: string } | null>(
-    null
-  )
+  const chatSessionId = `session-${currentUser?.id || "anon"}`
+  const candidateId = pendingQuery?.candidateId ?? null
 
-  useEffect(() => {
-    try {
-      const pending = localStorage.getItem("pendingAiQuery")
-      if (pending) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is client-only, must read post-hydration to avoid SSR mismatch
-        setInitialContext(JSON.parse(pending))
-        localStorage.removeItem("pendingAiQuery")
-      }
-    } catch {
-      // ignore malformed pendingAiQuery
-    }
-  }, [])
-
-  const initialQuery = initialContext?.q || searchParams.get("q")
-  const candidateId = initialContext?.candidate || searchParams.get("candidate")
-
-  // Konteks faktual kandidat: nama + posisi + hasil screening (skor, skill,
-  // ringkasan CV) + transkrip wawancara AI (tanya-jawab + feedback + skor).
-  // Tanpa ini AI cuma tau NAMA doang, jadi jawabannya ngawang. Di-fetch
-  // async begitu candidateId ada, disuntik jadi blok fakta di depan pertanyaan.
+  // Konteks faktual kandidat (skor screening + transkrip wawancara) -- sama
+  // persis dengan yang dipakai halaman lama, cuma sumbernya sekarang dari
+  // pendingQuery widget, bukan search params route.
   const [candidateContext, setCandidateContext] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- konteks di-fetch async dari candidateId; reset sinkron pas gak ada kandidat */
     if (!candidateId || !applications) {
       setCandidateContext(null)
       return
@@ -106,61 +87,44 @@ function AIAssistantChat() {
     return () => {
       cancelled = true
     }
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, [candidateId, applications])
 
-  // Kirim pesan ke AI dan handle streaming response
-  const sendToAI = useCallback(
+  const sendToAI = React.useCallback(
     async (allMessages: Message[]) => {
       setIsTyping(true)
 
-      // Buat placeholder message buat assistant
       const assistantMsgId = (Date.now() + 1).toString()
       setMessages((prev) => [
         ...prev,
         { id: assistantMsgId, role: "assistant", content: "", timestamp: new Date() },
       ])
 
-      // Abort request sebelumnya kalau ada
       if (abortRef.current) {
         abortRef.current.abort()
       }
       abortRef.current = new AbortController()
 
-      // Konversi messages ke format yang diharapkan AI service
       const chatMessages: aiService.ChatMessage[] = allMessages
         .filter((m) => m.role === "user" || m.role === "assistant")
         .map((m) => ({ role: m.role, content: m.content }))
 
       try {
         await aiService.streamChat(
-          `session-${currentUser?.id || "anon"}`,
+          chatSessionId,
           chatMessages,
           (chunk) => {
             if (chunk.error) {
-              // Tampilkan error di chat
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMsgId
-                    ? { ...m, content: `⚠️ ${chunk.error}` }
-                    : m
-                )
+                prev.map((m) => (m.id === assistantMsgId ? { ...m, content: `⚠️ ${chunk.error}` } : m))
               )
               setIsTyping(false)
               return
             }
-
             if (chunk.content) {
-              // Append content ke message yang sedang di-stream
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMsgId
-                    ? { ...m, content: m.content + chunk.content }
-                    : m
-                )
+                prev.map((m) => (m.id === assistantMsgId ? { ...m, content: m.content + chunk.content } : m))
               )
             }
-
             if (chunk.done) {
               setIsTyping(false)
             }
@@ -171,21 +135,17 @@ function AIAssistantChat() {
         if ((err as Error).name !== "AbortError") {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMsgId
-                ? { ...m, content: "⚠️ Gagal terhubung ke AI. Coba lagi nanti." }
-                : m
+              m.id === assistantMsgId ? { ...m, content: "⚠️ Gagal terhubung ke AI. Coba lagi nanti." } : m
             )
           )
         }
         setIsTyping(false)
       }
     },
-    [currentUser?.id]
+    [chatSessionId]
   )
 
-  // Seed welcome message sekali aja pas mount.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- seeds the welcome message post-hydration to keep SSR/client output matching
+  React.useEffect(() => {
     setMessages([
       {
         id: "1",
@@ -196,40 +156,38 @@ function AIAssistantChat() {
     ])
   }, [])
 
-  // Auto-submit pertanyaan awal (dari tombol "Tanya AI" di detail kandidat).
-  // Kalau ada candidateId, TUNGGU dulu sampai candidateContext ke-fetch biar
-  // pertanyaan pertama beneran bawa data kandidat (bukan ngawang).
-  useEffect(() => {
-    if (!initialQuery || hasAutoSubmitted.current) return
-    const waitingForContext = Boolean(candidateId) && candidateContext === null
+  // Auto-submit pertanyaan yang "dititipkan" dari halaman lain (mis. tombol
+  // Tanya AI di detail kandidat). Kalau ada candidateId, tunggu context-nya
+  // kefetch dulu biar jawaban pertama beneran bawa data, bukan ngawang.
+  React.useEffect(() => {
+    if (!isOpen || !pendingQuery || hasAutoSubmitted.current) return
+    const waitingForContext = Boolean(pendingQuery.candidateId) && candidateContext === null
     if (waitingForContext) return
 
     hasAutoSubmitted.current = true
-    const fullContent = candidateContext ? `${candidateContext}${initialQuery}` : initialQuery
+    const fullContent = candidateContext ? `${candidateContext}${pendingQuery.q}` : pendingQuery.q
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
       content: fullContent,
-      // Di UI cuma tampilin pertanyaan aslinya, sembunyiin blok data kandidat.
-      displayContent: initialQuery,
+      displayContent: pendingQuery.q,
       timestamp: new Date(),
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- auto-submit pertanyaan awal dari deep-link, sekali jalan (di-guard hasAutoSubmitted)
     setMessages((prev) => {
       const updated = [...prev, userMsg]
       sendToAI(updated)
       return updated
     })
-  }, [initialQuery, candidateId, candidateContext, sendToAI])
+    clearPendingQuery()
+  }, [isOpen, pendingQuery, candidateContext, sendToAI, clearPendingQuery])
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages, isTyping])
 
-  // Cleanup abort controller on unmount
-  useEffect(() => {
+  React.useEffect(() => {
     return () => {
       if (abortRef.current) {
         abortRef.current.abort()
@@ -257,33 +215,44 @@ function AIAssistantChat() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] lg:h-[calc(100dvh-5rem)] w-full relative overflow-hidden bg-background rounded-xl">
-      <AIAssistantHeader />
-      <AIAssistantMessages
-        messages={messages}
-        isTyping={isTyping}
-        currentUserName={currentUser?.name}
-        scrollRef={scrollRef}
-      />
-      <AIAssistantInput
-        value={inputValue}
-        onChange={setInputValue}
-        onSubmit={handleSendMessage}
-      />
-    </div>
-  )
-}
-
-export default function AIAssistantPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex h-[calc(100dvh-4rem)] items-center justify-center">
-          Lagi manggil Asisten AI...
+    <>
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 flex h-[min(70vh,640px)] w-[min(24rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-hairline bg-background shadow-2xl">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
+                <IconSparkles className="size-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold">Asisten AI</h2>
+                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="inline-block size-1.5 rounded-full bg-success" />
+                  Standby, siap dipanggil kapan aja
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="size-8 rounded-full" onClick={close} aria-label="Tutup Asisten AI">
+              <IconX className="size-4" />
+            </Button>
+          </div>
+          <AIAssistantMessages
+            messages={messages}
+            isTyping={isTyping}
+            currentUserName={currentUser?.name}
+            scrollRef={scrollRef}
+          />
+          <AIAssistantInput value={inputValue} onChange={setInputValue} onSubmit={handleSendMessage} />
         </div>
-      }
-    >
-      <AIAssistantChat />
-    </Suspense>
+      )}
+
+      <Button
+        size="icon"
+        onClick={toggle}
+        aria-label={isOpen ? "Tutup Asisten AI" : "Buka Asisten AI"}
+        className="fixed bottom-6 right-6 z-50 size-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+      >
+        {isOpen ? <IconX className="size-6" /> : <IconSparkles className="size-6" />}
+      </Button>
+    </>
   )
 }

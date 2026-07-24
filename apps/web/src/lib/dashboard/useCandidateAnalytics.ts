@@ -12,7 +12,7 @@ export interface AnalyticsDatum {
  * skor rekomendasi AI, tingkat pengalaman) -- murni derived data, gak ada
  * JSX di sini. */
 export function useCandidateAnalytics(jobApplications: Application[]) {
-  const statusCounts = { interview: 0, "under-review": 0, rejected: 0 };
+  const statusCounts = { interview: 0, interview_completed: 0, accepted: 0, "under-review": 0, rejected: 0 };
   jobApplications.forEach((app) => {
     if (statusCounts[app.status as keyof typeof statusCounts] !== undefined) {
       statusCounts[app.status as keyof typeof statusCounts]++;
@@ -20,6 +20,8 @@ export function useCandidateAnalytics(jobApplications: Application[]) {
   });
   const statusData: AnalyticsDatum[] = [
     { name: "Wawancara", value: statusCounts.interview, color: "var(--info)" },
+    { name: "Wawancara Selesai", value: statusCounts.interview_completed, color: "var(--status-pending)" },
+    { name: "Diterima", value: statusCounts.accepted, color: "var(--success)" },
     { name: "Administrasi", value: statusCounts["under-review"], color: "var(--warning)" },
     { name: "Ditolak", value: statusCounts.rejected, color: "var(--destructive)" },
   ].filter((d) => (d.value ?? 0) > 0);

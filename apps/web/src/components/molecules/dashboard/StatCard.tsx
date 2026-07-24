@@ -23,7 +23,6 @@ export function StatCard({
   badge?: ReactNode;
   footer?: ReactNode;
   footerDetail?: ReactNode;
-  /** Ilustrasi dekoratif (mis. /dashboard/paper.svg), nempel kanan-bawah. */
   image?: string;
   className?: string;
 }) {

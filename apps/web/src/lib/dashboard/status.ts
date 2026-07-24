@@ -2,6 +2,8 @@ export type ApplicationStatus =
   | "submitted"
   | "under-review"
   | "interview"
+  | "interview_completed"
+  | "accepted"
   | "rejected";
 
 export interface StatusMeta {
@@ -16,14 +18,36 @@ export interface StatusMeta {
 
 /** Sumber tunggal label + gaya status lamaran (glossary copywriting). */
 export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
-  submitted: { label: "Terkirim", variant: "outline", color: "var(--muted-foreground)", solidClass: "bg-muted-foreground" },
-  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--warning)", solidClass: "bg-[color-mix(in_oklch,var(--warning),black_15%)]" },
-  interview: { label: "Wawancara", variant: "default", color: "var(--info)", solidClass: "bg-info" },
+  submitted: { label: "Terkirim", variant: "outline", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
+  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--status-pending)", solidClass: "bg-status-pending" },
+  interview: { label: "Sedang Wawancara Teknis", variant: "default", color: "var(--status-positive)", solidClass: "bg-status-positive" },
+  interview_completed: { label: "Sudah Wawancara Teknis", variant: "secondary", color: "var(--status-pending)", solidClass: "bg-status-pending" },
+  accepted: { label: "Diterima", variant: "default", color: "var(--success)", solidClass: "bg-success" },
   rejected: { label: "Ditolak", variant: "outline", color: "var(--destructive)", solidClass: "bg-destructive" },
 };
 
 export function getStatusMeta(status: string): StatusMeta {
   return STATUS_META[status as ApplicationStatus] ?? STATUS_META.submitted;
+}
+
+export type StageAction = "invite" | "complete_interview" | "accept" | "reject";
+
+/** Satu sumber kebenaran soal aksi apa yang valid di tiap tahap lamaran --
+ * dipakai di 3 tempat (halaman detail kandidat, drawer quick actions, tabel
+ * kandidat) biar logikanya gak kesebar/gampang ketinggalan sinkron kalau
+ * status baru ditambah. "accepted"/"rejected" itu final, gak ada aksi lagi. */
+export function availableStageActions(status: string): StageAction[] {
+  switch (status as ApplicationStatus) {
+    case "submitted":
+    case "under-review":
+      return ["invite", "reject"];
+    case "interview":
+      return ["complete_interview", "reject"];
+    case "interview_completed":
+      return ["accept", "reject"];
+    default:
+      return [];
+  }
 }
 
 export interface ScoreLevel {
@@ -36,8 +60,8 @@ export interface ScoreLevel {
 
 /** Skor rekomendasi AI -> level (cutoff 75/55, sebelumnya terduplikasi 3x). */
 export function getScoreLevel(score?: number): ScoreLevel {
-  if (!score) return { label: "—", variant: "outline", color: "var(--muted-foreground)", solidClass: "bg-muted-foreground" };
-  if (score >= 75) return { label: "Memenuhi Syarat", variant: "default", color: "var(--success)", solidClass: "bg-success" };
-  if (score >= 55) return { label: "Perlu Dikembangkan", variant: "secondary", color: "var(--warning)", solidClass: "bg-[color-mix(in_oklch,var(--warning),black_15%)]" };
+  if (!score) return { label: "—", variant: "outline", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
+  if (score >= 75) return { label: "Memenuhi Syarat", variant: "default", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
+  if (score >= 55) return { label: "Perlu Dikembangkan", variant: "secondary", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" };
   return { label: "Tidak Sesuai", variant: "destructive", color: "var(--destructive)", solidClass: "bg-destructive" };
 }

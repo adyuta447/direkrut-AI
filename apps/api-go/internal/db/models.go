@@ -200,12 +200,13 @@ func (n *Notification) BeforeCreate(tx *gorm.DB) error {
 }
 
 type Application struct {
-	ID          string    `gorm:"column:id;primaryKey"`
-	JobID       string    `gorm:"column:job_id"`
-	CandidateID string    `gorm:"column:candidate_id"`
-	Status      string    `gorm:"column:status"`
-	AppliedAt   time.Time `gorm:"column:applied_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at"`
+	ID                   string     `gorm:"column:id;primaryKey"`
+	JobID                string     `gorm:"column:job_id"`
+	CandidateID          string     `gorm:"column:candidate_id"`
+	Status               string     `gorm:"column:status"`
+	AppliedAt            time.Time  `gorm:"column:applied_at"`
+	UpdatedAt            time.Time  `gorm:"column:updated_at"`
+	InterviewScheduledAt *time.Time `gorm:"column:interview_scheduled_at"`
 
 	Job       *Job       `gorm:"foreignKey:JobID;references:ID"`
 	Candidate *Candidate `gorm:"foreignKey:CandidateID;references:ID"`
@@ -213,6 +214,12 @@ type Application struct {
 	// kandidat nampilin skor screening AI langsung tanpa fetch per-baris.
 	// Cuma dibaca, gak pernah di-set saat Create/Update Application.
 	ScoringResult *ScoringResult `gorm:"foreignKey:ApplicationID;references:ID"`
+	// Has-many assessment (track_type "ai_interview" / "pre_screening").
+	// Dipakai Preload berkondisi biar listing HRD bisa nampilin hasil
+	// WAWANCARA AI juga -- sebelumnya skor wawancara cuma nyangkut di tabel
+	// assessments dan gak pernah ikut ke response, jadi dashboard HRD gak
+	// pernah berubah walau kandidat udah selesai wawancara.
+	Assessments []Assessment `gorm:"foreignKey:ApplicationID;references:ID"`
 }
 
 func (Application) TableName() string { return "applications" }
@@ -326,6 +333,11 @@ type ScoringResult struct {
 	RecommendationStatus *string   `gorm:"column:recommendation_status"`
 	EvidenceCoverage     *string   `gorm:"column:evidence_coverage"`
 	KeyGapsJSON          *string   `gorm:"column:key_gaps_json;type:jsonb"`
+
+	// Bullet-bullet bukti kecocokan CV vs lowongan dari AI matching (lihat
+	// aiengine.MatchCandidate) -- disimpen biar tab "Bukti Kecocokan" di
+	// dashboard HRD tetep muncul abis reload, gak cuma pas baru discreen.
+	MatchedEvidence json.RawMessage `gorm:"column:matched_evidence;type:jsonb"`
 }
 
 func (ScoringResult) TableName() string { return "scoring_results" }

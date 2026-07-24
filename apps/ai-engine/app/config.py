@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     object_storage_bucket: str = ""
     internal_api_key: str = ""
 
+    # Classifier kategori CV lokal (model ONNX kecil hasil fine-tune di Colab,
+    # diserve pakai onnxruntime -- bukan LLM eksternal). Prefix folder di
+    # object storage tempat model.onnx + tokenizer.json + labels.json
+    # disimpan. Kosong = fitur mati (endpoint balikin 503 yang jelas), jadi
+    # aman dideploy sebelum modelnya ada.
+    cv_classifier_prefix: str = ""
+    cv_classifier_max_len: int = 256
+
 
 @lru_cache
 def get_settings() -> Settings:

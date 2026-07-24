@@ -52,8 +52,6 @@ export interface ScoringWeightConfig {
   defaultFreshGraduate?: Omit<ScoringWeightConfig, "isCustom" | "defaultProfessional" | "defaultFreshGraduate">;
 }
 
-/** Potongan profil asli kandidat (diisi kandidat di halaman profilnya),
- * dikirim backend di listing/detail lamaran buat dashboard HRD. */
 export interface CandidateProfileSummary {
   location?: string;
   gender?: string;
@@ -77,7 +75,11 @@ export interface Application {
   validationStatus: "pending" | "in-progress" | "completed";
   validationResponses?: ValidationResponse[];
   recommendationScore?: number;
-  status: "submitted" | "under-review" | "interview" | "rejected";
+  interviewScore?: number;
+  interviewStatus?: string;
+  status: "submitted" | "under-review" | "interview" | "interview_completed" | "accepted" | "rejected";
+  /** Jadwal wawancara teknis yang HRD tentuin -- keisi begitu status masuk "interview". */
+  interviewScheduledAt?: string;
   appliedDate: string;
   cvViewed?: boolean;
   authenticityScore?: {

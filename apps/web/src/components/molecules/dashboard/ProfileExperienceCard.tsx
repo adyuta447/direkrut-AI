@@ -75,9 +75,9 @@ export function ProfileExperienceCard({ experience, onAdd, onUpdate, onRemove }:
 
   return (
     <Card id="section-experience" className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-info py-4 text-white">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-primary py-4 text-white">
         <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">Pengalaman Kerja</CardTitle>
-        <Button variant="ghost" className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
+        <Button variant="ghost" className="rounded-full bg-white/95 text-neutral-900 font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
           <PlusIcon className="size-4" /> Tambah
         </Button>
       </CardHeader>
@@ -151,9 +151,9 @@ export function ProfileEducationCard({ education, onAdd, onUpdate, onRemove }: P
 
   return (
     <Card id="section-education" className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-warning py-4 text-white">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-primary py-4 text-white">
         <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">Pendidikan</CardTitle>
-        <Button variant="ghost" className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
+        <Button variant="ghost" className="rounded-full bg-white/95 text-neutral-900 font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
           <PlusIcon className="size-4" /> Tambah
         </Button>
       </CardHeader>

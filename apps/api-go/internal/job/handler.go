@@ -44,6 +44,7 @@ func (h *Handler) Router() chi.Router {
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(h.requireAuth)
+		pr.With(appmw.RequireRole("hrd")).Get("/mine", h.handleListMyJobs)
 		pr.With(appmw.RequireRole("hrd")).Post("/", h.handleCreateJob)
 		pr.With(appmw.RequireRole("hrd")).Put("/{jobID}", h.handleUpdateJob)
 		pr.With(appmw.RequireRole("hrd")).Delete("/{jobID}", h.handleDeleteJob)
@@ -78,6 +79,7 @@ type jobResponse struct {
 	MinExperienceYears   int      `json:"minExperienceYears"`
 	EducationRequirement string   `json:"educationRequirement,omitempty"`
 	CandidateType        string   `json:"candidateType"`
+	ApplicantCount       int64    `json:"applicantCount"`
 }
 
 func toJobResponse(j appdb.Job) jobResponse {
@@ -187,6 +189,63 @@ func (h *Handler) handleListJobs(w http.ResponseWriter, r *http.Request) {
 
 	_ = appcache.SetJSON(ctx, h.cache, cacheKey, resp, 60*time.Second)
 	w.Header().Set("Cache-Control", "public, max-age=60")
+	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) applicantCountsByJob(ctx context.Context, jobIDs []string) (map[string]int64, error) {
+	counts := make(map[string]int64, len(jobIDs))
+	if len(jobIDs) == 0 {
+		return counts, nil
+	}
+	var rows []struct {
+		JobID string
+		Count int64
+	}
+	if err := h.db.WithContext(ctx).Model(&appdb.Application{}).
+		Select("job_id, COUNT(*) as count").
+		Where("job_id IN ?", jobIDs).
+		Group("job_id").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		counts[row.JobID] = row.Count
+	}
+	return counts, nil
+}
+
+func (h *Handler) handleListMyJobs(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CompanyID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun HRD ini belum terhubung ke perusahaan")
+		return
+	}
+	ctx := r.Context()
+
+	var jobs []appdb.Job
+	if err := h.db.WithContext(ctx).Preload("Company").
+		Where("company_id = ?", claims.CompanyID).
+		Order("created_at DESC").Find(&jobs).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil daftar lowongan")
+		return
+	}
+
+	jobIDs := make([]string, 0, len(jobs))
+	for _, j := range jobs {
+		jobIDs = append(jobIDs, j.ID)
+	}
+	counts, err := h.applicantCountsByJob(ctx, jobIDs)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil jumlah pelamar")
+		return
+	}
+
+	resp := jobListResponse{Items: make([]jobResponse, 0, len(jobs))}
+	for _, j := range jobs {
+		item := toJobResponse(j)
+		item.ApplicantCount = counts[j.ID]
+		resp.Items = append(resp.Items, item)
+	}
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
@@ -412,6 +471,31 @@ func (h *Handler) handleDeleteJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Lowongan harus dinonaktifin dulu sebelum bisa dihapus -- cegah HRD gak
+	// sengaja hapus lowongan yang masih aktif dilamar orang.
+	if jobRow.Status != "closed" {
+		httpx.WriteError(w, http.StatusConflict, "must_be_closed",
+			"nonaktifin dulu lowongan ini sebelum dihapus")
+		return
+	}
+
+	// Kalau udah pernah kedatangan lamaran, jangan hard-delete -- job_id di
+	// tabel applications bakal jadi dangling reference dan riwayat lamaran
+	// kandidat rusak. Cukup dibiarkan closed (arsip), gak perlu row baru
+	// atau status baru buat "archived".
+	var appCount int64
+	if err := h.db.WithContext(ctx).Model(&appdb.Application{}).
+		Where("job_id = ?", jobRow.ID).Count(&appCount).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal cek lamaran lowongan ini")
+		return
+	}
+	if appCount > 0 {
+		httpx.WriteError(w, http.StatusConflict, "has_applications",
+			"lowongan ini udah pernah dilamar -- gak bisa dihapus permanen biar riwayat kandidat gak rusak, cukup dinonaktifkan aja")
+		return
+	}
+
 	if err := h.db.WithContext(ctx).Delete(jobRow).Error; err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus lowongan")
 		return

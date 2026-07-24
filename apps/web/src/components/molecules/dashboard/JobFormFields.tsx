@@ -95,6 +95,11 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
   const { departments } = useDashboard()
   const initialDept = selectedJob?.department || ""
   const initialType = selectedJob?.type || ""
+  const [requirementsText, setRequirementsText] = useState(selectedJob?.requirements?.join("\n") || "")
+  const requirementsPreview = requirementsText
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean)
 
   const isInitialTypeCustom = initialType && !KNOWN_TYPES.includes(initialType)
 
@@ -256,14 +261,32 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="requirements">Persyaratan Tambahan / Lainnya (Opsional)</Label>
+          <Label htmlFor="requirements">Kualifikasi Tambahan</Label>
+          <p className="text-sm text-muted-foreground">
+            Satu poin singkat per baris (bukan paragraf) -- tiap baris bakal tampil sebagai chip terpisah ke kandidat.
+          </p>
           <Textarea
             id="requirements"
             name="requirements"
-            placeholder="Kualifikasi lain yang tidak masuk di kategori bawah (pisahkan baris baru)..."
-            className="min-h-[80px]"
-            defaultValue={selectedJob?.requirements?.join("\n") || ""}
+            placeholder={"Contoh:\nMinimal 2 tahun pengalaman di bidang terkait\nMenguasai Microsoft Excel\nTerbiasa kerja under pressure"}
+            className="min-h-[100px]"
+            value={requirementsText}
+            onChange={(e) => setRequirementsText(e.target.value)}
           />
+          {requirementsPreview.length > 0 && (
+            <div className="space-y-1.5 rounded-2xl border border-hairline bg-surface-1 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Preview ke kandidat
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {requirementsPreview.map((req, i) => (
+                  <span key={i} className="text-[14px] rounded-full bg-canvas border border-hairline px-4 py-1.5 text-ink">
+                    {req}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -10,16 +10,18 @@ import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeade
 import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";
 import { SidebarInset, SidebarProvider } from "../../components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 
 export default function CandidateLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useDashboard();
   const router = useRouter();
+  const mounted = useHasMounted();
 
   useEffect(() => {
-    if (!currentUser) router.replace("/auth");
-  }, [currentUser, router]);
+    if (mounted && !currentUser) router.replace("/auth");
+  }, [mounted, currentUser, router]);
 
-  if (!currentUser) return null;
+  if (!mounted || !currentUser) return null;
 
   return (
     <SidebarProvider

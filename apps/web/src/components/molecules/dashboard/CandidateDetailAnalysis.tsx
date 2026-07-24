@@ -19,8 +19,6 @@ import {
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
@@ -443,7 +441,6 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
             {error && <p className="text-sm text-destructive">{error}</p>}
           </>
         )}
-
         <Separator className="bg-hairline" />
 
         <div className="mt-2 mb-4">

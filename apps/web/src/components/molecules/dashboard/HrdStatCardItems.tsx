@@ -25,9 +25,9 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
   const delayedApps = administrasiApps.filter(
     (a) => daysSinceApplied(a.appliedDate) > 7
   ).length
-  const wawancara = applications.filter((a) => a.status === "interview").length
+  const wawancara = applications.filter((a) => a.status === "interview" || a.status === "interview_completed").length
   const belumDiscreen = applications.filter(
-    (a) => a.status !== "rejected" && a.recommendationScore == null
+    (a) => a.status !== "rejected" && a.status !== "accepted" && a.recommendationScore == null
   ).length
 
   return (
@@ -35,8 +35,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Total Lamaran"
         value={totalLamaran}
-        className={`bg-primary ${SOLID_CARD}`}
-        image="/dashboard/paper.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
@@ -50,8 +49,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Tahap Administrasi"
         value={tahapAdministrasi}
-        className={`bg-[color-mix(in_oklch,var(--warning),black_20%)] ${SOLID_CARD}`}
-        image="/dashboard/administrasi.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           delayedApps > 0 ? (
             <Badge variant="outline" className="border-white/40 bg-white text-destructive font-semibold">
@@ -71,8 +69,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Lolos Wawancara"
         value={wawancara}
-        className={`bg-brand-accent-strong ${SOLID_CARD}`}
-        image="/dashboard/conference.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
@@ -86,8 +83,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Belum Discreen AI"
         value={belumDiscreen}
-        className={`bg-success ${SOLID_CARD}`}
-        image="/dashboard/resume.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           belumDiscreen > 0 ? (
             <Badge variant="outline" className="border-white/40 bg-white text-warning font-semibold">

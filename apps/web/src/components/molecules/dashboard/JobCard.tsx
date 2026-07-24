@@ -16,7 +16,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
 import { SettingsJobAiScoringSheet } from "@/components/organisms/dashboard/SettingsJobAiScoringSheet"
@@ -39,11 +38,22 @@ export function JobCard({ job, onEdit }: JobCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [aiSettingsOpen, setAiSettingsOpen] = useState(false)
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false)
 
   const statusMeta = JOB_STATUS_META[job.status ?? "inactive"] ?? JOB_STATUS_META.inactive
+  const isActive = job.status === "active"
 
-  const handleToggleStatus = (checked: boolean) => {
-    updateJob(job.id, { status: checked ? "active" : "inactive" })
+  const handleToggleStatus = async () => {
+    const nextActive = !isActive
+    setIsTogglingStatus(true)
+    try {
+      await updateJob(job.id, { status: nextActive ? "active" : "inactive" })
+      setNotice(nextActive ? "Lowongan berhasil diaktifkan" : "Lowongan berhasil dinonaktifkan")
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Gagal ubah status lowongan, coba lagi ya")
+    } finally {
+      setIsTogglingStatus(false)
+    }
   }
 
   return (
@@ -83,14 +93,15 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl bg-surface-1 px-4 py-3">
-          <span className="text-sm font-medium text-ink">Aktifkan Lowongan</span>
-          <Switch
-            checked={job.status === "active"}
-            onCheckedChange={handleToggleStatus}
-            className="data-[state=checked]:bg-success"
-          />
-        </div>
+        <Button
+          type="button"
+          variant={isActive ? "outline" : "default"}
+          className={isActive ? "w-full border-hairline text-destructive hover:text-destructive hover:bg-destructive/10" : "w-full"}
+          disabled={isTogglingStatus}
+          onClick={handleToggleStatus}
+        >
+          {isTogglingStatus ? "Memproses..." : isActive ? "Nonaktifkan Lowongan" : "Aktifkan Lowongan"}
+        </Button>
       </CardContent>
 
       <CardFooter className="flex flex-col sm:flex-row justify-between items-center border-t border-hairline pt-4 gap-4">
@@ -118,7 +129,9 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="border-hairline text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="border-hairline text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+            disabled={job.status !== "inactive"}
+            title={job.status !== "inactive" ? "Nonaktifin lowongan ini dulu sebelum dihapus" : "Hapus lowongan"}
             onClick={() => setConfirmDelete(true)}
             title="Hapus Lowongan"
           >
@@ -136,8 +149,12 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             description={`Lowongan "${job.title}" bakal hilang permanen. Nggak bisa di-undo lho.`}
             confirmLabel="Ya, Hapus"
             onConfirm={async () => {
-              await deleteJob(job.id)
-              setNotice("Lowongan udah dihapus")
+              try {
+                await deleteJob(job.id)
+                setNotice("Lowongan udah dihapus")
+              } catch (err) {
+                setNotice(err instanceof Error ? err.message : "Gagal hapus lowongan, coba lagi ya")
+              }
             }}
           />
           <NoticeDialog message={notice} onClose={() => setNotice(null)} />
