@@ -32,8 +32,6 @@ export interface Job {
   timeline?: { from: string; to: string };
 }
 
-/** Potongan profil asli kandidat (diisi kandidat di halaman profilnya),
- * dikirim backend di listing/detail lamaran buat dashboard HRD. */
 export interface CandidateProfileSummary {
   location?: string;
   gender?: string;
@@ -57,7 +55,6 @@ export interface Application {
   validationStatus: "pending" | "in-progress" | "completed";
   validationResponses?: ValidationResponse[];
   recommendationScore?: number;
-  /** Hasil WAWANCARA AI -- sumbernya beda dari recommendationScore (screening CV). */
   interviewScore?: number;
   interviewStatus?: string;
   status: "submitted" | "under-review" | "interview" | "rejected";

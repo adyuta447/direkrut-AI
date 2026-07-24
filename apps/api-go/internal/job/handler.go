@@ -69,6 +69,7 @@ type jobResponse struct {
 	Status          string     `json:"status"`
 	PublishedAt     *time.Time `json:"publishedAt,omitempty"`
 	CreatedAt       time.Time  `json:"createdAt"`
+	ApplicantCount  int64      `json:"applicantCount"`
 }
 
 func toJobResponse(j appdb.Job) jobResponse {
@@ -165,30 +166,59 @@ func (h *Handler) handleListJobs(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
-// handleListMyJobs: daftar lowongan milik company HRD yang login, SEMUA
-// status (draft/published/closed) -- beda dari handleListJobs (publik, cuma
-// published, lintas company) yang sebelumnya salah dipakai juga buat halaman
-// Manajemen Lowongan HRD. Akibatnya HRD lihat lowongan company LAIN (dengan
-// tombol edit/hapus yang percuma karena bakal ditolak loadOwnedJob), dan
-// lowongan draft/closed milik sendiri malah gak pernah muncul di grid-nya.
+func (h *Handler) applicantCountsByJob(ctx context.Context, jobIDs []string) (map[string]int64, error) {
+	counts := make(map[string]int64, len(jobIDs))
+	if len(jobIDs) == 0 {
+		return counts, nil
+	}
+	var rows []struct {
+		JobID string
+		Count int64
+	}
+	if err := h.db.WithContext(ctx).Model(&appdb.Application{}).
+		Select("job_id, COUNT(*) as count").
+		Where("job_id IN ?", jobIDs).
+		Group("job_id").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		counts[row.JobID] = row.Count
+	}
+	return counts, nil
+}
+
 func (h *Handler) handleListMyJobs(w http.ResponseWriter, r *http.Request) {
 	claims, ok := appmw.ClaimsFromContext(r.Context())
 	if !ok || claims.CompanyID == "" {
 		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun HRD ini belum terhubung ke perusahaan")
 		return
 	}
+	ctx := r.Context()
 
 	var jobs []appdb.Job
-	if err := h.db.WithContext(r.Context()).Preload("Company").
+	if err := h.db.WithContext(ctx).Preload("Company").
 		Where("company_id = ?", claims.CompanyID).
 		Order("created_at DESC").Find(&jobs).Error; err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil daftar lowongan")
 		return
 	}
 
+	jobIDs := make([]string, 0, len(jobs))
+	for _, j := range jobs {
+		jobIDs = append(jobIDs, j.ID)
+	}
+	counts, err := h.applicantCountsByJob(ctx, jobIDs)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil jumlah pelamar")
+		return
+	}
+
 	resp := jobListResponse{Items: make([]jobResponse, 0, len(jobs))}
 	for _, j := range jobs {
-		resp.Items = append(resp.Items, toJobResponse(j))
+		item := toJobResponse(j)
+		item.ApplicantCount = counts[j.ID]
+		resp.Items = append(resp.Items, item)
 	}
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }

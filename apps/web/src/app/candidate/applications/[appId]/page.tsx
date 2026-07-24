@@ -13,7 +13,6 @@ import { NotFoundCard } from "@/components/molecules/dashboard/NotFoundCard"
 import { AppDetailHero } from "@/components/molecules/dashboard/AppDetailHero"
 import { AppDetailTimeline } from "@/components/molecules/dashboard/AppDetailTimeline"
 import { AppDetailJobInfo } from "@/components/molecules/dashboard/AppDetailJobInfo"
-import { ApplicationStatsTab } from "@/components/organisms/dashboard/ApplicationStatsTab"
 import { ApplicationTranscriptTab } from "@/components/organisms/dashboard/ApplicationTranscriptTab"
 import { getApplicationDetailData } from "@/lib/dashboard/applicationDetailData"
 import type { Application, Job } from "@/lib/types"
@@ -89,7 +88,7 @@ export default function ApplicationDetailPage() {
     )
   }
 
-  const { isFreshGrad, jobApplications, companyJobs, applicationFlowData, positionDistribution, timelineSteps } =
+  const { isFreshGrad, jobApplications, companyJobs, timelineSteps } =
     getApplicationDetailData(application, job, applications, jobs)
 
   return (
@@ -109,7 +108,6 @@ export default function ApplicationDetailPage() {
           <TabsTrigger value="perjalanan">Perjalanan</TabsTrigger>
           <TabsTrigger value="transkrip">Transkrip AI</TabsTrigger>
           <TabsTrigger value="posisi">Detail Posisi</TabsTrigger>
-          <TabsTrigger value="statistik">Statistik</TabsTrigger>
         </TabsList>
 
         <TabsContent value="perjalanan" className="space-y-6 py-4">
@@ -129,15 +127,6 @@ export default function ApplicationDetailPage() {
 
         <TabsContent value="posisi" className="space-y-6 py-4">
           <AppDetailJobInfo job={job} companyJobs={companyJobs} />
-        </TabsContent>
-
-        <TabsContent value="statistik" className="py-4">
-          <ApplicationStatsTab
-            job={job}
-            jobApplicationsCount={jobApplications.length}
-            applicationFlowData={applicationFlowData}
-            positionDistribution={positionDistribution}
-          />
         </TabsContent>
       </Tabs>
     </div>

@@ -12,18 +12,20 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
 import { useDashboard } from "@/context/DashboardContext"
-import { getApplicationById } from "@/services/applicationService"
+import { getApplicationById, listApplicationsForJob } from "@/services/applicationService"
 import { BackButton } from "@/components/molecules/dashboard/BackButton"
 import { getExtendedData } from "@/lib/dashboard/extended-data"
+import { getApplicationFlowData, getPositionDistribution } from "@/lib/dashboard/applicationStatsData"
 import { CandidateContactGrid } from "@/components/molecules/dashboard/CandidateContactGrid"
 import { CandidateCharts } from "@/components/molecules/dashboard/CandidateCharts"
 import { CandidateDetailAnalysis } from "@/components/molecules/dashboard/CandidateDetailAnalysis"
 import { InterviewLogCard, PortfolioCard } from "@/components/molecules/dashboard/CandidateDetailCV"
+import { ApplicationStatsTab } from "@/components/organisms/dashboard/ApplicationStatsTab"
 import type { Application } from "@/lib/types"
 
 export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>()
-  const { applications } = useDashboard()
+  const { applications, myJobs } = useDashboard()
   const [showChart, setShowChart] = React.useState(false)
 
   // Diambil langsung by-id (bukan cuma applications.find dari context) --
@@ -45,6 +47,21 @@ export default function CandidateDetailPage() {
   const candidate = rawCandidate
     ? { ...rawCandidate, ...getExtendedData(rawCandidate) }
     : null
+
+  // Lamaran lain buat lowongan yang sama -- dasar funnel di tab Statistik.
+  // Discope server-side lewat listApplicationsForJob (HRD cuma liat lowongan
+  // miliknya sendiri), bukan filter applications di client.
+  const [jobApplications, setJobApplications] = React.useState<Application[]>([])
+  React.useEffect(() => {
+    if (!candidate?.jobId) return
+    let cancelled = false
+    listApplicationsForJob(candidate.jobId).then((fetched) => {
+      if (!cancelled) setJobApplications(fetched)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [candidate?.jobId])
 
   if (!candidate) {
     return (
@@ -144,9 +161,9 @@ export default function CandidateDetailPage() {
       <div className="mt-4">
         <Tabs defaultValue="analisis" className="w-full">
           <TabsList className="w-max max-w-full overflow-x-auto">
-            {["analisis", "transkrip", "ringkasan"].map((tab) => (
+            {["analisis", "transkrip", "ringkasan", "statistik"].map((tab) => (
               <TabsTrigger key={tab} value={tab}>
-                {tab === "analisis" ? "Detail Analisis & Bukti AI" : tab === "transkrip" ? "Log Wawancara AI" : "Ringkasan CV"}
+                {tab === "analisis" ? "Detail Analisis & Bukti AI" : tab === "transkrip" ? "Log Wawancara AI" : tab === "ringkasan" ? "Ringkasan CV" : "Statistik"}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -158,6 +175,17 @@ export default function CandidateDetailPage() {
           </TabsContent>
           <TabsContent value="ringkasan" className="py-6">
             <PortfolioCard candidate={candidate} />
+          </TabsContent>
+          <TabsContent value="statistik" className="py-6">
+            <ApplicationStatsTab
+              job={{
+                title: candidate.jobTitle,
+                company: myJobs.find((j) => j.id === candidate.jobId)?.company ?? "Perusahaan",
+              }}
+              jobApplicationsCount={jobApplications.length}
+              applicationFlowData={getApplicationFlowData(jobApplications)}
+              positionDistribution={getPositionDistribution(myJobs)}
+            />
           </TabsContent>
         </Tabs>
       </div>
