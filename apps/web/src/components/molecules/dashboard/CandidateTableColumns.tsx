@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   IconArrowUp,
@@ -8,6 +9,7 @@ import {
   IconBrandWhatsapp,
   IconX,
   IconEye,
+  IconTrash,
 } from "@tabler/icons-react"
 import { type ColumnDef } from "@tanstack/react-table"
 import { getExtendedData } from "@/lib/dashboard/extended-data"
@@ -16,6 +18,9 @@ import { Button } from "@/components/ui/button"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 import { CandidateTableCellViewer } from "@/components/molecules/dashboard/CandidateDrawerContent"
 import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
+import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
+import { useDashboard } from "@/context/DashboardContext"
 
 function SortableHeader({
   label,
@@ -48,10 +53,16 @@ function SortableHeader({
 
 function ActionsCell({ row }: { row: { original: Candidate } }) {
   const router = useRouter()
+  const { deleteApplication } = useDashboard()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const candidate = row.original
+  const canDelete = candidate.status === "rejected" || candidate.status === "interview"
+
   return (
     <div className="flex items-center gap-1.5">
       <DecisionDialog
-        candidate={row.original}
+        candidate={candidate}
         decision="reject"
         trigger={
           <Button
@@ -68,11 +79,38 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
         variant="outline"
         size="icon"
         className="h-7 w-7 rounded-full text-muted-foreground border-hairline"
-        onClick={() => router.push(`/hrd/candidates/${row.original.id}`)}
+        onClick={() => router.push(`/hrd/candidates/${candidate.id}`)}
       >
         <IconEye className="size-3.5" />
         <span className="sr-only">Lihat Detail</span>
       </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive border-hairline disabled:opacity-40"
+        disabled={!canDelete}
+        title={canDelete ? "Hapus Kandidat" : "Kandidat harus ditolak atau lolos wawancara dulu sebelum bisa dihapus"}
+        onClick={() => setConfirmDelete(true)}
+      >
+        <IconTrash className="size-3.5" />
+        <span className="sr-only">Hapus Kandidat</span>
+      </Button>
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Yakin mau hapus kandidat ini?"
+        description={`Data lamaran "${candidate.applicantName}" bakal hilang permanen. Nggak bisa di-undo lho.`}
+        confirmLabel="Ya, Hapus"
+        onConfirm={async () => {
+          try {
+            await deleteApplication(candidate.id)
+            setNotice("Kandidat udah dihapus")
+          } catch (err) {
+            setNotice(err instanceof Error ? err.message : "Gagal hapus kandidat, coba lagi ya")
+          }
+        }}
+      />
+      <NoticeDialog message={notice} onClose={() => setNotice(null)} />
     </div>
   )
 }

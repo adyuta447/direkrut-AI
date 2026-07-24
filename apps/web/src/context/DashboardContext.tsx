@@ -36,6 +36,7 @@ interface DashboardContextType {
     note?: string,
     email?: { subject: string; body: string },
   ) => Promise<void>;
+  deleteApplication: (id: string) => Promise<void>;
   jobs: Job[];
   /** Lowongan MILIK company HRD yang login, semua status -- sumber buat
    * halaman Manajemen Lowongan (bukan `jobs`, itu publik lintas-company). */
@@ -212,6 +213,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     updateApplication(id, result ?? { status });
   };
 
+  const deleteApplication = async (id: string) => {
+    await applicationService.deleteApplication(id);
+    setApplications((prev) => prev.filter((a) => a.id !== id));
+  };
+
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
     setMyJobs((prev) => [saved, ...prev]);
@@ -220,8 +226,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const updateJob = async (id: string, updates: Partial<Job>) => {
     const existing = myJobs.find((j) => j.id === id);
     if (!existing) return;
-    const saved = await jobService.updateJob(id, { ...existing, ...updates });
-    setMyJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
+    setMyJobs((prev) => prev.map((j) => (j.id === id ? { ...existing, ...updates } : j)));
+    try {
+      const saved = await jobService.updateJob(id, { ...existing, ...updates });
+      setMyJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
+    } catch (err) {
+      setMyJobs((prev) => prev.map((j) => (j.id === id ? existing : j)));
+      throw err;
+    }
   };
 
   const deleteJob = async (id: string) => {
@@ -258,6 +270,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         updateApplication,
         applyToJob,
         changeApplicationStatus,
+        deleteApplication,
         jobs,
         myJobs,
         addJob,

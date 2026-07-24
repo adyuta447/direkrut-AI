@@ -3,7 +3,7 @@ import { ChartCard, CHART_TOOLTIP_STYLE } from "@/components/molecules/dashboard
 import type { Job } from "@/lib/types"
 
 interface ApplicationStatsTabProps {
-  job: Job
+  job: Pick<Job, "title" | "company">
   jobApplicationsCount: number
   applicationFlowData: { name: string; value: number; fill: string }[]
   positionDistribution: { name: string; value: number }[]

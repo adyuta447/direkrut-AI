@@ -135,3 +135,10 @@ export async function updateApplicationStatus(
   });
   return mapApiApplicationToApplication(apiApp);
 }
+
+// Cuma boleh buat lamaran yang udah final (ditolak / lolos wawancara) --
+// backend nolak (409) kalau statusnya masih berjalan, lihat handleDeleteApplication.
+export async function deleteApplication(id: string): Promise<void> {
+  if (!isApiConfigured) return;
+  await apiFetch<void>(`/v1/applications/${id}`, { method: "DELETE" });
+}

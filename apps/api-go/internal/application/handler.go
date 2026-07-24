@@ -63,6 +63,7 @@ func (h *Handler) Router() chi.Router {
 		pr.Get("/", h.handleListApplications)
 		pr.Get("/{applicationID}", h.handleGetApplication)
 		pr.With(appmw.RequireRole("hrd"), decisionRateLimit).Patch("/{applicationID}/status", h.handleUpdateStatus)
+		pr.With(appmw.RequireRole("hrd")).Delete("/{applicationID}", h.handleDeleteApplication)
 
 		// AI screening (HRD): parse CV kandidat + hitung match score vs
 		// deskripsi lowongan.
@@ -618,6 +619,52 @@ func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
 	// Kotak Masuk in-app.
 	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_feedback",
 		"Feedback pengembangan dari lamaranmu", resp.Feedback)
+}
+
+// handleDeleteApplication: HRD hapus permanen data lamaran yang udah final
+// (ditolak, atau lolos wawancara) -- bukan buat lamaran yang masih jalan
+// (submitted/under-review/interview belum diputus), biar HRD gak kepencet
+// hapus kandidat yang masih diproses. Beda dari handleDeleteJob (yang blokir
+// hapus kalau ada anak baris), application_status_history SELALU punya
+// minimal 1 baris sejak lamaran dibuat (lihat handleSubmitApplication) --
+// jadi di sini kita cascade-delete anak2nya sendiri dalam transaksi,
+// bukan nolak hapusnya, soalnya kalau nolak gak akan pernah bisa kehapus.
+func (h *Handler) handleDeleteApplication(w http.ResponseWriter, r *http.Request) {
+	appRow, ok := h.loadVisibleApplication(w, r)
+	if !ok {
+		return
+	}
+	if appRow.Status != "rejected" && appRow.Status != "interview" {
+		httpx.WriteError(w, http.StatusConflict, "must_be_decided",
+			"lamaran ini harus ditolak atau lolos wawancara dulu sebelum bisa dihapus")
+		return
+	}
+
+	ctx := r.Context()
+	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("assessment_id IN (SELECT id FROM assessments WHERE application_id = ?)", appRow.ID).
+			Delete(&appdb.AssessmentItem{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.Assessment{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.CVParseResult{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.ScoringResult{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("application_id = ?", appRow.ID).Delete(&appdb.ApplicationStatusHistory{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&appdb.Application{}, "id = ?", appRow.ID).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus lamaran")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // --- AI screening (CV parse + job-match score) ---

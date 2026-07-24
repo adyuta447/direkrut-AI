@@ -19,6 +19,7 @@ interface ApiJob {
   status: string;
   publishedAt?: string;
   createdAt: string;
+  applicantCount?: number;
 }
 
 interface ApiJobListResponse {
@@ -126,7 +127,7 @@ function mapApiJobToJob(apiJob: ApiJob): Job {
       addSuffix: true,
       locale: id,
     }),
-    applicantCount: 0,
+    applicantCount: apiJob.applicantCount ?? 0,
     status: STATUS_FROM_API[apiJob.status] ?? "active",
   };
 }
