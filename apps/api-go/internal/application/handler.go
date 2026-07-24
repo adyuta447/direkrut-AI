@@ -107,28 +107,29 @@ func (h *Handler) ensureAIConfigured(w http.ResponseWriter) bool {
 // halaman profilnya) yang ditampilin di tabel/detail dashboard HRD --
 // pengganti data sintetis dari hash nama yang dulu dipakai FE.
 type candidateProfileSummary struct {
-	Location       string           `json:"location,omitempty"`
-	Gender         string           `json:"gender,omitempty"`
-	Age            *int             `json:"age,omitempty"`
-	Headline       string           `json:"headline,omitempty"`
-	Phone          string           `json:"phone,omitempty"`
-	Email          string           `json:"email,omitempty"`
-	Experience     []map[string]any `json:"experience,omitempty"`
-	Education      []map[string]any `json:"education,omitempty"`
+	Location   string           `json:"location,omitempty"`
+	Gender     string           `json:"gender,omitempty"`
+	Age        *int             `json:"age,omitempty"`
+	Headline   string           `json:"headline,omitempty"`
+	Phone      string           `json:"phone,omitempty"`
+	Email      string           `json:"email,omitempty"`
+	Experience []map[string]any `json:"experience,omitempty"`
+	Education  []map[string]any `json:"education,omitempty"`
 }
 
 type applicationResponse struct {
-	ID                  string                   `json:"id"`
-	JobID               string                   `json:"jobId"`
-	JobTitle            string                   `json:"jobTitle,omitempty"`
-	CompanyName         string                   `json:"companyName,omitempty"`
-	CandidateID         string                   `json:"candidateId"`
-	CandidateName       string                   `json:"candidateName,omitempty"`
-	Status              string                   `json:"status"`
-	AppliedAt           time.Time                `json:"appliedAt"`
-	UpdatedAt           time.Time                `json:"updatedAt"`
-	RecommendationScore *float64                 `json:"recommendationScore,omitempty"`
-	CandidateProfile    *candidateProfileSummary `json:"candidateProfile,omitempty"`
+	ID                   string                   `json:"id"`
+	JobID                string                   `json:"jobId"`
+	JobTitle             string                   `json:"jobTitle,omitempty"`
+	CompanyName          string                   `json:"companyName,omitempty"`
+	CandidateID          string                   `json:"candidateId"`
+	CandidateName        string                   `json:"candidateName,omitempty"`
+	Status               string                   `json:"status"`
+	AppliedAt            time.Time                `json:"appliedAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
+	InterviewScheduledAt *time.Time               `json:"interviewScheduledAt,omitempty"`
+	RecommendationScore  *float64                 `json:"recommendationScore,omitempty"`
+	CandidateProfile     *candidateProfileSummary `json:"candidateProfile,omitempty"`
 	// Hasil WAWANCARA AI -- beda sumber dari RecommendationScore (yang dari
 	// screening CV). Tanpa dua field ini, dashboard HRD gak pernah nunjukin
 	// bahwa kandidat udah selesai wawancara.
@@ -140,6 +141,7 @@ func toApplicationResponse(a appdb.Application) applicationResponse {
 	resp := applicationResponse{
 		ID: a.ID, JobID: a.JobID, CandidateID: a.CandidateID,
 		Status: a.Status, AppliedAt: a.AppliedAt, UpdatedAt: a.UpdatedAt,
+		InterviewScheduledAt: a.InterviewScheduledAt,
 	}
 	if a.Job != nil {
 		resp.JobTitle = a.Job.Title
@@ -325,7 +327,8 @@ func (h *Handler) handleSentDecisions(w http.ResponseWriter, r *http.Request) {
 		Joins("JOIN applications a ON a.id = ash.application_id").
 		Joins("JOIN jobs j ON j.id = a.job_id").
 		Joins("JOIN candidates c ON c.id = a.candidate_id").
-		Where("j.company_id = ? AND ash.to_status IN ?", claims.CompanyID, []string{"interview", "rejected", "under-review"}).
+		Where("j.company_id = ? AND ash.to_status IN ?", claims.CompanyID,
+			[]string{"interview", "interview_completed", "accepted", "rejected", "under-review"}).
 		Order("ash.created_at DESC").
 		Limit(100).
 		Scan(&rows).Error
@@ -449,8 +452,12 @@ func (h *Handler) handleGetApplication(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateStatusRequest struct {
-	Status string `json:"status" validate:"required,oneof=submitted under-review interview rejected"`
+	Status string `json:"status" validate:"required,oneof=submitted under-review interview interview_completed accepted rejected"`
 	Note   string `json:"note"`
+	// Cuma dipakai (dan ditulis) pas Status == "interview" -- HRD ngundang +
+	// milih jadwal dalam satu aksi yang sama. Opsional: HRD boleh pindahin
+	// status ke "interview" dulu, isi jadwalnya belakangan lewat request lain.
+	InterviewScheduledAt *time.Time `json:"interviewScheduledAt"`
 	// EmailSubject/EmailBody opsional -- kalau diisi (HRD ngirim lewat
 	// EmailPreviewPanel di dashboard), dipakai apa adanya buat email ke
 	// kandidat. Dibatesin panjangnya biar gak disalahgunain buat flood
@@ -482,6 +489,14 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
+	// Lamaran yang udah diterima itu keputusan final -- gak ada jalan buka
+	// lagi kayak "rejected" (gak ada trigger alami buat "batal diterima").
+	if appRow.Status == "accepted" {
+		httpx.WriteError(w, http.StatusConflict, "already_decided",
+			"lamaran ini udah diterima -- gak bisa diubah lagi")
+		return
+	}
+
 	// Lamaran yang udah ditolak dikunci -- HRD gak bisa kirim keputusan
 	// (email) lagi ke kandidat yang sama biar gak boros traffic/biaya kirim.
 	// Satu-satunya jalan buka lagi: kandidat ngulang wawancara AI (assessment
@@ -509,8 +524,11 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 	fromStatus := appRow.Status
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
-			Update("status", req.Status).Error; err != nil {
+		updates := map[string]any{"status": req.Status}
+		if req.InterviewScheduledAt != nil {
+			updates["interview_scheduled_at"] = req.InterviewScheduledAt
+		}
+		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).Updates(updates).Error; err != nil {
 			return err
 		}
 		history := appdb.ApplicationStatusHistory{
@@ -525,6 +543,9 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	appRow.Status = req.Status
+	if req.InterviewScheduledAt != nil {
+		appRow.InterviewScheduledAt = req.InterviewScheduledAt
+	}
 	// Notifikasi + email kandidat -- keduanya best-effort, gagal ngirim gak
 	// boleh gagalin update status-nya sendiri (udah kepake duluan).
 	if appRow.Candidate != nil && appRow.Job != nil {
@@ -534,6 +555,9 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		}
 		title := "Status lamaran diperbarui"
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
+		if req.InterviewScheduledAt != nil {
+			body += fmt.Sprintf("\n\nJadwal wawancara: %s", req.InterviewScheduledAt.Format("02/01/2006 15:04"))
+		}
 		// Kalau HRD nulis pesan sendiri (subjek+isi email di dialog keputusan),
 		// itu pesan ASLI yang harus kandidat liat di Kotak Masuk in-app-nya --
 		// sebelumnya cuma baris generik di atas yang kekirim, jadi detail &
@@ -645,9 +669,9 @@ func (h *Handler) handleDeleteApplication(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-	if appRow.Status != "rejected" && appRow.Status != "interview" {
+	if appRow.Status != "rejected" && appRow.Status != "accepted" {
 		httpx.WriteError(w, http.StatusConflict, "must_be_decided",
-			"lamaran ini harus ditolak atau lolos wawancara dulu sebelum bisa dihapus")
+			"lamaran ini harus diterima atau ditolak dulu sebelum bisa dihapus")
 		return
 	}
 
@@ -1624,7 +1648,11 @@ func statusLabel(status string) string {
 	case "under-review":
 		return "Administrasi"
 	case "interview":
-		return "Wawancara"
+		return "Sedang Wawancara Teknis"
+	case "interview_completed":
+		return "Sudah Wawancara Teknis"
+	case "accepted":
+		return "Diterima"
 	case "rejected":
 		return "Ditolak"
 	default:

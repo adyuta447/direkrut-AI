@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/drawer"
 import { Label } from "@/components/ui/label"
 import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
+import { MarkInterviewCompleteAction } from "@/components/organisms/dashboard/MarkInterviewCompleteAction"
+import { availableStageActions } from "@/lib/dashboard/status"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 
 interface CandidateTableCellViewerProps {
@@ -78,31 +80,62 @@ function DrawerInfoGrid({ item }: { item: Candidate }) {
 }
 
 function DrawerQuickActions({ item }: { item: Candidate }) {
+  const stageActions = availableStageActions(item.status)
+  if (stageActions.length === 0) return null
+
   return (
     <div className="space-y-3">
       <Label className="text-base font-semibold">Tindakan Cepat</Label>
       <div className="flex flex-col gap-2">
-        <DecisionDialog
-          candidate={item}
-          decision="invite"
-          trigger={
-            <Button className="justify-start w-full" variant="outline">
-              <IconUser className="size-4 mr-2" /> Jadwalkan Wawancara
-            </Button>
-          }
-        />
-        <DecisionDialog
-          candidate={item}
-          decision="reject"
-          trigger={
-            <Button
-              className="justify-start w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-              variant="outline"
-            >
-              Tolak Kandidat Ini
-            </Button>
-          }
-        />
+        {stageActions.includes("invite") && (
+          <DecisionDialog
+            candidate={item}
+            decision="invite"
+            trigger={
+              <Button className="justify-start w-full" variant="outline">
+                <IconUser className="size-4 mr-2" /> Jadwalkan Wawancara
+              </Button>
+            }
+          />
+        )}
+        {stageActions.includes("complete_interview") && (
+          <MarkInterviewCompleteAction
+            candidate={item}
+            trigger={
+              <Button className="justify-start w-full" variant="outline">
+                <IconUser className="size-4 mr-2" /> Tandai Wawancara Selesai
+              </Button>
+            }
+          />
+        )}
+        {stageActions.includes("accept") && (
+          <DecisionDialog
+            candidate={item}
+            decision="accept"
+            trigger={
+              <Button
+                className="justify-start w-full text-success hover:text-success hover:bg-success/10"
+                variant="outline"
+              >
+                <IconUser className="size-4 mr-2" /> Terima Kandidat Ini
+              </Button>
+            }
+          />
+        )}
+        {stageActions.includes("reject") && (
+          <DecisionDialog
+            candidate={item}
+            decision="reject"
+            trigger={
+              <Button
+                className="justify-start w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                variant="outline"
+              >
+                Tolak Kandidat Ini
+              </Button>
+            }
+          />
+        )}
       </div>
     </div>
   )

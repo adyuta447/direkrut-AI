@@ -200,12 +200,13 @@ func (n *Notification) BeforeCreate(tx *gorm.DB) error {
 }
 
 type Application struct {
-	ID          string    `gorm:"column:id;primaryKey"`
-	JobID       string    `gorm:"column:job_id"`
-	CandidateID string    `gorm:"column:candidate_id"`
-	Status      string    `gorm:"column:status"`
-	AppliedAt   time.Time `gorm:"column:applied_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at"`
+	ID                   string     `gorm:"column:id;primaryKey"`
+	JobID                string     `gorm:"column:job_id"`
+	CandidateID          string     `gorm:"column:candidate_id"`
+	Status               string     `gorm:"column:status"`
+	AppliedAt            time.Time  `gorm:"column:applied_at"`
+	UpdatedAt            time.Time  `gorm:"column:updated_at"`
+	InterviewScheduledAt *time.Time `gorm:"column:interview_scheduled_at"`
 
 	Job       *Job       `gorm:"foreignKey:JobID;references:ID"`
 	Candidate *Candidate `gorm:"foreignKey:CandidateID;references:ID"`

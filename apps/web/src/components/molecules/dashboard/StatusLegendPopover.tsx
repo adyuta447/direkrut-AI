@@ -13,14 +13,18 @@ export interface StatusLegendItem {
 const CANDIDATE_FLOW: StatusLegendItem[] = [
   { status: "submitted", meaning: "Lamaranmu masuk -- CV kamu lagi discreen AI." },
   { status: "under-review", meaning: "Tim HRD lagi meninjau hasil screening & wawancaramu." },
-  { status: "interview", meaning: "Selamat! Kamu diundang wawancara lanjutan bareng tim perusahaan." },
+  { status: "interview", meaning: "Selamat! Kamu diundang wawancara teknis bareng tim perusahaan." },
+  { status: "interview_completed", meaning: "Wawancara teknismu udah selesai, tim HRD lagi nentuin keputusan." },
+  { status: "accepted", meaning: "Selamat, kamu diterima! Tim HRD bakal hubungin kamu." },
   { status: "rejected", meaning: "Belum lolos kali ini -- cek email, ada feedback pengembangan buat kamu." },
 ]
 
 const HRD_FLOW: StatusLegendItem[] = [
   { status: "submitted", meaning: "Kandidat baru melamar -- CV otomatis discreen AI." },
   { status: "under-review", meaning: "Lagi ditinjau HRD (skor AI + hasil wawancara AI jadi bahan pertimbangan)." },
-  { status: "interview", meaning: "Diundang wawancara lanjutan bareng tim (HR/teknis/user)." },
+  { status: "interview", meaning: "Diundang wawancara teknis bareng tim (HR/teknis/user)." },
+  { status: "interview_completed", meaning: "Wawancara teknis selesai -- tinggal putuskan diterima atau ditolak." },
+  { status: "accepted", meaning: "Diterima -- kandidat otomatis dapet email selamat." },
   { status: "rejected", meaning: "Ditolak -- kandidat otomatis dapet email pemberitahuan & feedback." },
 ]
 

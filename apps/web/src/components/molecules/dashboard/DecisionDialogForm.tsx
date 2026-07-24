@@ -142,7 +142,7 @@ interface EmailPreviewPanelProps {
   emailBody: string
   onSubjectChange: (val: string) => void
   onBodyChange: (val: string) => void
-  decision: "invite" | "reject"
+  decision: "invite" | "accept" | "reject"
   interviewType: string
   interviewDate: string
   interviewTime: string

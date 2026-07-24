@@ -22,12 +22,16 @@ type Message = {
 
 const SUBJECT: Record<string, string> = {
   interview: "Undangan Wawancara",
+  interview_completed: "Wawancara Teknis Selesai",
+  accepted: "Kandidat Diterima",
   rejected: "Pemberitahuan Hasil Seleksi",
   "under-review": "Lamaran Sedang Ditinjau",
 }
 
 const TYPE: Record<string, Message["type"]> = {
   interview: "invitation",
+  interview_completed: "update",
+  accepted: "offer",
   rejected: "rejection",
   "under-review": "update",
 }
