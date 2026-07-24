@@ -271,6 +271,13 @@ func (c *Client) ParseCV(ctx context.Context, req ParseCVRequest) (*ParseCVRespo
 }
 
 func (c *Client) ScoreValidation(ctx context.Context, req ScoreValidationRequest) (*ScoreValidationResponse, error) {
+	// ai-engine's Pydantic model nolak literal `null` buat field list non-optional
+	// (400/422), sedangkan nil slice Go di-marshal jadi `null`, bukan `[]`. Jaga
+	// di sini -- satu titik yang dilewatin semua caller -- daripada masing2
+	// caller inget benerin sendiri.
+	if req.Competencies == nil {
+		req.Competencies = []string{}
+	}
 	var resp ScoreValidationResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/assessment/score-validation", req, &resp); err != nil {
 		return nil, err
@@ -295,6 +302,15 @@ func (c *Client) EmbedText(ctx context.Context, req EmbedRequest) (*EmbedRespons
 }
 
 func (c *Client) MatchCandidate(ctx context.Context, req MatchRequest) (*MatchResponse, error) {
+	// Sama kayak ScoreValidation di atas -- nil slice Go jadi `null` di JSON,
+	// ai-engine nolaknya. Jaga di titik ini biar semua caller (screening,
+	// cross-role match) otomatis aman.
+	if req.RequiredSkills == nil {
+		req.RequiredSkills = []string{}
+	}
+	if req.PreferredSkills == nil {
+		req.PreferredSkills = []string{}
+	}
 	var resp MatchResponse
 	if err := c.doJSON(ctx, http.MethodPost, "/v1/vector-search/match", req, &resp); err != nil {
 		return nil, err
