@@ -1043,8 +1043,8 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := screeningResponse{
-<<<<<<< HEAD
 		OverallScore:         scoreResult.OverallScore,
+		MatchedEvidence:      unmarshalMatchedEvidence(scoreResult.MatchedEvidence),
 		Category:             scoreResult.Category,
 		CandidateTrack:       scoreResult.CandidateTrack,
 		Reasoning:            scoreResult.Reasoning,
@@ -1082,12 +1082,6 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 	// FinalWeightedScore == OverallScore pada engine baru
 	fws := scoreResult.OverallScore
 	resp.FinalWeightedScore = &fws
-
-=======
-		OverallScore:    scoreResult.OverallScore,
-		MatchedEvidence: unmarshalMatchedEvidence(scoreResult.MatchedEvidence),
-	}
->>>>>>> prod
 	var parseResult appdb.CVParseResult
 	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
 		var parsed aiengine.ParseCVResponse

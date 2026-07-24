@@ -1,12 +1,12 @@
 "use client"
 
-import * as React from "react"
+
 import { useRouter } from "next/navigation"
 import { CheckCircleIcon, ClockIcon, InfoIcon } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-export default function CompletedStepPage({ params }: { params: Promise<{ jobId: string }> }) {
+export default function CompletedStepPage() {
   const router = useRouter()
 
   return (
