@@ -8,6 +8,8 @@ import { UtilityBar } from "../../molecules/shared/UtilityBar";
 import { NavLinks } from "../../molecules/shared/NavLinks";
 import { MobileMenu } from "./MobileMenu";
 
+import { useDashboard } from "@/context/DashboardContext";
+
 interface SiteHeaderProps {
   contactLabel?: string;
   registerLabel?: string;
@@ -19,6 +21,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { currentUser, logout } = useDashboard();
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
@@ -55,12 +58,34 @@ export function SiteHeader({
 
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-6">
-              <Link href="/auth/login" className="text-[14px] font-sans font-bold hover:text-primary transition-none">
-                Masuk
-              </Link>
-              <Link href="/auth/register" className="btn-primary font-sans font-bold">
-                {registerLabel}
-              </Link>
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <Link href={currentUser.role === "hrd" ? "/hrd" : "/candidate"} className="btn-primary font-sans font-bold flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] uppercase">
+                      {currentUser.name?.[0] ?? "U"}
+                    </div>
+                    Ke Dashboard
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      window.location.href = "/";
+                    }}
+                    className="text-[14px] font-sans font-bold text-ink-muted hover:text-danger transition-colors px-2"
+                  >
+                    Keluar
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-[14px] font-sans font-bold hover:text-primary transition-none">
+                    Masuk
+                  </Link>
+                  <Link href="/auth/register" className="btn-primary font-sans font-bold">
+                    {registerLabel}
+                  </Link>
+                </>
+              )}
             </div>
 
             <button

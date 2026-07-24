@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from app.cache import get_or_set, make_cache_key
 from app.logging import log_ai_call
 from app.prompt_guard import INJECTION_GUARD, wrap_untrusted
-from app.providers import GeminiProvider, GroqProvider
+from app.providers import GeminiProvider, get_provider_for_task
 from app.rate_limit import limit
 from app.storage import download_object
 
@@ -32,11 +32,14 @@ class ValidationAnswer(BaseModel):
 class ScoreValidationRequest(BaseModel):
     application_id: str
     responses: list[ValidationAnswer]
+    competencies: list[str]
 
 
 class ScoreValidationResponse(BaseModel):
     recommendation_score: float
     authenticity_score: dict[str, float]
+    competency_scores: dict[str, dict]  # Now holds structured evidence
+    evidence_confidence: str
 
 
 class TranscribeInterviewRequest(BaseModel):
@@ -60,7 +63,9 @@ class GenerateQuestionsResponse(BaseModel):
 
 
 class GeneratePreScreenQuestionsRequest(BaseModel):
+    job_title: str = ""
     job_description: str
+    cv_summary: str | None = None
 
 
 class GeneratePreScreenQuestionsResponse(BaseModel):
@@ -78,11 +83,16 @@ class ProctorCheckResponse(BaseModel):
 
 
 _SCORING_SYSTEM_PROMPT = (
-    "Kamu adalah asisten HR yang menilai jawaban validasi kompetensi kandidat. "
-    "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
-    '{"recommendation_score": number 0-100, '
-    '"authenticity_score": {"authentic": number, "generic": number, "aiGenerated": number}} '
-    "(tiga nilai authenticity_score harus totalnya 100."
+    "Kamu adalah asisten HR yang menilai jawaban validasi kompetensi kandidat secara objektif berdasarkan bukti. "
+    "Diberikan daftar kompetensi yang harus divalidasi (KOMPETENSI_YANG_DIUJI) dan transkrip tanya jawab. "
+    "Untuk setiap kompetensi, tentukan match_status: 'STRONG_EVIDENCE', 'PARTIAL_EVIDENCE', 'NO_EVIDENCE', atau 'CONTRADICTORY'. "
+    "Berikan reasoning (alasan logis) dan ekstrak quotes (kutipan perkataan kandidat) persis dari transkrip yang menjadi bukti. "
+    "Tentukan evidence_confidence: 'High' jika bukti jelas, 'Needs Validation' jika membingungkan/lemah, atau 'High Potential' jika tidak standar tapi menunjukkan pemahaman. "
+    "Tentukan authenticity_score (persentase apakah jawaban terdengar asli/authentic, generik/generic, atau dihasilkan AI/aiGenerated). "
+    "Balas HANYA dengan JSON valid, tanpa markdown code fence, dengan struktur berikut: "
+    '{"authenticity_score": {"authentic": number, "generic": number, "aiGenerated": number}, '
+    '"competencies": [{"name": "Nama Kompetensi", "match_status": "STRONG_EVIDENCE", "reasoning": "...", "quotes": ["..."]}], '
+    '"evidence_confidence": "High"}'
     "\n\n" + INJECTION_GUARD
 )
 
@@ -94,14 +104,44 @@ def _format_responses(responses: list[ValidationAnswer]) -> str:
 def _parse_scoring_json(raw: str) -> ScoreValidationResponse:
     try:
         data = json.loads(raw)
+        competencies = data.get("competencies", [])
+        competency_scores = {}
+        total_score = 0.0
+        
+        for comp in competencies:
+            name = comp.get("name", "Unknown")
+            status = comp.get("match_status", "NO_EVIDENCE")
+            score = 0.0
+            if status == "STRONG_EVIDENCE":
+                score = 100.0
+            elif status == "PARTIAL_EVIDENCE":
+                score = 60.0
+            elif status == "CONTRADICTORY":
+                score = -50.0
+            
+            total_score += score
+            competency_scores[name] = {
+                "score": score,
+                "match_status": status,
+                "reasoning": comp.get("reasoning", ""),
+                "quotes": comp.get("quotes", [])
+            }
+            
+        recommendation_score = total_score / len(competencies) if competencies else 0.0
+        recommendation_score = max(0.0, recommendation_score)
+
         return ScoreValidationResponse(
-            recommendation_score=float(data["recommendation_score"]),
-            authenticity_score={k: float(v) for k, v in data["authenticity_score"].items()},
+            recommendation_score=float(recommendation_score),
+            authenticity_score={k: float(v) for k, v in data.get("authenticity_score", {"authentic": 100, "generic": 0, "aiGenerated": 0}).items()},
+            competency_scores=competency_scores,
+            evidence_confidence=str(data.get("evidence_confidence", "Needs Validation")),
         )
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+    except Exception:
         return ScoreValidationResponse(
             recommendation_score=0.0,
             authenticity_score={"authentic": 0.0, "generic": 0.0, "aiGenerated": 0.0},
+            competency_scores={},
+            evidence_confidence="Needs Validation"
         )
 
 
@@ -114,9 +154,10 @@ async def score_validation(payload: ScoreValidationRequest) -> ScoreValidationRe
     )
 
     async def compute() -> dict:
-        provider = GroqProvider()
+        provider = get_provider_for_task("complete")
         started = time.monotonic()
-        prompt = wrap_untrusted("JAWABAN_KANDIDAT", _format_responses(payload.responses))
+        prompt = wrap_untrusted("KOMPETENSI_YANG_DIUJI", ", ".join(payload.competencies))
+        prompt += "\n\n" + wrap_untrusted("JAWABAN_KANDIDAT", _format_responses(payload.responses))
         raw_result = await provider.complete(prompt, system=_SCORING_SYSTEM_PROMPT)
         log_ai_call(provider="groq", model=provider.COMPLETE_MODEL, latency_ms=(time.monotonic() - started) * 1000, cache_hit=False)
         return _parse_scoring_json(raw_result).model_dump()
@@ -139,6 +180,7 @@ async def transcribe_interview(payload: TranscribeInterviewRequest) -> Transcrib
     cache_key = make_cache_key("transcribe_interview", payload.application_id, payload.audio_object_key)
 
     async def compute() -> dict:
+        from app.providers import GroqProvider
         provider = GroqProvider()
         audio_bytes = download_object(payload.audio_object_key)
 
@@ -159,23 +201,27 @@ async def transcribe_interview(payload: TranscribeInterviewRequest) -> Transcrib
 
 
 _QUESTIONS_SYSTEM_PROMPT = (
-    "Kamu adalah pewawancara HR profesional berpengalaman 10+ tahun. Diberikan "
+    "Kamu adalah pewawancara HR Senior profesional berpengalaman 10+ tahun. Diberikan "
     "JUDUL POSISI, deskripsi lowongan, dan opsional ringkasan CV kandidat, buat "
-    "4-5 pertanyaan interview yang relevan.\n"
+    "TEPAT 5 pertanyaan wawancara terstruktur dengan komposisi berikut:\n"
+    "\n"
+    "STRUKTUR WAJIB (5 pertanyaan):\n"
+    "1. [TEKNIS] Pertanyaan teknis mendalam #1 — verifikasi klaim skill utama di CV atau persyaratan lowongan. "
+    "Buat pertanyaan yang MEMAKSA kandidat menjelaskan HOW dan WHY, bukan hanya WHAT.\n"
+    "2. [TEKNIS] Pertanyaan teknis mendalam #2 — aspek teknis yang berbeda dari nomor 1.\n"
+    "3. [BEHAVIORAL] Pertanyaan STAR (Situasi-Tugas-Aksi-Hasil) — pengalaman nyata yang relevan posisi.\n"
+    "4. [BEHAVIORAL] Pertanyaan STAR kedua — fokus tantangan atau kegagalan dan pembelajaran.\n"
+    "5. [SITUASIONAL] Skenario hipotetis realistis — situasi yang MUNGKIN terjadi di posisi ini.\n"
+    "\n"
     "ATURAN PENTING:\n"
-    "1. Pertanyaan WAJIB spesifik dan sesuai dengan JUDUL POSISI serta bidang "
-    "profesionalnya. Contoh: posisi 'Product Manager' -> tanya soal roadmap "
-    "produk, prioritas fitur, stakeholder, metrik; posisi 'Backend Engineer' "
-    "-> tanya soal arsitektur, database, API. \n"
-    "2. JANGAN PERNAH mengarang tugas atau pertanyaan di luar lingkup posisi "
-    "yang tertulis. DILARANG menanyakan pekerjaan kasar/rendahan (mis. "
-    "'bisa mengepel?', 'bisa bersih-bersih?') kecuali JUDUL POSISI-nya memang "
-    "office boy/cleaning service. Kalau ragu soal bidangnya, berpegang pada "
-    "JUDUL POSISI, jangan berasumsi.\n"
-    "3. Campur pertanyaan teknis dan perilaku, spesifik ke posisi ini, bukan "
-    "pertanyaan generik.\n"
+    "1. Pertanyaan WAJIB spesifik posisi. Contoh: 'Backend Engineer' → tanya arsitektur, database, performa; "
+    "'Product Manager' → tanya roadmap, trade-off, stakeholder; 'Data Analyst' → tanya SQL, visualisasi, insight.\n"
+    "2. JANGAN tanya hal umum seperti 'ceritakan tentang dirimu' atau 'kelebihan kamu apa'. "
+    "Pertanyaan harus memaksa kandidat memberikan BUKTI KONKRET, bukan jawaban generik.\n"
+    "3. Jika ada ringkasan CV, gunakan untuk mempertajam pertanyaan berdasarkan pengalaman SPESIFIK kandidat.\n"
+    "4. DILARANG menanyakan hal di luar lingkup posisi.\n"
     "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
-    '{"questions": ["pertanyaan 1", "pertanyaan 2", ...]}'
+    '{"questions": ["pertanyaan 1", "pertanyaan 2", "pertanyaan 3", "pertanyaan 4", "pertanyaan 5"]}'
     "\n\n" + INJECTION_GUARD
 )
 
@@ -203,7 +249,7 @@ async def generate_questions(payload: GenerateQuestionsRequest) -> GenerateQuest
     cache_key = make_cache_key("generate_questions", payload.job_title, payload.job_description, payload.cv_summary or "")
 
     async def compute() -> dict:
-        provider = GroqProvider()
+        provider = get_provider_for_task("complete")
         # Judul posisi ditaruh PALING DEPAN sebagai jangkar utama -- ini yang
         # bikin model gak ngarang tugas di luar bidang (mis. Product Manager
         # gak ditanya soal ngepel).
@@ -224,12 +270,16 @@ async def generate_questions(payload: GenerateQuestionsRequest) -> GenerateQuest
 
 
 _PRESCREEN_SYSTEM_PROMPT = (
-    "Kamu adalah asisten HR yang bikin pertanyaan screening awal buat "
-    "nyaring pelamar asal apply sebelum masuk tahap wawancara AI yang lebih "
-    "mendalam dan lebih mahal. Diberikan deskripsi lowongan, buat 3 "
-    "pertanyaan SINGKAT yang bisa dijawab dalam 1-2 kalimat -- fokus ke "
-    "kualifikasi dasar dan pengalaman yang relevan, BUKAN pertanyaan "
-    "mendalam/studi kasus (itu porsi wawancara AI, bukan di sini). "
+    "Kamu adalah asisten HR yang membuat pertanyaan screening awal untuk menyaring pelamar "
+    "sebelum masuk tahap wawancara AI yang lebih mendalam. Diberikan JUDUL POSISI, deskripsi lowongan, "
+    "dan opsional ringkasan CV kandidat, buat TEPAT 3 pertanyaan SINGKAT yang:\n"
+    "1. Bisa dijawab dalam 2-4 kalimat\n"
+    "2. Memverifikasi KUALIFIKASI DASAR yang kritis untuk posisi ini (bukan pertanyaan mendalam)\n"
+    "3. Mendorong kandidat menyebut PENGALAMAN NYATA, bukan jawaban teoritis\n"
+    "4. Relevan dengan lowongan dan spesifik terhadap CV kandidat jika tersedia\n"
+    "\n"
+    "HINDARI: pertanyaan terlalu mudah (ya/tidak), terlalu sulit (studi kasus), atau generik ('ceritakan tentang dirimu').\n"
+    "FOKUS: pengalaman relevan, tools yang dikuasai, situasi kerja spesifik bidang ini.\n"
     "Balas HANYA dengan JSON valid, tanpa markdown code fence, berbentuk: "
     '{"questions": ["pertanyaan 1", "pertanyaan 2", "pertanyaan 3"]}'
     "\n\n" + INJECTION_GUARD
@@ -255,12 +305,17 @@ def _parse_prescreen_questions_json(raw: str) -> GeneratePreScreenQuestionsRespo
 
 @router.post("/generate-prescreen-questions", response_model=GeneratePreScreenQuestionsResponse)
 async def generate_prescreen_questions(payload: GeneratePreScreenQuestionsRequest) -> GeneratePreScreenQuestionsResponse:
-    cache_key = make_cache_key("generate_prescreen_questions", payload.job_description)
+    cache_key = make_cache_key("generate_prescreen_questions", payload.job_title, payload.job_description, payload.cv_summary or "")
 
     async def compute() -> dict:
-        provider = GroqProvider()
+        provider = get_provider_for_task("complete")
+        prompt = wrap_untrusted("JUDUL_POSISI", payload.job_title or "(tidak disebutkan)")
+        prompt += "\n\n" + wrap_untrusted("DESKRIPSI_LOWONGAN", payload.job_description)
+        if payload.cv_summary:
+            prompt += "\n\n" + wrap_untrusted("RINGKASAN_CV_KANDIDAT", payload.cv_summary)
+            
         started = time.monotonic()
-        raw_result = await provider.complete(wrap_untrusted("DESKRIPSI_LOWONGAN", payload.job_description), system=_PRESCREEN_SYSTEM_PROMPT)
+        raw_result = await provider.complete(prompt, system=_PRESCREEN_SYSTEM_PROMPT)
         log_ai_call(provider="groq", model=provider.COMPLETE_MODEL, latency_ms=(time.monotonic() - started) * 1000, cache_hit=False)
         return _parse_prescreen_questions_json(raw_result).model_dump()
 
@@ -312,7 +367,7 @@ async def generate_feedback(payload: GenerateFeedbackRequest) -> GenerateFeedbac
     cache_key = make_cache_key("generate_feedback", prompt)
 
     async def compute() -> dict:
-        provider = GroqProvider()
+        provider = get_provider_for_task("complete")
         started = time.monotonic()
         feedback = await provider.complete(prompt, system=_FEEDBACK_SYSTEM_PROMPT)
         log_ai_call(provider="groq", model=provider.COMPLETE_MODEL, latency_ms=(time.monotonic() - started) * 1000, cache_hit=False)

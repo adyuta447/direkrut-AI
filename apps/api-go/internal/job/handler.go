@@ -48,6 +48,9 @@ func (h *Handler) Router() chi.Router {
 		pr.With(appmw.RequireRole("hrd")).Put("/{jobID}", h.handleUpdateJob)
 		pr.With(appmw.RequireRole("hrd")).Delete("/{jobID}", h.handleDeleteJob)
 		pr.With(appmw.RequireRole("candidate")).Post("/{jobID}/cv-upload-url", h.handleCVUploadURL)
+		// Konfigurasi bobot AI scoring per-lowongan
+		pr.With(appmw.RequireRole("hrd")).Get("/{jobID}/scoring-weights", h.handleGetJobScoringWeights)
+		pr.With(appmw.RequireRole("hrd")).Put("/{jobID}/scoring-weights", h.handlePutJobScoringWeights)
 	})
 
 	return r
@@ -68,6 +71,13 @@ type jobResponse struct {
 	Status          string     `json:"status"`
 	PublishedAt     *time.Time `json:"publishedAt,omitempty"`
 	CreatedAt       time.Time  `json:"createdAt"`
+	// Field terstruktur untuk AI Evidence-Based Scoring
+	RequiredSkills       []string `json:"requiredSkills,omitempty"`
+	PreferredSkills      []string `json:"preferredSkills,omitempty"`
+	KeyResponsibilities  string   `json:"keyResponsibilities,omitempty"`
+	MinExperienceYears   int      `json:"minExperienceYears"`
+	EducationRequirement string   `json:"educationRequirement,omitempty"`
+	CandidateType        string   `json:"candidateType"`
 }
 
 func toJobResponse(j appdb.Job) jobResponse {
@@ -76,6 +86,22 @@ func toJobResponse(j appdb.Job) jobResponse {
 		Requirements: derefStr(j.Requirements), Location: derefStr(j.Location),
 		EmploymentType: j.EmploymentType, SalaryMin: j.SalaryMin, SalaryMax: j.SalaryMax,
 		Status: j.Status, PublishedAt: j.PublishedAt, CreatedAt: j.CreatedAt,
+		CandidateType: j.CandidateType,
+	}
+	if j.MinExperienceYears != nil {
+		resp.MinExperienceYears = *j.MinExperienceYears
+	}
+	if j.KeyResponsibilities != nil {
+		resp.KeyResponsibilities = *j.KeyResponsibilities
+	}
+	if j.EducationRequirement != nil {
+		resp.EducationRequirement = *j.EducationRequirement
+	}
+	if j.RequiredSkills != nil && *j.RequiredSkills != "" {
+		_ = json.Unmarshal([]byte(*j.RequiredSkills), &resp.RequiredSkills)
+	}
+	if j.PreferredSkills != nil && *j.PreferredSkills != "" {
+		_ = json.Unmarshal([]byte(*j.PreferredSkills), &resp.PreferredSkills)
 	}
 	if j.Company != nil {
 		resp.CompanyName = j.Company.Name
@@ -209,14 +235,21 @@ func (h *Handler) handleGetJob(w http.ResponseWriter, r *http.Request) {
 }
 
 type jobWriteRequest struct {
-	Title          string `json:"title" validate:"required,min=3,max=200"`
-	Description    string `json:"description" validate:"required,min=10"`
-	Requirements   string `json:"requirements"`
-	Location       string `json:"location"`
-	EmploymentType string `json:"employmentType" validate:"required"`
-	SalaryMin      *int64 `json:"salaryMin"`
-	SalaryMax      *int64 `json:"salaryMax"`
-	Status         string `json:"status" validate:"required,oneof=draft published closed"`
+	Title                string   `json:"title" validate:"required,min=3,max=200"`
+	Description          string   `json:"description" validate:"required,min=10"`
+	Requirements         string   `json:"requirements"`
+	Location             string   `json:"location"`
+	EmploymentType       string   `json:"employmentType" validate:"required"`
+	SalaryMin            *int64   `json:"salaryMin"`
+	SalaryMax            *int64   `json:"salaryMax"`
+	Status               string   `json:"status" validate:"required,oneof=draft published closed"`
+	// Field terstruktur AI Evidence-Based Scoring
+	RequiredSkills       []string `json:"requiredSkills"`
+	PreferredSkills      []string `json:"preferredSkills"`
+	KeyResponsibilities  string   `json:"keyResponsibilities"`
+	MinExperienceYears   int      `json:"minExperienceYears"`
+	EducationRequirement string   `json:"educationRequirement"`
+	CandidateType        string   `json:"candidateType" validate:"omitempty,oneof=any fresh_graduate professional"`
 }
 
 func (h *Handler) invalidateListCache(ctx context.Context) {
@@ -241,12 +274,38 @@ func (h *Handler) handleCreateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Serialize skills arrays ke JSON
+	var requiredSkillsJSON, preferredSkillsJSON *string
+	if len(req.RequiredSkills) > 0 {
+		b, _ := json.Marshal(req.RequiredSkills)
+		s := string(b)
+		requiredSkillsJSON = &s
+	}
+	if len(req.PreferredSkills) > 0 {
+		b, _ := json.Marshal(req.PreferredSkills)
+		s := string(b)
+		preferredSkillsJSON = &s
+	}
+	candidateType := req.CandidateType
+	if candidateType == "" {
+		candidateType = "any"
+	}
+	minExp := req.MinExperienceYears
+
 	jobRow := appdb.Job{
 		CompanyID: claims.CompanyID, CreatedBy: claims.HrdUserID,
 		Title: req.Title, Description: req.Description,
 		Requirements: nilIfEmpty(req.Requirements), Location: nilIfEmpty(req.Location),
 		EmploymentType: req.EmploymentType, SalaryMin: req.SalaryMin, SalaryMax: req.SalaryMax,
 		Status: req.Status,
+		// Structured fields
+		RequiredSkills:       requiredSkillsJSON,
+		PreferredSkills:      preferredSkillsJSON,
+		KeyResponsibilities:  nilIfEmpty(req.KeyResponsibilities),
+		MinExperienceYears:   &minExp,
+		EducationRequirement: nilIfEmpty(req.EducationRequirement),
+		CandidateType:        candidateType,
 	}
 	if req.Status == "published" {
 		now := time.Now()
@@ -298,6 +357,25 @@ func (h *Handler) handleUpdateJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Serialize skills arrays ke JSON
+	var requiredSkillsJSON, preferredSkillsJSON *string
+	if len(req.RequiredSkills) > 0 {
+		b, _ := json.Marshal(req.RequiredSkills)
+		s := string(b)
+		requiredSkillsJSON = &s
+	}
+	if len(req.PreferredSkills) > 0 {
+		b, _ := json.Marshal(req.PreferredSkills)
+		s := string(b)
+		preferredSkillsJSON = &s
+	}
+	candidateType := req.CandidateType
+	if candidateType == "" {
+		candidateType = "any"
+	}
+	minExp := req.MinExperienceYears
+
 	jobRow.Title = req.Title
 	jobRow.Description = req.Description
 	jobRow.Requirements = nilIfEmpty(req.Requirements)
@@ -305,6 +383,12 @@ func (h *Handler) handleUpdateJob(w http.ResponseWriter, r *http.Request) {
 	jobRow.EmploymentType = req.EmploymentType
 	jobRow.SalaryMin = req.SalaryMin
 	jobRow.SalaryMax = req.SalaryMax
+	jobRow.RequiredSkills = requiredSkillsJSON
+	jobRow.PreferredSkills = preferredSkillsJSON
+	jobRow.KeyResponsibilities = nilIfEmpty(req.KeyResponsibilities)
+	jobRow.MinExperienceYears = &minExp
+	jobRow.EducationRequirement = nilIfEmpty(req.EducationRequirement)
+	jobRow.CandidateType = candidateType
 	if jobRow.Status != "published" && req.Status == "published" {
 		now := time.Now()
 		jobRow.PublishedAt = &now
@@ -361,4 +445,97 @@ func (h *Handler) handleCVUploadURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"uploadUrl": uploadURL, "objectKey": objectKey})
+}
+
+// --- Per-job scoring weight configuration ---
+
+type jobScoringWeightsResp struct {
+	WeightSkillMatch       float64 `json:"weightSkillMatch"`
+	WeightExperience       float64 `json:"weightExperience"`
+	WeightEducation        float64 `json:"weightEducation"`
+	WeightResponsibilities float64 `json:"weightResponsibilities"`
+	WeightAdditional       float64 `json:"weightAdditional"`
+	IsCustom               bool    `json:"isCustom"`
+}
+
+type jobScoringWeightsReq struct {
+	WeightSkillMatch       float64 `json:"weightSkillMatch" validate:"required,min=0,max=100"`
+	WeightExperience       float64 `json:"weightExperience" validate:"required,min=0,max=100"`
+	WeightEducation        float64 `json:"weightEducation" validate:"required,min=0,max=100"`
+	WeightResponsibilities float64 `json:"weightResponsibilities" validate:"required,min=0,max=100"`
+	WeightAdditional       float64 `json:"weightAdditional" validate:"required,min=0,max=100"`
+}
+
+func (h *Handler) handleGetJobScoringWeights(w http.ResponseWriter, r *http.Request) {
+	jobRow, ok := h.loadOwnedJob(w, r)
+	if !ok {
+		return
+	}
+
+	var cfg appdb.JobScoringWeightConfig
+	if err := h.db.WithContext(r.Context()).Where("job_id = ?", jobRow.ID).First(&cfg).Error; err != nil {
+		// Belum ada konfigurasi khusus untuk job ini — kembalikan default
+		httpx.WriteJSON(w, http.StatusOK, jobScoringWeightsResp{
+			WeightSkillMatch: 35, WeightExperience: 25, WeightEducation: 10,
+			WeightResponsibilities: 20, WeightAdditional: 10, IsCustom: false,
+		})
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, jobScoringWeightsResp{
+		WeightSkillMatch:       cfg.WeightSkillMatch,
+		WeightExperience:       cfg.WeightExperience,
+		WeightEducation:        cfg.WeightEducation,
+		WeightResponsibilities: cfg.WeightResponsibilities,
+		WeightAdditional:       cfg.WeightAdditional,
+		IsCustom:               cfg.IsCustom,
+	})
+}
+
+func (h *Handler) handlePutJobScoringWeights(w http.ResponseWriter, r *http.Request) {
+	jobRow, ok := h.loadOwnedJob(w, r)
+	if !ok {
+		return
+	}
+
+	var req jobScoringWeightsReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body tidak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+
+	total := req.WeightSkillMatch + req.WeightExperience + req.WeightEducation + req.WeightResponsibilities + req.WeightAdditional
+	if total < 99.0 || total > 101.0 {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_weights", "total bobot harus = 100%")
+		return
+	}
+
+	cfg := appdb.JobScoringWeightConfig{
+		JobID:                  jobRow.ID,
+		WeightSkillMatch:       req.WeightSkillMatch,
+		WeightExperience:       req.WeightExperience,
+		WeightEducation:        req.WeightEducation,
+		WeightResponsibilities: req.WeightResponsibilities,
+		WeightAdditional:       req.WeightAdditional,
+		IsCustom:               true,
+		UpdatedAt:              time.Now(),
+	}
+
+	ctx := r.Context()
+	var existing appdb.JobScoringWeightConfig
+	if h.db.WithContext(ctx).Where("job_id = ?", jobRow.ID).First(&existing).Error == nil {
+		// Update existing
+		h.db.WithContext(ctx).Model(&existing).Updates(map[string]any{
+			"weight_skill_match": req.WeightSkillMatch, "weight_experience": req.WeightExperience,
+			"weight_education": req.WeightEducation, "weight_responsibilities": req.WeightResponsibilities,
+			"weight_additional": req.WeightAdditional, "is_custom": true, "updated_at": time.Now(),
+		})
+	} else {
+		h.db.WithContext(ctx).Create(&cfg)
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "isCustom": true})
 }

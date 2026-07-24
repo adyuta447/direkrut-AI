@@ -202,17 +202,72 @@ export async function matchCandidate(
 // job-match, DAN nyimpen hasilnya ke Postgres, jadi gak perlu dihitung ulang
 // tiap kali halaman detail kandidat dibuka.
 
+export interface LLMAssessment {
+  requirement: string;
+  category: string;
+  importance: string;
+  match_status: string;
+  evidence_strength: string;
+  relationship: string;
+  evidence_text?: string;
+  source_section?: string;
+  reasoning: string;
+  score: number;
+}
+
+export interface ComponentScore {
+  score: number;         // 0.0 – 1.0
+  weight: number;        // bobot persen
+  weighted_score: number;
+  status: string;
+  summary: string;
+  matched_count: number;
+  partial_count: number;
+  missing_count: number;
+  assessments: LLMAssessment[];
+}
+
+export interface WeightConfig {
+  skillMatch: number;
+  experience: number;
+  education: number;
+  responsibilities: number;
+  additional: number;
+}
+
 export interface ScreeningResult {
   cvSummary: string;
   skills: string[];
   workExperienceYears: number | null;
   overallScore: number;
-  similarityScore?: number;
-  matchedEvidence?: string[];
+  finalWeightedScore?: number;
+  category?: string;
+  candidateTrack?: string;
+  reasoning?: string;
+  quotes?: string[];
+  matchedEvidence?: string[]; // legacy
+  
+  // MVP Evidence-Based Scoring fields
+  eligibilityStatus?: string;
+  matchScore?: number;
+  recommendationStatus?: string;
+  evidenceCoverage?: string;
+  keyGaps?: string[];
+
+  componentScores?: {
+    skill_match?: ComponentScore;
+    experience?: ComponentScore;
+    education?: ComponentScore;
+    responsibilities?: ComponentScore;
+    additional?: ComponentScore;
+  };
+  weightsUsed?: WeightConfig;
+  careerConsistencyNote?: string;
 }
 
-export async function screenApplication(applicationId: string): Promise<ScreeningResult> {
-  return apiFetch<ScreeningResult>(`/v1/applications/${applicationId}/screen`, { method: "POST" });
+export async function screenApplication(applicationId: string, force: boolean = false): Promise<ScreeningResult> {
+  const query = force ? "?force=true" : "";
+  return apiFetch<ScreeningResult>(`/v1/applications/${applicationId}/screen${query}`, { method: "POST" });
 }
 
 export async function getScreeningResult(applicationId: string): Promise<ScreeningResult | null> {
@@ -363,11 +418,20 @@ export interface ProctoringFlag {
   reason: string;
 }
 
+export interface InterviewCompetency {
+  score: number;
+  match_status: string;
+  reasoning: string;
+  quotes: string[];
+}
+
 export interface InterviewResult {
   status: string;
-  recommendationScore: number | null;
+  recommendationScore?: number;
+  competencyScores?: Record<string, InterviewCompetency>;
+  evidenceConfidence?: string;
   items: InterviewItem[];
-  proctoringFlags: ProctoringFlag[];
+  proctoringFlags: { at: string; reason: string }[];
 }
 
 export async function getInterviewResult(applicationId: string): Promise<InterviewResult | null> {

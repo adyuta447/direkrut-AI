@@ -259,6 +259,15 @@ type Job struct {
 	CreatedAt      time.Time  `gorm:"column:created_at"`
 	UpdatedAt      time.Time  `gorm:"column:updated_at"`
 
+	// Field terstruktur untuk AI scoring berbasis bukti.
+	// RequiredSkills dan PreferredSkills disimpan sebagai JSON array string.
+	RequiredSkills       *string `gorm:"column:required_skills;type:jsonb;default:'[]'"`
+	PreferredSkills      *string `gorm:"column:preferred_skills;type:jsonb;default:'[]'"`
+	KeyResponsibilities  *string `gorm:"column:key_responsibilities"`
+	MinExperienceYears   *int    `gorm:"column:min_experience_years;default:0"`
+	EducationRequirement *string `gorm:"column:education_requirement"`
+	CandidateType        string  `gorm:"column:candidate_type;default:any"`
+
 	// Belongs-to buat Preload("Company") di listing/detail -- konsumen
 	// (apps/web) butuh nama & industri perusahaan, bukan cuma company_id.
 	// Cuma dibaca (Preload), gak pernah di-set saat Create/Update Job,
@@ -301,11 +310,74 @@ type ScoringResult struct {
 	ApplicationID   string    `gorm:"column:application_id"`
 	OverallScore    float64   `gorm:"column:overall_score"`
 	SkillMatchScore *float64  `gorm:"column:skill_match_score"`
+	Category        *string   `gorm:"column:category"`
+	CandidateTrack  *string   `gorm:"column:candidate_track"`
+	Reasoning       *string   `gorm:"column:reasoning"`
+	QuotesJSON      *string   `gorm:"column:quotes_json"`
 	ModelUsed       *string   `gorm:"column:model_used"`
 	ScoredAt        time.Time `gorm:"column:scored_at"`
+	// Breakdown skor per komponen dan bobot yang digunakan (JSON)
+	ComponentScores *string   `gorm:"column:component_scores;type:jsonb"`
+	WeightsUsed     *string   `gorm:"column:weights_used;type:jsonb"`
+	
+	// MVP Evidence-based fields
+	EligibilityStatus    *string   `gorm:"column:eligibility_status"`
+	MatchScore           *float64  `gorm:"column:match_score"`
+	RecommendationStatus *string   `gorm:"column:recommendation_status"`
+	EvidenceCoverage     *string   `gorm:"column:evidence_coverage"`
+	KeyGapsJSON          *string   `gorm:"column:key_gaps_json;type:jsonb"`
 }
 
 func (ScoringResult) TableName() string { return "scoring_results" }
+
+// ScoringWeightConfig menyimpan konfigurasi bobot scoring per-company.
+// Jika HRD tidak mengustomisasi, DirekrutAI menggunakan bobot default.
+type ScoringWeightConfig struct {
+	ID                     string    `gorm:"column:id;primaryKey"`
+	CompanyID              string    `gorm:"column:company_id"`
+	CandidateType          string    `gorm:"column:candidate_type"`
+	WeightSkillMatch       float64   `gorm:"column:weight_skill_match"`
+	WeightExperience       float64   `gorm:"column:weight_experience"`
+	WeightEducation        float64   `gorm:"column:weight_education"`
+	WeightResponsibilities float64   `gorm:"column:weight_responsibilities"`
+	WeightAdditional       float64   `gorm:"column:weight_additional"`
+	IsCustom               bool      `gorm:"column:is_custom"`
+	CreatedAt              time.Time `gorm:"column:created_at"`
+	UpdatedAt              time.Time `gorm:"column:updated_at"`
+}
+
+func (ScoringWeightConfig) TableName() string { return "scoring_weight_configs" }
+
+func (s *ScoringWeightConfig) BeforeCreate(tx *gorm.DB) error {
+	if s.ID == "" {
+		s.ID = newUUIDv4()
+	}
+	return nil
+}
+
+// JobScoringWeightConfig menyimpan konfigurasi bobot scoring per-lowongan.
+// Override company-level config untuk lowongan tertentu yang butuh bobot khusus.
+type JobScoringWeightConfig struct {
+	ID                     string    `gorm:"column:id;primaryKey"`
+	JobID                  string    `gorm:"column:job_id"`
+	WeightSkillMatch       float64   `gorm:"column:weight_skill_match"`
+	WeightExperience       float64   `gorm:"column:weight_experience"`
+	WeightEducation        float64   `gorm:"column:weight_education"`
+	WeightResponsibilities float64   `gorm:"column:weight_responsibilities"`
+	WeightAdditional       float64   `gorm:"column:weight_additional"`
+	IsCustom               bool      `gorm:"column:is_custom"`
+	CreatedAt              time.Time `gorm:"column:created_at"`
+	UpdatedAt              time.Time `gorm:"column:updated_at"`
+}
+
+func (JobScoringWeightConfig) TableName() string { return "job_scoring_weight_configs" }
+
+func (j *JobScoringWeightConfig) BeforeCreate(tx *gorm.DB) error {
+	if j.ID == "" {
+		j.ID = newUUIDv4()
+	}
+	return nil
+}
 
 func (s *ScoringResult) BeforeCreate(tx *gorm.DB) error {
 	if s.ID == "" {
@@ -326,6 +398,11 @@ type Assessment struct {
 	// interview -- default:'[]' biar GORM omit kolom ini dari INSERT pas
 	// nil, sama kayak Candidate.Experience/Education/Links.
 	ProctoringFlags json.RawMessage `gorm:"column:proctoring_flags;type:jsonb;default:'[]'"`
+
+	// Hasil validasi kompetensi spesifik (mis. Python: 88, Problem Solving: 91)
+	CompetencyScores json.RawMessage `gorm:"column:competency_scores;type:jsonb;default:'{}'"`
+	// Kesimpulan korelasi antara klaim di CV vs pembuktian di interview
+	EvidenceConfidence *string `gorm:"column:evidence_confidence"`
 
 	Items []AssessmentItem `gorm:"foreignKey:AssessmentID;references:ID"`
 }

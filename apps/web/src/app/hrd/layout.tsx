@@ -22,23 +22,21 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
   if (!currentUser) return null;
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as CSSProperties
-        }
-      >
-        <HrdSidebar variant="inset" />
-        <SidebarInset data-dashboard className="h-svh bg-background text-foreground overflow-hidden">
-          <DashboardHeader />
-          <main className="flex-1 min-h-0 overflow-y-auto p-0">{children}</main>
-        </SidebarInset>
-        <SearchDialog />
-        <Toaster position="top-right" />
-      </SidebarProvider>
-    </ThemeProvider>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as CSSProperties
+      }
+    >
+      <HrdSidebar variant="inset" />
+      <SidebarInset data-dashboard className="h-svh bg-background text-foreground overflow-hidden">
+        <DashboardHeader />
+        <main className="flex-1 min-h-0 overflow-y-auto p-0">{children}</main>
+      </SidebarInset>
+      <SearchDialog />
+      <Toaster position="top-right" />
+    </SidebarProvider>
   );
 }

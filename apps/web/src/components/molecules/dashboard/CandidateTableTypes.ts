@@ -12,4 +12,6 @@ export interface Candidate {
   candidateProfile?: CandidateProfileSummary
   email?: string
   phone?: string
+  category?: string
+  aiCategory?: string // Kategori hasil screening AI ("Sangat Sesuai", "Sesuai", dll)
 }

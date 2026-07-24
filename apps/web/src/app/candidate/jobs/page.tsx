@@ -12,7 +12,7 @@ import { JobDetailSheet } from "@/components/organisms/jobs/JobDetailSheet"
 import { JobsEmptyState } from "@/components/molecules/jobs/JobsEmptyState"
 
 export default function CandidateJobsPage() {
-  const { jobs } = useDashboard()
+  const { jobs, applications } = useDashboard()
   const filters = useJobFilters(jobs)
 
   const applyHref = (id: string) => `/candidate/apply/${id}`
@@ -95,6 +95,7 @@ export default function CandidateJobsPage() {
             <JobDetailPanel
               job={filters.activeJob}
               applyHref={applyHref(filters.activeJob.id)}
+              applicationStatus={applications.find((a) => a.jobId === filters.activeJob?.id)?.status}
               className="top-6 h-[calc(100svh-6rem)]"
             />
           )}
@@ -105,6 +106,7 @@ export default function CandidateJobsPage() {
         job={filters.selectedJob ? filters.filteredJobs.find((j) => j.id === filters.selectedJob) ?? null : null}
         onClose={() => filters.setSelectedJob(null)}
         applyHref={(job) => applyHref(job.id)}
+        applicationStatus={applications.find((a) => a.jobId === filters.selectedJob)?.status}
       />
     </div>
   )

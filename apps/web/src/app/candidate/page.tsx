@@ -1,19 +1,29 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useDashboard } from "@/context/DashboardContext"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { StatCard, StatCardGrid } from "@/components/molecules/dashboard/StatCard"
 import { Button } from "@/components/ui/button"
 import {
   CandidateRecentApplications,
-  CandidateRecentApplicationsHeader,
 } from "@/components/molecules/dashboard/CandidateRecentApplications"
 import { CandidateAIBanner } from "@/components/molecules/dashboard/CandidateAIBanner"
 import { BriefcaseIcon } from "lucide-react"
+import * as candidateService from "@/services/candidateService"
 
 export default function CandidateDashboardPage() {
-  const { myApplications, currentUser } = useDashboard()
+  const { myApplications, jobs, currentUser } = useDashboard()
+  const [realName, setRealName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (currentUser?.role === "candidate") {
+      candidateService.getMyProfile().then((profile) => {
+        if (profile?.name) setRealName(profile.name)
+      }).catch(console.error)
+    }
+  }, [currentUser])
 
   const total = myApplications.length
   const administrasi = myApplications.filter((a) => a.status === "under-review").length
@@ -28,7 +38,7 @@ export default function CandidateDashboardPage() {
           <PageHeader
             size="lg"
             eyebrow="Dashboard Kamu"
-            title={`Halo, ${currentUser?.name ?? "Kandidat"} 👋`}
+            title={`Halo, ${realName || currentUser?.name || "Kandidat"} 👋`}
             description={
               aktif > 0
                 ? `Ada ${aktif} lamaran yang lagi jalan. Semua progresnya kepantau dari sini.`
@@ -75,8 +85,7 @@ export default function CandidateDashboardPage() {
         </StatCardGrid>
 
         <div className="flex flex-col gap-4 px-4 lg:px-6">
-          <CandidateRecentApplicationsHeader />
-          <CandidateRecentApplications applications={myApplications} />
+          <CandidateRecentApplications applications={myApplications} jobs={jobs} />
         </div>
 
         <div className="px-4 lg:px-6">

@@ -123,11 +123,14 @@ type ValidationAnswer struct {
 type ScoreValidationRequest struct {
 	ApplicationID string             `json:"application_id"`
 	Responses     []ValidationAnswer `json:"responses"`
+	Competencies  []string           `json:"competencies"`
 }
 
 type ScoreValidationResponse struct {
 	RecommendationScore float64            `json:"recommendation_score"`
 	AuthenticityScore   map[string]float64 `json:"authenticity_score"`
+	CompetencyScores    map[string]any     `json:"competency_scores"`
+	EvidenceConfidence  string             `json:"evidence_confidence"`
 }
 
 type TranscribeInterviewRequest struct {
@@ -148,16 +151,75 @@ type EmbedResponse struct {
 	Embedding []float64 `json:"embedding"`
 }
 
+// WeightConfig berisi bobot per komponen (persen 0-100, total = 100).
+type WeightConfig struct {
+	SkillMatch       float64 `json:"skill_match"`
+	Experience       float64 `json:"experience"`
+	Education        float64 `json:"education"`
+	Responsibilities float64 `json:"responsibilities"`
+	Additional       float64 `json:"additional"`
+}
+
+// DefaultWeightsProfessional adalah bobot default DirekrutAI untuk jalur Professional.
+var DefaultWeightsProfessional = WeightConfig{SkillMatch: 35, Experience: 25, Education: 10, Responsibilities: 20, Additional: 10}
+
+// DefaultWeightsFreshGrad adalah bobot default DirekrutAI untuk jalur Fresh Graduate.
+var DefaultWeightsFreshGrad = WeightConfig{SkillMatch: 30, Experience: 15, Education: 20, Responsibilities: 25, Additional: 10}
+
 type MatchRequest struct {
-	ApplicationID  string `json:"application_id"`
-	JobID          string `json:"job_id"`
-	CVSummary      string `json:"cv_summary"`
-	JobDescription string `json:"job_description"`
+	ApplicationID       string   `json:"application_id"`
+	JobID               string   `json:"job_id"`
+	CVSummary           string   `json:"cv_summary"`
+	JobDescription      string   `json:"job_description"`
+	WorkExperienceYears *float64 `json:"work_experience_years"`
+	// Field terstruktur untuk Evidence-Based Scoring
+	RequiredSkills       []string  `json:"required_skills"`
+	PreferredSkills      []string  `json:"preferred_skills"`
+	KeyResponsibilities  string    `json:"key_responsibilities"`
+	MinExperienceYears   int       `json:"min_experience_years"`
+	EducationRequirement string    `json:"education_requirement"`
+	CandidateType        string    `json:"candidate_type"`
+	Weights              *WeightConfig `json:"weights,omitempty"`
+}
+
+type LLMAssessment struct {
+	Requirement      string  `json:"requirement"`
+	Category         string  `json:"category"`
+	Importance       string  `json:"importance"`
+	MatchStatus      string  `json:"match_status"`
+	EvidenceStrength string  `json:"evidence_strength"`
+	Relationship     string  `json:"relationship"`
+	EvidenceText     *string `json:"evidence_text"`
+	SourceSection    *string `json:"source_section"`
+	Reasoning        string  `json:"reasoning"`
+	Score            float64 `json:"score"`
+}
+
+// ComponentScore berisi skor satu dimensi penilaian beserta buktinya.
+type ComponentScore struct {
+	Score         float64         `json:"score"`
+	Weight        float64         `json:"weight"`
+	WeightedScore float64         `json:"weighted_score"`
+	Status        string          `json:"status"`
+	Summary       string          `json:"summary"`
+	MatchedCount  int             `json:"matched_count"`
+	PartialCount  int             `json:"partial_count"`
+	MissingCount  int             `json:"missing_count"`
+	Assessments   []LLMAssessment `json:"assessments"`
 }
 
 type MatchResponse struct {
-	SimilarityScore float64  `json:"similarity_score"`
-	MatchedEvidence []string `json:"matched_evidence"`
+	SimilarityScore       float64                   `json:"similarity_score"`
+	EligibilityStatus     string                    `json:"eligibility_status"`
+	MatchScore            float64                   `json:"match_score"`
+	RecommendationStatus  string                    `json:"recommendation_status"`
+	EvidenceCoverage      string                    `json:"evidence_coverage"`
+	ReasoningSummary      string                    `json:"reasoning_summary"`
+	ComponentScores       map[string]ComponentScore `json:"component_scores"`
+	KeyGaps               []string                  `json:"key_gaps"`
+	CandidateTrack        string                    `json:"candidate_track"`
+	CareerConsistencyNote *string                   `json:"career_consistency_note,omitempty"`
+	WeightsUsed           WeightConfig              `json:"weights_used"`
 }
 
 type GenerateQuestionsRequest struct {
@@ -171,7 +233,9 @@ type GenerateQuestionsResponse struct {
 }
 
 type GeneratePreScreenQuestionsRequest struct {
+	JobTitle       string `json:"job_title"`
 	JobDescription string `json:"job_description"`
+	CVSummary      string `json:"cv_summary,omitempty"`
 }
 
 type GeneratePreScreenQuestionsResponse struct {

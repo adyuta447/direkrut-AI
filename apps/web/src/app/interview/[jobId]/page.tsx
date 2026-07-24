@@ -22,6 +22,7 @@ import {
   CheckCircleIcon, ShieldCheckIcon, ClockIcon, ArrowRightIcon,
   InfoIcon, SparklesIcon, MessageSquareIcon, VideoOffIcon, XCircleIcon,
 } from "lucide-react"
+import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 
 type InterviewState = "setup" | "prescreen" | "interview" | "finalizing" | "feedback"
 
@@ -142,6 +143,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   const [warningCount, setWarningCount] = React.useState(0)
   const [latestWarningReason, setLatestWarningReason] = React.useState("")
   const [showWarningModal, setShowWarningModal] = React.useState(false)
+  const [showStartTestConfirm, setShowStartTestConfirm] = React.useState(false)
 
   // --- Kamera & mikrofon wajib buat proctoring, bukan dekorasi ---
   const [mediaStream, setMediaStream] = React.useState<MediaStream | null>(null)
@@ -475,12 +477,81 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
             size="lg"
             className="mt-6 w-full rounded-full py-6 text-base font-bold"
             disabled={!readyToStart}
-            onClick={() => setInterviewState("prescreen")}
+            onClick={() => setInterviewState("guidelines")}
           >
-            Mulai Wawancara Sekarang
+            Lanjut ke Panduan
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full mt-2"
+            onClick={() => router.push("/candidate")}
+          >
+            Kembali ke Beranda Dashboard
           </Button>
         </div>
       </div>
+    </div>
+  )
+
+  const renderGuidelines = () => (
+    <div className="flex flex-col min-h-screen max-w-2xl mx-auto pt-8 pb-12 px-6 md:px-12 animate-in fade-in duration-500">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Panduan & Mekanisme Wawancara</h1>
+        <p className="text-muted-foreground mt-2">Penting: Harap baca mekanisme ini sebelum Anda memulai.</p>
+      </div>
+
+      <div className="flex-1 space-y-6">
+        <div className="bg-muted/50 rounded-2xl p-6 border border-border">
+          <h3 className="text-lg font-bold mb-4">Tahapan Wawancara</h3>
+          <ul className="space-y-4">
+            <li className="flex gap-4 items-start">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary font-bold">1</div>
+              <div>
+                <p className="font-semibold text-foreground">Test Tertulis (Pre-screen)</p>
+                <p className="text-sm text-muted-foreground mt-1">Anda akan diberikan 3 pertanyaan esai singkat yang harus dijawab dengan mengetik. Ini adalah tes awal sebelum masuk ke tahap wawancara AI.</p>
+              </div>
+            </li>
+            <li className="flex gap-4 items-start">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary font-bold">2</div>
+              <div>
+                <p className="font-semibold text-foreground">Wawancara AI (Lisan)</p>
+                <p className="text-sm text-muted-foreground mt-1">Sistem AI akan memberikan pertanyaan secara lisan (audio). Anda wajib menjawabnya secara lisan menggunakan mikrofon (waktu maksimal 2 menit per pertanyaan).</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div className="bg-destructive/10 border border-destructive/30 rounded-2xl p-5 flex gap-4 text-destructive">
+          <AlertTriangleIcon className="size-6 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-semibold text-destructive">Komitmen Penyelesaian</h4>
+            <p className="text-sm text-destructive/90 leading-relaxed">
+              Setelah Anda menekan tombol "Mulai Test Tertulis" di bawah, Anda <strong>TIDAK DAPAT KEMBALI</strong>, menjeda proses, atau keluar dari halaman ini hingga seluruh tahapan wawancara lisan selesai.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-4 mt-8">
+        <Button variant="outline" size="lg" className="flex-1 py-6 shadow-sm" onClick={() => setInterviewState("setup")}>
+          Kembali
+        </Button>
+        <Button size="lg" className="flex-[2] py-6 text-base font-bold shadow-lg" onClick={() => setShowStartTestConfirm(true)}>
+          Mengerti, Mulai Test Tertulis
+        </Button>
+      </div>
+
+      <ConfirmDialog
+        open={showStartTestConfirm}
+        onOpenChange={setShowStartTestConfirm}
+        title="Sudah Siap Memulai?"
+        description="Pastikan posisi kamera dan audio sudah siap. Setelah menekan lanjut, timer tes tertulis akan langsung berjalan."
+        confirmLabel="Ya, Mulai Sekarang"
+        onConfirm={() => {
+          setShowStartTestConfirm(false)
+          setInterviewState("prescreen")
+        }}
+      />
     </div>
   )
 
@@ -780,6 +851,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   return (
     <>
       {interviewState === "setup" && renderSetup()}
+      {interviewState === "guidelines" && renderGuidelines()}
       {interviewState === "prescreen" && renderPrescreen()}
       {interviewState === "interview" && renderInterview()}
       {interviewState === "finalizing" && renderLoadingScreen("Menilai hasil wawancaramu...")}

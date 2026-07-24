@@ -22,23 +22,21 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
   if (!currentUser) return null;
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as CSSProperties
-        }
-      >
-        <CandidateSidebar />
-        <SidebarInset data-dashboard className="h-svh bg-background text-foreground">
-          <DashboardHeader />
-          <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
-          <SearchDialog />
-          <Toaster position="top-right" />
-        </SidebarInset>
-      </SidebarProvider>
-    </ThemeProvider>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as CSSProperties
+      }
+    >
+      <CandidateSidebar />
+      <SidebarInset data-dashboard className="h-svh bg-background text-foreground">
+        <DashboardHeader />
+        <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
+        <SearchDialog />
+        <Toaster position="top-right" />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

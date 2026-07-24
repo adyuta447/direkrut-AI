@@ -231,11 +231,24 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 	// ulang. request context BUKAN dipakai (bakal ke-cancel begitu response
 	// ini keburu dikirim), pakai context.Background() yang independen.
 	if appRow.Candidate != nil && appRow.Candidate.CvFileURL != nil && *appRow.Candidate.CvFileURL != "" && h.aiClient.IsConfigured() {
-		go func(app appdb.Application) {
-			if _, err := h.runScreening(context.Background(), &app); err != nil {
-				log.Printf("[application] auto-screening gagal buat lamaran %s: %v", app.ID, err)
+		go func() {
+			ctxBg := context.Background()
+			if _, err := h.runScreening(ctxBg, &appRow, false); err != nil {
+				log.Printf("[application] background auto-screening gagal buat lamaran %s: %v", appRow.ID, err)
+			} else {
+				// Update status otomatis menjadi "screened" jika masih "submitted"
+				h.db.WithContext(ctxBg).Model(&appdb.Application{}).
+					Where("id = ? AND status = ?", appRow.ID, "submitted").
+					Update("status", "screened")
+				
+				fromStatus := "submitted"
+				history := appdb.ApplicationStatusHistory{
+					ApplicationID: appRow.ID, FromStatus: &fromStatus, ToStatus: "screened",
+					Note: nilIfEmpty("Auto-screening AI selesai"),
+				}
+				h.db.WithContext(ctxBg).Create(&history)
 			}
-		}(appRow)
+		}()
 	}
 
 	// Kabarin HRD pemilik lowongan ada pelamar baru.
@@ -484,11 +497,9 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_status", title, body)
 
-		// Recipient SELALU dari data server-side (email kandidat pemilik
-		// lamaran ini, udah lolos ownership check di loadVisibleApplication)
-		// -- jangan pernah dari request body, biar akun pengirim ini gak
-		// bisa disalahgunain kirim ke sembarang alamat.
 		if req.EmailSubject != "" && req.EmailBody != "" && appRow.Candidate.User != nil {
+			_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_email", req.EmailSubject, req.EmailBody)
+			
 			go func(to, subject, emailBody string) {
 				if err := h.mailer.Send(context.Background(), to, subject, emailBody); err != nil {
 					log.Printf("[application] gagal kirim email keputusan HRD ke %s: %v", to, err)
@@ -559,6 +570,9 @@ func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
 		companyName = appRow.Job.Company.Name
 	}
 	subject := fmt.Sprintf("Feedback lamaranmu untuk %s di %s", appRow.Job.Title, companyName)
+	
+	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_email", subject, resp.Feedback)
+
 	if err := h.mailer.Send(ctx, appRow.Candidate.User.Email, subject, resp.Feedback); err != nil {
 		log.Printf("[application] gagal kirim email feedback penolakan ke %s: %v", appRow.Candidate.User.Email, err)
 		return
@@ -571,16 +585,22 @@ func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
 // --- AI screening (CV parse + job-match score) ---
 
 type screeningResponse struct {
-	CVSummary           string   `json:"cvSummary"`
-	Skills              []string `json:"skills"`
-	WorkExperienceYears *float64 `json:"workExperienceYears"`
-	OverallScore        float64  `json:"overallScore"`
-	// SimilarityScore/MatchedEvidence cuma keisi pas response ini datang
-	// langsung dari POST /screen yang baru ngitung -- gak dipersist (gak ada
-	// kolom buat evidence bullets di scoring_results), jadi GET /screening
-	// abis reload halaman nampilin skor angka aja tanpa bullet penjelasnya.
-	SimilarityScore float64  `json:"similarityScore,omitempty"`
-	MatchedEvidence []string `json:"matchedEvidence,omitempty"`
+	CVSummary             string                             `json:"cvSummary"`
+	Skills                []string                           `json:"skills"`
+	WorkExperienceYears   *float64                           `json:"workExperienceYears"`
+	OverallScore          float64                            `json:"overallScore"`
+	FinalWeightedScore    *float64                           `json:"finalWeightedScore,omitempty"`
+	Category              *string                            `json:"category,omitempty"`
+	CandidateTrack        *string                            `json:"candidateTrack,omitempty"`
+	Reasoning             *string                            `json:"reasoning,omitempty"`
+	Quotes                []string                           `json:"quotes,omitempty"`
+	ComponentScores       map[string]aiengine.ComponentScore `json:"componentScores,omitempty"`
+	WeightsUsed           *aiengine.WeightConfig             `json:"weightsUsed,omitempty"`
+	EligibilityStatus     *string                            `json:"eligibilityStatus,omitempty"`
+	MatchScore            *float64                           `json:"matchScore,omitempty"`
+	RecommendationStatus  *string                            `json:"recommendationStatus,omitempty"`
+	EvidenceCoverage      *string                            `json:"evidenceCoverage,omitempty"`
+	KeyGaps               []string                           `json:"keyGaps,omitempty"`
 }
 
 // handleScreen idempotent: kalau lamaran ini udah pernah discreen, balikin
@@ -594,9 +614,21 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
+	force := r.URL.Query().Get("force") == "true"
 	var existingScore appdb.ScoringResult
-	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingScore).Error; err == nil {
-		resp := screeningResponse{OverallScore: existingScore.OverallScore}
+	if !force && h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingScore).Error == nil {
+		resp := screeningResponse{
+			OverallScore:   existingScore.OverallScore,
+			Category:       existingScore.Category,
+			CandidateTrack: existingScore.CandidateTrack,
+			Reasoning:      existingScore.Reasoning,
+		}
+		if existingScore.QuotesJSON != nil {
+			var q []string
+			if json.Unmarshal([]byte(*existingScore.QuotesJSON), &q) == nil {
+				resp.Quotes = q
+			}
+		}
 		var existingParse appdb.CVParseResult
 		if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error; err == nil {
 			var parsed aiengine.ParseCVResponse
@@ -618,7 +650,7 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.runScreening(ctx, appRow)
+	resp, err := h.runScreening(ctx, appRow, force)
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadGateway, "ai_error", err.Error())
 		return
@@ -631,15 +663,13 @@ func (h *Handler) handleScreen(w http.ResponseWriter, r *http.Request) {
 // handleScreen (manual, HRD klik tombol) DAN otomatis di goroutine
 // background begitu lamaran disubmit (lihat handleSubmitApplication) --
 // keduanya lewat jalur yang sama biar logic scoring gak kepisah dua tempat.
-func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (*screeningResponse, error) {
+func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application, force bool) (*screeningResponse, error) {
 	// Resume dari state setengah jadi: kalau run sebelumnya sempet nyimpen
 	// hasil parse CV tapi keburu gagal di step match/skor, reuse hasil parse
-	// yang udah ada -- jangan parse ulang (buang quota AI) apalagi Create
-	// ulang (unique constraint application_id -> "duplicated key not
-	// allowed", yang bikin retry screening macet selamanya).
+	// yang udah ada (kecuali di-force dari dashboard HRD).
 	var parsed *aiengine.ParseCVResponse
 	var existingParse appdb.CVParseResult
-	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error; err == nil {
+	if !force && h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&existingParse).Error == nil {
 		var cached aiengine.ParseCVResponse
 		if json.Unmarshal([]byte(existingParse.ParsedJSON), &cached) == nil {
 			parsed = &cached
@@ -667,33 +697,155 @@ func (h *Handler) runScreening(ctx context.Context, appRow *appdb.Application) (
 		}
 	}
 
+	// Bangun job description (legacy field, tetap dikirim sebagai konteks)
 	jobDescription := appRow.Job.Description
 	if appRow.Job.Requirements != nil && *appRow.Job.Requirements != "" {
 		jobDescription += "\n\n" + *appRow.Job.Requirements
 	}
+
+	// Parse required/preferred skills dari JSON
+	var requiredSkills, preferredSkills []string
+	if appRow.Job.RequiredSkills != nil && *appRow.Job.RequiredSkills != "" {
+		_ = json.Unmarshal([]byte(*appRow.Job.RequiredSkills), &requiredSkills)
+	}
+	if appRow.Job.PreferredSkills != nil && *appRow.Job.PreferredSkills != "" {
+		_ = json.Unmarshal([]byte(*appRow.Job.PreferredSkills), &preferredSkills)
+	}
+
+	keyResponsibilities := ""
+	if appRow.Job.KeyResponsibilities != nil {
+		keyResponsibilities = *appRow.Job.KeyResponsibilities
+	}
+	educationReq := ""
+	if appRow.Job.EducationRequirement != nil {
+		educationReq = *appRow.Job.EducationRequirement
+	}
+	minExp := 0
+	if appRow.Job.MinExperienceYears != nil {
+		minExp = *appRow.Job.MinExperienceYears
+	}
+
+	// Cari konfigurasi bobot: job-level dulu, lalu company-level, lalu default
+	var customWeights *aiengine.WeightConfig
+	var jobWeightCfg appdb.JobScoringWeightConfig
+	if h.db.WithContext(ctx).Where("job_id = ? AND is_custom = true", appRow.JobID).First(&jobWeightCfg).Error == nil {
+		customWeights = &aiengine.WeightConfig{
+			SkillMatch:       jobWeightCfg.WeightSkillMatch,
+			Experience:       jobWeightCfg.WeightExperience,
+			Education:        jobWeightCfg.WeightEducation,
+			Responsibilities: jobWeightCfg.WeightResponsibilities,
+			Additional:       jobWeightCfg.WeightAdditional,
+		}
+	} else if appRow.Job != nil {
+		var compWeightCfg appdb.ScoringWeightConfig
+		if h.db.WithContext(ctx).Where("company_id = ? AND is_custom = true", appRow.Job.CompanyID).First(&compWeightCfg).Error == nil {
+			customWeights = &aiengine.WeightConfig{
+				SkillMatch:       compWeightCfg.WeightSkillMatch,
+				Experience:       compWeightCfg.WeightExperience,
+				Education:        compWeightCfg.WeightEducation,
+				Responsibilities: compWeightCfg.WeightResponsibilities,
+				Additional:       compWeightCfg.WeightAdditional,
+			}
+		}
+	}
+
 	match, err := h.aiClient.MatchCandidate(ctx, aiengine.MatchRequest{
-		ApplicationID: appRow.ID, JobID: appRow.JobID,
-		CVSummary: parsed.Summary, JobDescription: jobDescription,
+		ApplicationID:        appRow.ID,
+		JobID:                appRow.JobID,
+		CVSummary:            parsed.Summary,
+		JobDescription:       jobDescription,
+		WorkExperienceYears:  parsed.WorkExperienceYears,
+		RequiredSkills:       requiredSkills,
+		PreferredSkills:      preferredSkills,
+		KeyResponsibilities:  keyResponsibilities,
+		MinExperienceYears:   minExp,
+		EducationRequirement: educationReq,
+		CandidateType:        appRow.Job.CandidateType,
+		Weights:              customWeights,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("gagal hitung skor kecocokan: %w", err)
 	}
-	overallScore := match.SimilarityScore * 100
-	modelUsed := "groq+gemini"
+
+	// Gunakan MatchScore sebagai overall score
+	overallScore := match.MatchScore
+	if overallScore == 0 {
+		overallScore = match.SimilarityScore * 100
+	}
+	modelUsed := "groq+gemini-evidence-v2"
+
+	// Serialize quotes - dihapus pada MVP karena evidence ada di assessments
+	var quotesJSON *string
+
+	// Serialize component scores
+	var componentScoresJSON *string
+	if len(match.ComponentScores) > 0 {
+		cs, _ := json.Marshal(match.ComponentScores)
+		csStr := string(cs)
+		componentScoresJSON = &csStr
+	}
+
+	// Serialize weights used
+	var weightsUsedJSON *string
+	wj, _ := json.Marshal(match.WeightsUsed)
+	wjStr := string(wj)
+	weightsUsedJSON = &wjStr
+
+	var keyGapsJSON *string
+	if len(match.KeyGaps) > 0 {
+		kg, _ := json.Marshal(match.KeyGaps)
+		kgStr := string(kg)
+		keyGapsJSON = &kgStr
+	}
+
 	scoreResult := appdb.ScoringResult{
-		ApplicationID: appRow.ID, OverallScore: overallScore, SkillMatchScore: &overallScore,
-		ModelUsed: &modelUsed, ScoredAt: time.Now(),
+		ApplicationID:        appRow.ID,
+		OverallScore:         overallScore,
+		SkillMatchScore:      &overallScore,
+		Category:             nil, // removed in MVP
+		CandidateTrack:       &match.CandidateTrack,
+		Reasoning:            &match.ReasoningSummary, // Use MVP reasoning_summary
+		QuotesJSON:           quotesJSON,
+		ModelUsed:            &modelUsed,
+		ScoredAt:             time.Now(),
+		ComponentScores:      componentScoresJSON,
+		WeightsUsed:          weightsUsedJSON,
+		EligibilityStatus:    &match.EligibilityStatus,
+		MatchScore:           &match.MatchScore,
+		RecommendationStatus: &match.RecommendationStatus,
+		EvidenceCoverage:     &match.EvidenceCoverage,
+		KeyGapsJSON:          keyGapsJSON,
 	}
 	if err := h.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "application_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"overall_score", "skill_match_score", "model_used", "scored_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{
+			"overall_score", "skill_match_score", "category", "candidate_track",
+			"reasoning", "quotes_json", "model_used", "scored_at",
+			"component_scores", "weights_used", "eligibility_status",
+			"match_score", "recommendation_status", "evidence_coverage", "key_gaps_json",
+		}),
 	}).Create(&scoreResult).Error; err != nil {
 		return nil, fmt.Errorf("gagal simpan hasil skor: %w", err)
 	}
 
+	weightsPtr := &match.WeightsUsed
 	return &screeningResponse{
-		CVSummary: parsed.Summary, Skills: parsed.Skills, WorkExperienceYears: parsed.WorkExperienceYears,
-		OverallScore: overallScore, SimilarityScore: match.SimilarityScore, MatchedEvidence: match.MatchedEvidence,
+		CVSummary:          parsed.Summary,
+		Skills:             parsed.Skills,
+		WorkExperienceYears: parsed.WorkExperienceYears,
+		OverallScore:       overallScore,
+		FinalWeightedScore: &overallScore,
+		Category:           nil, // removed in MVP
+		CandidateTrack:     &match.CandidateTrack,
+		Reasoning:          &match.ReasoningSummary,
+		Quotes:             nil, // removed in MVP
+		ComponentScores:    match.ComponentScores,
+		WeightsUsed:        weightsPtr,
+		EligibilityStatus:    &match.EligibilityStatus,
+		MatchScore:           &match.MatchScore,
+		RecommendationStatus: &match.RecommendationStatus,
+		EvidenceCoverage:     &match.EvidenceCoverage,
+		KeyGaps:              match.KeyGaps,
 	}, nil
 }
 
@@ -709,7 +861,46 @@ func (h *Handler) handleGetScreening(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lamaran ini belum discreen")
 		return
 	}
-	resp := screeningResponse{OverallScore: scoreResult.OverallScore}
+	resp := screeningResponse{
+		OverallScore:         scoreResult.OverallScore,
+		Category:             scoreResult.Category,
+		CandidateTrack:       scoreResult.CandidateTrack,
+		Reasoning:            scoreResult.Reasoning,
+		EligibilityStatus:    scoreResult.EligibilityStatus,
+		MatchScore:           scoreResult.MatchScore,
+		RecommendationStatus: scoreResult.RecommendationStatus,
+		EvidenceCoverage:     scoreResult.EvidenceCoverage,
+	}
+	if scoreResult.QuotesJSON != nil {
+		var q []string
+		if json.Unmarshal([]byte(*scoreResult.QuotesJSON), &q) == nil {
+			resp.Quotes = q
+		}
+	}
+	if scoreResult.KeyGapsJSON != nil {
+		var kg []string
+		if json.Unmarshal([]byte(*scoreResult.KeyGapsJSON), &kg) == nil {
+			resp.KeyGaps = kg
+		}
+	}
+	// Muat component scores jika ada
+	if scoreResult.ComponentScores != nil {
+		var cs map[string]aiengine.ComponentScore
+		if json.Unmarshal([]byte(*scoreResult.ComponentScores), &cs) == nil {
+			resp.ComponentScores = cs
+		}
+	}
+	// Muat weights used jika ada
+	if scoreResult.WeightsUsed != nil {
+		var wu aiengine.WeightConfig
+		if json.Unmarshal([]byte(*scoreResult.WeightsUsed), &wu) == nil {
+			resp.WeightsUsed = &wu
+		}
+	}
+	// FinalWeightedScore == OverallScore pada engine baru
+	fws := scoreResult.OverallScore
+	resp.FinalWeightedScore = &fws
+
 	var parseResult appdb.CVParseResult
 	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&parseResult).Error; err == nil {
 		var parsed aiengine.ParseCVResponse
@@ -797,9 +988,13 @@ func (h *Handler) handleCrossRole(w http.ResponseWriter, r *http.Request) {
 				log.Printf("[application] cross-role match gagal buat lamaran %s vs lowongan %s: %v", appRow.ID, job.ID, err)
 				return
 			}
+			evidence := []string{}
+			if match.ReasoningSummary != "" {
+				evidence = []string{match.ReasoningSummary}
+			}
 			results[i] = crossRoleMatch{
 				JobID: job.ID, JobTitle: job.Title,
-				Score: match.SimilarityScore * 100, MatchedEvidence: match.MatchedEvidence,
+				Score: match.SimilarityScore * 100, MatchedEvidence: evidence,
 			}
 			found[i] = true
 		}(i, job)
@@ -961,10 +1156,9 @@ func (h *Handler) appendProctoringFlag(ctx context.Context, applicationID string
 	return h.db.WithContext(ctx).Model(&appdb.Assessment{}).Where("id = ?", a.ID).Update("proctoring_flags", updated).Error
 }
 
-// preScreenPassThreshold: sengaja rendah -- tujuannya nyaring jawaban
-// kosong/asal-asalan, bukan nge-rank kualitas kandidat (itu porsi AI
-// screening + wawancara asli yang jauh lebih dalam).
-const preScreenPassThreshold = 40.0
+// preScreenPassThreshold: diubah ke 0.0 agar kandidat tidak pernah diblokir
+// dari wawancara AI (evaluasi final dilakukan setelah wawancara selesai).
+const preScreenPassThreshold = 0.0
 
 func (h *Handler) preScreenPassed(ctx context.Context, applicationID string) bool {
 	var a appdb.Assessment
@@ -989,8 +1183,19 @@ func (h *Handler) handlePreScreenQuestions(w http.ResponseWriter, r *http.Reques
 	}
 	ctx := r.Context()
 
+	cvSummary := ""
+	var cvParse appdb.CVParseResult
+	if err := h.db.WithContext(ctx).Where("application_id = ?", appRow.ID).First(&cvParse).Error; err == nil {
+		var parsed aiengine.ParseCVResponse
+		if json.Unmarshal([]byte(cvParse.ParsedJSON), &parsed) == nil {
+			cvSummary = parsed.Summary
+		}
+	}
+
 	resp, err := h.aiClient.GeneratePreScreenQuestions(ctx, aiengine.GeneratePreScreenQuestionsRequest{
+		JobTitle:       appRow.Job.Title,
 		JobDescription: appRow.Job.Description,
+		CVSummary:      cvSummary,
 	})
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal generate pertanyaan screening awal")
@@ -1044,7 +1249,7 @@ func (h *Handler) handlePreScreenSubmit(w http.ResponseWriter, r *http.Request) 
 	}
 
 	scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{
-		ApplicationID: appRow.ID, Responses: req.Responses,
+		ApplicationID: appRow.ID, Responses: req.Responses, Competencies: []string{"Kualifikasi Dasar", "Relevansi Pengalaman"},
 	})
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadGateway, "ai_error", "gagal nilai screening awal")
@@ -1335,14 +1540,42 @@ func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request
 			}
 			responses = append(responses, aiengine.ValidationAnswer{Question: it.QuestionText, Answer: answer})
 		}
-		scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{ApplicationID: appRow.ID, Responses: responses})
+		
+		var competencies []string
+		if appRow.Job != nil {
+			if appRow.Job.RequiredSkills != nil {
+				var reqSkills []string
+				if err := json.Unmarshal([]byte(*appRow.Job.RequiredSkills), &reqSkills); err == nil {
+					competencies = append(competencies, reqSkills...)
+				}
+			}
+			if appRow.Job.PreferredSkills != nil {
+				var prefSkills []string
+				if err := json.Unmarshal([]byte(*appRow.Job.PreferredSkills), &prefSkills); err == nil {
+					competencies = append(competencies, prefSkills...)
+				}
+			}
+		}
+
+		scoreResp, err := h.aiClient.ScoreValidation(ctx, aiengine.ScoreValidationRequest{
+			ApplicationID: appRow.ID, 
+			Responses: responses,
+			Competencies: competencies,
+		})
 		if err != nil {
 			log.Printf("[application] gagal score-validation buat lamaran %s: %v", appRow.ID, err)
 		} else {
 			now := time.Now()
 			score := scoreResp.RecommendationScore
+			
+			compScoresJSON, _ := json.Marshal(scoreResp.CompetencyScores)
+			
 			h.db.WithContext(ctx).Model(&assessment).Updates(map[string]any{
-				"score": score, "status": "completed", "completed_at": now,
+				"score": score, 
+				"status": "completed", 
+				"completed_at": now,
+				"competency_scores": string(compScoresJSON),
+				"evidence_confidence": scoreResp.EvidenceConfidence,
 			})
 			resp.RecommendationScore = &score
 			resp.AuthenticityScore = scoreResp.AuthenticityScore
@@ -1417,6 +1650,8 @@ type interviewItemResponse struct {
 type interviewResultResponse struct {
 	Status              string                  `json:"status"`
 	RecommendationScore *float64                `json:"recommendationScore"`
+	CompetencyScores    map[string]float64      `json:"competencyScores,omitempty"`
+	EvidenceConfidence  *string                 `json:"evidenceConfidence,omitempty"`
 	Items               []interviewItemResponse `json:"items"`
 	ProctoringFlags     []proctoringFlag        `json:"proctoringFlags"`
 }
@@ -1450,9 +1685,17 @@ func (h *Handler) handleGetInterview(w http.ResponseWriter, r *http.Request) {
 	}
 	var flags []proctoringFlag
 	_ = json.Unmarshal(assessment.ProctoringFlags, &flags)
+	
+	var competencyScores map[string]float64
+	_ = json.Unmarshal(assessment.CompetencyScores, &competencyScores)
 
 	httpx.WriteJSON(w, http.StatusOK, interviewResultResponse{
-		Status: assessment.Status, RecommendationScore: assessment.Score, Items: itemResp, ProctoringFlags: flags,
+		Status:              assessment.Status, 
+		RecommendationScore: assessment.Score, 
+		CompetencyScores:    competencyScores,
+		EvidenceConfidence:  assessment.EvidenceConfidence,
+		Items:               itemResp, 
+		ProctoringFlags:     flags,
 	})
 }
 

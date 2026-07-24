@@ -12,9 +12,10 @@ interface JobDetailSheetProps {
   job: Job | null;
   onClose: () => void;
   applyHref?: (job: Job) => string;
+  applicationStatus?: string;
 }
 
-export function JobDetailSheet({ job, onClose, applyHref }: JobDetailSheetProps) {
+export function JobDetailSheet({ job, onClose, applyHref, applicationStatus }: JobDetailSheetProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -58,20 +59,17 @@ export function JobDetailSheet({ job, onClose, applyHref }: JobDetailSheetProps)
       />
 
       <div className="absolute inset-x-0 bottom-0 top-14 bg-canvas rounded-t-[28px] overflow-hidden flex flex-col animate-fade-up">
-        <div className="flex items-center justify-between px-5 h-14 border-b border-hairline flex-shrink-0">
-          <span className="text-[14px] font-medium text-ink truncate pr-4">{job.title}</span>
+        <div className="absolute top-4 right-4 z-10 bg-canvas/80 backdrop-blur rounded-full">
           <button
-            type="button"
             onClick={onClose}
-            aria-label="Tutup"
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-surface-1 text-ink flex-shrink-0"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-1 border border-hairline text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors"
           >
-            <X size={18} strokeWidth={1.5} />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          <JobDetailHeader job={job} applyHref={applyHref?.(job)} />
+          <JobDetailHeader job={job} applyHref={applyHref?.(job)} applicationStatus={applicationStatus} />
           <div className="p-6 sm:p-8">
             <div className="mb-8">
               <h3 className="text-[20px] font-semibold mb-4 text-ink">Deskripsi Pekerjaan</h3>

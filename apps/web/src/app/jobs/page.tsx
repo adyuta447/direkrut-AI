@@ -22,7 +22,7 @@ export default function JobsPage() {
 }
 
 function JobsPageContent() {
-  const { jobs } = useDashboard();
+  const { jobs, applications } = useDashboard();
   const searchParams = useSearchParams();
   const filters = useJobFilters(jobs, {
     search: searchParams.get("q") ?? undefined,
@@ -56,7 +56,12 @@ function JobsPageContent() {
                 pageCount={filters.pageCount}
                 onPageChange={filters.goToPage}
               />
-              {filters.activeJob && <JobDetailPanel job={filters.activeJob} />}
+              {filters.activeJob && (
+                <JobDetailPanel 
+                  job={filters.activeJob} 
+                  applicationStatus={applications.find(a => a.jobId === filters.activeJob?.id)?.status}
+                />
+              )}
             </div>
           )}
         </div>
@@ -66,6 +71,7 @@ function JobsPageContent() {
       <JobDetailSheet
         job={filters.selectedJob ? filters.activeJob : null}
         onClose={() => filters.setSelectedJob(null)}
+        applicationStatus={filters.activeJob ? applications.find(a => a.jobId === filters.activeJob.id)?.status : undefined}
       />
 
       <SiteFooter />
