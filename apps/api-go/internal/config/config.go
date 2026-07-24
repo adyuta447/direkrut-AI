@@ -8,6 +8,8 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -37,6 +39,9 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
+	// Membaca file .env jika ada (sangat berguna untuk user Windows yang tidak menggunakan Makefile)
+	_ = godotenv.Load()
+
 	cfg := &Config{
 		Port:      getEnv("PORT", "8080"),
 		WebOrigin: os.Getenv("WEB_ORIGIN"),

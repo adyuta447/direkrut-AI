@@ -56,6 +56,12 @@ async def _with_timeout_and_retry(fn: Callable[[], Awaitable[T]]) -> T:
 class AIProvider(ABC):
     """Kontrak minimal yang harus dipenuhi tiap provider AI."""
 
+    @property
+    @abstractmethod
+    def COMPLETE_MODEL(self) -> str:
+        """Nama model utama yang dipakai untuk completion."""
+        pass
+
     @abstractmethod
     async def complete(self, prompt: str, *, system: str | None = None) -> str:
         """Generate teks dari prompt. Dipakai buat CV parsing, assessment,
@@ -228,8 +234,6 @@ def get_provider(name: str | None = None) -> AIProvider:
 
 
 _TASK_PROVIDER_MAP: dict[str, str] = {
-    "complete": "groq",       # Llama 3.3 70B -- cepat, gratis
-    "stream": "groq",         # Streaming chat -- low latency
     "embed": "gemini",        # gemini-embedding-001 -- Groq gak punya
     "vision": "gemini",       # Flash Lite -- Groq gak support vision
     "transcribe": "groq",     # Whisper large v3

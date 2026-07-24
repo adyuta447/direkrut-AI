@@ -19,6 +19,13 @@ interface ApiJob {
   status: string;
   publishedAt?: string;
   createdAt: string;
+  // Field terstruktur baru
+  requiredSkills?: string[];
+  preferredSkills?: string[];
+  keyResponsibilities?: string;
+  minExperienceYears?: number;
+  educationRequirement?: string;
+  candidateType?: string;
   applicantCount?: number;
 }
 
@@ -87,6 +94,13 @@ interface JobWriteRequestBody {
   salaryMin?: number;
   salaryMax?: number;
   status: string;
+  // Field terstruktur
+  requiredSkills?: string[];
+  preferredSkills?: string[];
+  keyResponsibilities?: string;
+  minExperienceYears?: number;
+  educationRequirement?: string;
+  candidateType?: string;
 }
 
 function buildJobWriteRequest(job: Omit<Job, "id" | "applicantCount">): JobWriteRequestBody {
@@ -98,6 +112,13 @@ function buildJobWriteRequest(job: Omit<Job, "id" | "applicantCount">): JobWrite
     employmentType: LABEL_TO_EMPLOYMENT_TYPE[job.type] ?? "full-time",
     ...parseSalaryRange(job.salaryRange),
     status: STATUS_TO_API[job.status ?? "draft"],
+    // Pass the structured fields back to API
+    requiredSkills: job.requiredSkills ?? [],
+    preferredSkills: job.preferredSkills ?? [],
+    keyResponsibilities: job.keyResponsibilities ?? "",
+    minExperienceYears: job.minExperienceYears ?? 0,
+    educationRequirement: job.educationRequirement ?? "",
+    candidateType: job.candidateType ?? "any",
   };
 }
 
@@ -129,6 +150,13 @@ function mapApiJobToJob(apiJob: ApiJob): Job {
     }),
     applicantCount: apiJob.applicantCount ?? 0,
     status: STATUS_FROM_API[apiJob.status] ?? "active",
+    // Map the new fields
+    requiredSkills: apiJob.requiredSkills ?? [],
+    preferredSkills: apiJob.preferredSkills ?? [],
+    keyResponsibilities: apiJob.keyResponsibilities ?? "",
+    minExperienceYears: apiJob.minExperienceYears ?? 0,
+    educationRequirement: apiJob.educationRequirement ?? "",
+    candidateType: (apiJob.candidateType as Job["candidateType"]) ?? "any",
   };
 }
 
@@ -197,4 +225,29 @@ export async function updateJob(id: string, job: Omit<Job, "id" | "applicantCoun
 export async function deleteJob(id: string): Promise<void> {
   if (!isApiConfigured) return;
   await apiFetch<void>(`/v1/jobs/${id}`, { method: "DELETE" });
+}
+
+// --- API Scoring Weights ---
+import { ScoringWeightConfig } from "../lib/types";
+
+export async function getCompanyScoringWeights(): Promise<ScoringWeightConfig> {
+  return apiFetch<ScoringWeightConfig>("/v1/companies/me/scoring-weights");
+}
+
+export async function updateCompanyScoringWeights(weights: Omit<ScoringWeightConfig, "isCustom" | "defaultProfessional" | "defaultFreshGraduate">): Promise<void> {
+  return apiFetch<void>("/v1/companies/me/scoring-weights", {
+    method: "PUT",
+    body: JSON.stringify(weights),
+  });
+}
+
+export async function getJobScoringWeights(jobId: string): Promise<ScoringWeightConfig> {
+  return apiFetch<ScoringWeightConfig>(`/v1/jobs/${jobId}/scoring-weights`);
+}
+
+export async function updateJobScoringWeights(jobId: string, weights: Omit<ScoringWeightConfig, "isCustom" | "defaultProfessional" | "defaultFreshGraduate">): Promise<void> {
+  return apiFetch<void>(`/v1/jobs/${jobId}/scoring-weights`, {
+    method: "PUT",
+    body: JSON.stringify(weights),
+  });
 }

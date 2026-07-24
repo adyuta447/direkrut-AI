@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
+import { SettingsJobAiScoringSheet } from "@/components/organisms/dashboard/SettingsJobAiScoringSheet"
 import type { Job } from "@/lib/types"
 
 interface JobCardProps {
@@ -36,6 +37,7 @@ export function JobCard({ job, onEdit }: JobCardProps) {
   const { updateJob, deleteJob } = useDashboard()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [aiSettingsOpen, setAiSettingsOpen] = useState(false)
   const [isTogglingStatus, setIsTogglingStatus] = useState(false)
 
   const statusMeta = JOB_STATUS_META[job.status ?? "inactive"] ?? JOB_STATUS_META.inactive
@@ -111,7 +113,17 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           Cek Kandidat
         </Button>
         <div className="flex gap-2 w-full sm:w-auto justify-end">
-          <Button variant="outline" size="icon" className="border-hairline" onClick={() => onEdit(job)}>
+          <Button variant="outline" size="icon" className="border-hairline group" onClick={() => setAiSettingsOpen(true)} title="Atur Bobot AI (Khusus Lowongan Ini)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-violet-600 transition-colors group-hover:text-violet-700">
+              <path d="M7 11.236v3.764a2 2 0 0 0 2 2h3.764a2 2 0 0 0 1.414-.586l6.236-6.236a2 2 0 0 0 0-2.828l-2.353-2.353a2 2 0 0 0-2.828 0l-6.236 6.236a2 2 0 0 0-.586 1.414" />
+              <path d="m14.5 6.5 3 3" />
+              <path d="M4.5 19.5 7 17" />
+              <path d="m2 22 2.5-2.5" />
+              <path d="M8 8v.01" />
+              <path d="M16 16v.01" />
+            </svg>
+          </Button>
+          <Button variant="outline" size="icon" className="border-hairline" onClick={() => onEdit(job)} title="Edit Lowongan">
             <IconEdit className="size-4" />
           </Button>
           <Button
@@ -121,9 +133,15 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             disabled={job.status !== "inactive"}
             title={job.status !== "inactive" ? "Nonaktifin lowongan ini dulu sebelum dihapus" : "Hapus lowongan"}
             onClick={() => setConfirmDelete(true)}
+            title="Hapus Lowongan"
           >
             <IconTrash className="size-4" />
           </Button>
+          <SettingsJobAiScoringSheet
+            open={aiSettingsOpen}
+            onOpenChange={setAiSettingsOpen}
+            selectedJob={job}
+          />
           <ConfirmDialog
             open={confirmDelete}
             onOpenChange={setConfirmDelete}

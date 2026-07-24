@@ -55,6 +55,8 @@ interface DashboardContextType {
   setSearchOpen: (open: boolean) => void;
   isProfileComplete: boolean;
   setIsProfileComplete: (val: boolean) => void;
+  savedJobs: string[];
+  toggleSavedJob: (jobId: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(
@@ -82,6 +84,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState("landing");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
+
+  // Load saved jobs from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("direkrut-saved-jobs");
+      if (saved) {
+        try {
+          setSavedJobs(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse saved jobs", e);
+        }
+      }
+    }
+  }, []);
+
+  const toggleSavedJob = (jobId: string) => {
+    setSavedJobs((prev) => {
+      const next = prev.includes(jobId) ? prev.filter((id) => id !== jobId) : [...prev, jobId];
+      if (typeof window !== "undefined") {
+        localStorage.setItem("direkrut-saved-jobs", JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   const refetchApplications = async () => {
     if (!currentUser?.id) return;
@@ -320,6 +347,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setSearchOpen,
         isProfileComplete,
         setIsProfileComplete,
+        savedJobs,
+        toggleSavedJob,
       }}
     >
       {children}

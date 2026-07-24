@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select"
 import { useDashboard } from "@/context/DashboardContext"
 import { Job } from "@/lib/types"
+import { TagInput } from "@/components/atoms/shared/TagInput"
+import { IconSparkles } from "@tabler/icons-react"
 
 const KNOWN_TYPES = ["Penuh Waktu", "Paruh Waktu", "Kontrak"]
 
@@ -33,6 +35,12 @@ export interface JobFormValues {
   description: string
   requirements: string[]
   timeline?: { from: string; to: string }
+  requiredSkills: string[]
+  preferredSkills: string[]
+  keyResponsibilities: string
+  minExperienceYears: number
+  educationRequirement: string
+  candidateType: string
 }
 
 export function parseJobFormValues(formData: FormData): JobFormValues {
@@ -44,6 +52,16 @@ export function parseJobFormValues(formData: FormData): JobFormValues {
   const hasTimeline = formData.get("hasTimeline") === "1"
   const dateFrom = (formData.get("dateFrom") as string) || ""
   const dateTo = (formData.get("dateTo") as string) || ""
+  
+  let requiredSkills: string[] = []
+  let preferredSkills: string[] = []
+  try {
+    requiredSkills = JSON.parse((formData.get("requiredSkills") as string) || "[]")
+    preferredSkills = JSON.parse((formData.get("preferredSkills") as string) || "[]")
+  } catch (e) {
+    // skip
+  }
+
   return {
     title: ((formData.get("title") as string) || "").trim() || "Lowongan Tanpa Judul",
     department: (formData.get("department") as string) || "Umum",
@@ -53,6 +71,12 @@ export function parseJobFormValues(formData: FormData): JobFormValues {
     description: (formData.get("description") as string) || "",
     requirements,
     timeline: hasTimeline && dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined,
+    requiredSkills,
+    preferredSkills,
+    keyResponsibilities: (formData.get("keyResponsibilities") as string) || "",
+    minExperienceYears: parseInt((formData.get("minExperienceYears") as string) || "0", 10),
+    educationRequirement: (formData.get("educationRequirement") as string) || "",
+    candidateType: (formData.get("candidateType") as string) || "any",
   }
 }
 
@@ -91,6 +115,10 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
     ? new Date(selectedJob.timeline.to).toISOString().split("T")[0]
     : ""
 
+  const [requiredSkills, setRequiredSkills] = useState<string[]>(selectedJob?.requiredSkills || [])
+  const [preferredSkills, setPreferredSkills] = useState<string[]>(selectedJob?.preferredSkills || [])
+  const [candidateType, setCandidateType] = useState(selectedJob?.candidateType || "any")
+
   // Departemen lama yang udah kepakai tapi kebetulan udah dihapus dari daftar
   // dikelola -- tetap ditampilkan sebagai opsi biar form edit gak blank.
   const deptOptions =
@@ -103,11 +131,14 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
 
   return (
     <div className="grid gap-8">
-      {/* Nilai final Departemen/Tipe/Timeline dikirim lewat hidden input supaya bisa
+      {/* Nilai final Departemen/Tipe/Timeline/Skills dikirim lewat hidden input supaya bisa
           diambil langsung dari FormData saat submit, tanpa state terpisah di parent. */}
       <input type="hidden" name="department" value={resolvedDept} />
       <input type="hidden" name="type" value={resolvedType} />
       <input type="hidden" name="hasTimeline" value={hasTimeline ? "1" : ""} />
+      <input type="hidden" name="requiredSkills" value={JSON.stringify(requiredSkills)} />
+      <input type="hidden" name="preferredSkills" value={JSON.stringify(preferredSkills)} />
+      <input type="hidden" name="candidateType" value={candidateType} />
 
       <div className="space-y-4">
         <SectionLabel icon={IconBriefcase}>Informasi Dasar</SectionLabel>
@@ -219,18 +250,18 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
       <div className="space-y-4 border-t border-hairline pt-6">
         <SectionLabel icon={IconFileDescription}>Deskripsi &amp; Kualifikasi</SectionLabel>
         <div className="space-y-2">
-          <Label htmlFor="description">Deskripsi Pekerjaan</Label>
+          <Label htmlFor="description">Deskripsi Pekerjaan (Umum)</Label>
           <Textarea
             id="description"
             name="description"
-            placeholder="Jelaskan peran dan tanggung jawab..."
-            className="min-h-[100px]"
+            placeholder="Jelaskan peran secara umum..."
+            className="min-h-[80px]"
             defaultValue={selectedJob?.description || ""}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="requirements">Kualifikasi Utama</Label>
+          <Label htmlFor="requirements">Kualifikasi Tambahan</Label>
           <p className="text-sm text-muted-foreground">
             Satu poin singkat per baris (bukan paragraf) -- tiap baris bakal tampil sebagai chip terpisah ke kandidat.
           </p>
@@ -256,6 +287,82 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="space-y-4 border-t border-hairline pt-6">
+        <div className="flex flex-col gap-1 mb-2">
+          <SectionLabel icon={IconSparkles}>Data Spesifik untuk Screening AI</SectionLabel>
+          <p className="text-[13px] text-ink-muted pl-9">Isi bagian ini selengkap mungkin untuk meningkatkan akurasi screening AI. Data ini akan digunakan AI sebagai acuan untuk mencocokkan skor tiap komponen dari CV kandidat.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Tipe Kandidat Dicari</Label>
+            <Select value={candidateType} onValueChange={(val: string) => setCandidateType(val)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih tipe kandidat..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Bebas (Semua Kalangan)</SelectItem>
+                <SelectItem value="fresh_graduate">Fresh Graduate Diutamakan</SelectItem>
+                <SelectItem value="professional">Profesional / Berpengalaman</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="minExperienceYears">Minimum Pengalaman (Tahun)</Label>
+            <Input
+              id="minExperienceYears"
+              name="minExperienceYears"
+              type="number"
+              min="0"
+              placeholder="Contoh: 2"
+              defaultValue={selectedJob?.minExperienceYears || 0}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="educationRequirement">Syarat Pendidikan</Label>
+          <Input
+            id="educationRequirement"
+            name="educationRequirement"
+            placeholder="Contoh: Minimal S1 Teknik Informatika atau setara"
+            defaultValue={selectedJob?.educationRequirement || ""}
+          />
+        </div>
+
+        <div className="space-y-2 mt-4">
+          <Label>Required Skills (Wajib)</Label>
+          <p className="text-[12px] text-ink-muted -mt-1 mb-1">Skill yang wajib dimiliki kandidat.</p>
+          <TagInput
+            tags={requiredSkills}
+            setTags={setRequiredSkills}
+            placeholder="Ketik skill (contoh: React, Golang) lalu tekan Enter..."
+          />
+        </div>
+
+        <div className="space-y-2 mt-2">
+          <Label>Preferred Skills (Nilai Plus)</Label>
+          <p className="text-[12px] text-ink-muted -mt-1 mb-1">Skill tambahan yang jadi nilai plus kalau ada.</p>
+          <TagInput
+            tags={preferredSkills}
+            setTags={setPreferredSkills}
+            placeholder="Ketik skill (contoh: Docker, AWS) lalu tekan Enter..."
+          />
+        </div>
+
+        <div className="space-y-2 mt-4">
+          <Label htmlFor="keyResponsibilities">Tanggung Jawab Utama (Key Responsibilities)</Label>
+          <p className="text-[12px] text-ink-muted -mt-1 mb-1">Pekerjaan apa saja yang akan dilakukan sehari-hari? (Pisahkan dengan baris baru)</p>
+          <Textarea
+            id="keyResponsibilities"
+            name="keyResponsibilities"
+            placeholder="- Mengembangkan fitur baru\n- Melakukan code review..."
+            className="min-h-[100px]"
+            defaultValue={selectedJob?.keyResponsibilities || ""}
+          />
         </div>
       </div>
     </div>
