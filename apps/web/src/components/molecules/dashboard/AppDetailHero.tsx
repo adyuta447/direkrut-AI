@@ -38,7 +38,10 @@ function StatusPanel({ application, timelineSteps, statusHelper }: {
       <div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className={cn("h-full rounded-full transition-all", application.status === "rejected" ? "bg-destructive" : "bg-primary")}
+            className={cn(
+              "h-full rounded-full transition-all",
+              application.status === "rejected" ? "bg-destructive" : application.status === "accepted" ? "bg-success" : "bg-primary"
+            )}
             style={{ width: `${Math.max(progressPct, 8)}%` }}
           />
         </div>

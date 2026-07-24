@@ -35,6 +35,7 @@ interface DashboardContextType {
     status: Application["status"],
     note?: string,
     email?: { subject: string; body: string },
+    interviewScheduledAt?: string,
   ) => Promise<void>;
   deleteApplication: (id: string) => Promise<void>;
   jobs: Job[];
@@ -211,9 +212,18 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     status: Application["status"],
     note?: string,
     email?: { subject: string; body: string },
+    interviewScheduledAt?: string,
   ) => {
-    const result = await applicationService.updateApplicationStatus(id, status, note, email);
-    updateApplication(id, result ?? { status });
+    const existing = applications.find((a) => a.id === id);
+    const optimistic: Partial<Application> = { status, ...(interviewScheduledAt ? { interviewScheduledAt } : {}) };
+    updateApplication(id, optimistic);
+    try {
+      const result = await applicationService.updateApplicationStatus(id, status, note, email, interviewScheduledAt);
+      updateApplication(id, result ?? optimistic);
+    } catch (err) {
+      if (existing) updateApplication(id, existing);
+      throw err;
+    }
   };
 
   const deleteApplication = async (id: string) => {

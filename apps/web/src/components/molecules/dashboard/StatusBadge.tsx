@@ -1,4 +1,4 @@
-import { IconCalendarEventFilled, IconCircleCheckFilled, IconCircleXFilled, IconLoader } from "@tabler/icons-react";
+import { IconCalendarEventFilled, IconCircleCheckFilled, IconCircleXFilled, IconLoader, IconTrophyFilled } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { getScoreLevel, getStatusMeta } from "@/lib/dashboard/status";
 
@@ -6,6 +6,8 @@ const STATUS_ICON: Record<string, typeof IconCircleCheckFilled> = {
   submitted: IconCircleCheckFilled,
   "under-review": IconLoader,
   interview: IconCalendarEventFilled,
+  interview_completed: IconLoader,
+  accepted: IconTrophyFilled,
   rejected: IconCircleXFilled,
 };
 

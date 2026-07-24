@@ -64,3 +64,11 @@ export function getDefaultInviteBody(
 ): string {
   return `Kepada ${applicantName},\n\nKami dengan senang hati memberitahukan bahwa lamaran Anda untuk posisi ${jobTitle} telah ditinjau dan kami ingin mengundang Anda untuk mengikuti sesi wawancara.\n\nMohon informasikan ketersediaan waktu Anda dalam minggu ini.\n\nKami menantikan pertemuan dengan Anda.\n\nHormat kami,\nTim HRD`
 }
+
+export function getDefaultAcceptSubject(jobTitle: string) {
+  return `Selamat, Kamu Diterima! — ${jobTitle}`
+}
+
+export function getDefaultAcceptBody(applicantName: string, jobTitle: string): string {
+  return `Kepada ${applicantName},\n\nSelamat! Setelah melalui seluruh tahapan seleksi, kami dengan senang hati memberitahukan bahwa Anda DITERIMA untuk posisi ${jobTitle}.\n\nTim kami akan segera menghubungi Anda untuk informasi langkah selanjutnya.\n\nSelamat bergabung, dan sampai jumpa!\n\nHormat kami,\nTim HRD`
+}

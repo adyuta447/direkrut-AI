@@ -11,6 +11,7 @@ interface ApiApplication {
   status: string;
   appliedAt: string;
   updatedAt: string;
+  interviewScheduledAt?: string;
   recommendationScore?: number;
   interviewScore?: number;
   interviewStatus?: string;
@@ -31,6 +32,7 @@ function mapApiApplicationToApplication(a: ApiApplication): Application {
     validationStatus: "pending",
     status: (a.status as Application["status"]) || "submitted",
     appliedDate: a.appliedAt,
+    interviewScheduledAt: a.interviewScheduledAt,
     recommendationScore: a.recommendationScore,
     interviewScore: a.interviewScore,
     interviewStatus: a.interviewStatus,
@@ -120,7 +122,8 @@ export async function updateApplicationStatus(
   id: string,
   status: Application["status"],
   note?: string,
-  email?: { subject: string; body: string }
+  email?: { subject: string; body: string },
+  interviewScheduledAt?: string
 ): Promise<Application | null> {
   if (!isApiConfigured) return null;
   const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
@@ -129,6 +132,7 @@ export async function updateApplicationStatus(
       status,
       note,
       ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
+      ...(interviewScheduledAt ? { interviewScheduledAt } : {}),
     }),
   });
   return mapApiApplicationToApplication(apiApp);

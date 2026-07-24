@@ -11,15 +11,18 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DecisionDialog } from "@/components/organisms/dashboard/DecisionDialog"
+import { MarkInterviewCompleteAction } from "@/components/organisms/dashboard/MarkInterviewCompleteAction"
 import { useDashboard } from "@/context/DashboardContext"
 import { getApplicationById, listApplicationsForJob } from "@/services/applicationService"
 import { BackButton } from "@/components/molecules/dashboard/BackButton"
 import { getExtendedData } from "@/lib/dashboard/extended-data"
+import { availableStageActions } from "@/lib/dashboard/status"
 import { getApplicationFlowData, getPositionDistribution } from "@/lib/dashboard/applicationStatsData"
 import { CandidateContactGrid } from "@/components/molecules/dashboard/CandidateContactGrid"
 import { CandidateCharts } from "@/components/molecules/dashboard/CandidateCharts"
 import { CandidateDetailAnalysis } from "@/components/molecules/dashboard/CandidateDetailAnalysis"
 import { InterviewLogCard, PortfolioCard } from "@/components/molecules/dashboard/CandidateDetailCV"
+import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
 import { ApplicationStatsTab } from "@/components/organisms/dashboard/ApplicationStatsTab"
 import type { Application } from "@/lib/types"
 
@@ -75,6 +78,7 @@ export default function CandidateDetailPage() {
 
   const baseScore = candidate.recommendationScore || 0
   const isFreshGrad = candidate.category === "fresh-graduate"
+  const stageActions = availableStageActions(candidate.status)
 
   const chartData = {
     radar: [
@@ -122,9 +126,7 @@ export default function CandidateDetailPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-3xl font-bold leading-[1.1] tracking-[-0.02em]">{candidate.applicantName}</h1>
-                  <Badge variant={candidate.status === "interview" ? "default" : candidate.status === "rejected" ? "destructive" : "secondary"} className="capitalize">
-                    {candidate.status === "under-review" ? "Administrasi" : candidate.status}
-                  </Badge>
+                  <StatusBadge status={candidate.status} />
                   <Badge variant="outline" className={isFreshGrad ? "border-info text-info" : "border-primary text-primary"}>
                     {isFreshGrad ? "Fresh Graduate" : "Professional"}
                   </Badge>
@@ -143,12 +145,26 @@ export default function CandidateDetailPage() {
                   <IconFileText className="size-4 shrink-0" /><span className="truncate">Lihat CV</span>
                 </Button>
               )}
-              <DecisionDialog candidate={candidate} decision="invite"
-                trigger={<Button className="bg-success hover:bg-success/90 text-white flex items-center justify-center gap-2"><IconCheck className="size-4 shrink-0" /><span className="truncate">Undang Wawancara</span></Button>}
-              />
-              <DecisionDialog candidate={candidate} decision="reject"
-                trigger={<Button className="bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-2"><IconX className="size-4 shrink-0" /><span className="truncate">Tolak Lamaran</span></Button>}
-              />
+              {stageActions.includes("invite") && (
+                <DecisionDialog candidate={candidate} decision="invite"
+                  trigger={<Button className="bg-success hover:bg-success/90 text-white flex items-center justify-center gap-2"><IconCheck className="size-4 shrink-0" /><span className="truncate">Undang Wawancara</span></Button>}
+                />
+              )}
+              {stageActions.includes("complete_interview") && (
+                <MarkInterviewCompleteAction candidate={candidate}
+                  trigger={<Button className="flex items-center justify-center gap-2"><IconCheck className="size-4 shrink-0" /><span className="truncate">Tandai Wawancara Selesai</span></Button>}
+                />
+              )}
+              {stageActions.includes("accept") && (
+                <DecisionDialog candidate={candidate} decision="accept"
+                  trigger={<Button className="bg-success hover:bg-success/90 text-white flex items-center justify-center gap-2"><IconCheck className="size-4 shrink-0" /><span className="truncate">Terima Kandidat</span></Button>}
+                />
+              )}
+              {stageActions.includes("reject") && (
+                <DecisionDialog candidate={candidate} decision="reject"
+                  trigger={<Button className="bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-2"><IconX className="size-4 shrink-0" /><span className="truncate">Tolak Lamaran</span></Button>}
+                />
+              )}
             </div>
           </div>
 

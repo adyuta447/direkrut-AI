@@ -57,7 +57,9 @@ export interface Application {
   recommendationScore?: number;
   interviewScore?: number;
   interviewStatus?: string;
-  status: "submitted" | "under-review" | "interview" | "rejected";
+  status: "submitted" | "under-review" | "interview" | "interview_completed" | "accepted" | "rejected";
+  /** Jadwal wawancara teknis yang HRD tentuin -- keisi begitu status masuk "interview". */
+  interviewScheduledAt?: string;
   appliedDate: string;
   cvViewed?: boolean;
   authenticityScore?: {

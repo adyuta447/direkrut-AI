@@ -17,9 +17,10 @@ export default function CandidateDashboardPage() {
 
   const total = myApplications.length
   const administrasi = myApplications.filter((a) => a.status === "under-review").length
-  const wawancara = myApplications.filter((a) => a.status === "interview").length
+  const wawancara = myApplications.filter((a) => a.status === "interview" || a.status === "interview_completed").length
+  const diterima = myApplications.filter((a) => a.status === "accepted").length
   const ditolak = myApplications.filter((a) => a.status === "rejected").length
-  const aktif = total - ditolak
+  const aktif = total - ditolak - diterima
 
   return (
     <div className="flex flex-1 flex-col">
@@ -64,6 +65,13 @@ export default function CandidateDashboardPage() {
             value={wawancara}
             image="/dashboard/conference.svg"
             footerDetail={wawancara > 0 ? "Gas, siapin dirimu!" : "Belum ada jadwal"}
+          />
+          <StatCard
+            label="Diterima"
+            value={diterima}
+            className="bg-success border-transparent text-white [&_.text-muted-foreground]:text-white/80"
+            image="/dashboard/conference.svg"
+            footerDetail={diterima > 0 ? "Selamat!" : "Belum ada"}
           />
           <StatCard
             label="Ditolak"

@@ -20,7 +20,9 @@ import type { Application, Job } from "@/lib/types"
 const STATUS_HELPER: Record<string, string> = {
   submitted: "Lamaranmu udah meluncur. Tunggu kabar selanjutnya ya!",
   "under-review": "Lagi dicek tim HRD. Sabar dikit, biasanya nggak lama kok.",
-  interview: "Kamu lolos ke wawancara! Gas, siapin dirimu.",
+  interview: "Kamu lolos ke wawancara teknis! Gas, siapin dirimu.",
+  interview_completed: "Wawancara teknismu udah selesai. Tim HRD lagi nentuin keputusan akhir.",
+  accepted: "Selamat, kamu diterima! Tim HRD bakal hubungin kamu buat langkah selanjutnya.",
   rejected: "Kali ini belum jodoh. Masih banyak posisi lain yang nunggu kamu.",
 }
 
@@ -113,7 +115,7 @@ export default function ApplicationDetailPage() {
         <TabsContent value="perjalanan" className="space-y-6 py-4">
           <AppDetailTimeline
             timelineSteps={timelineSteps}
-            showFeedback={application.status === "under-review" || application.status === "interview"}
+            showFeedback={["under-review", "interview", "interview_completed"].includes(application.status)}
           />
         </TabsContent>
 

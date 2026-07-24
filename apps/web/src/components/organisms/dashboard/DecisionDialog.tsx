@@ -29,13 +29,21 @@ import {
   getDefaultInviteSubject,
   getDefaultRejectSubject,
   getDefaultInviteBody,
+  getDefaultAcceptSubject,
+  getDefaultAcceptBody,
 } from "@/components/molecules/dashboard/DecisionDialogFeedback"
 
 interface DecisionDialogProps {
   candidate: Candidate
-  decision: "invite" | "reject"
+  decision: "invite" | "accept" | "reject"
   trigger?: React.ReactNode
 }
+
+const STATUS_BY_DECISION = {
+  invite: "interview",
+  accept: "accepted",
+  reject: "rejected",
+} as const
 
 export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogProps) {
   const { changeApplicationStatus } = useDashboard()
@@ -65,12 +73,16 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
       setEmailSubject(
         decision === "invite"
           ? getDefaultInviteSubject(candidate.jobTitle)
-          : getDefaultRejectSubject(candidate.jobTitle)
+          : decision === "accept"
+            ? getDefaultAcceptSubject(candidate.jobTitle)
+            : getDefaultRejectSubject(candidate.jobTitle)
       )
       setEmailBody(
         decision === "invite"
           ? getDefaultInviteBody(candidate.applicantName, candidate.jobTitle)
-          : getPersonalFeedback(candidate)
+          : decision === "accept"
+            ? getDefaultAcceptBody(candidate.applicantName, candidate.jobTitle)
+            : getPersonalFeedback(candidate)
       )
       setShowConfirmation(false)
       setIsSending(false)
@@ -84,11 +96,16 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
     }
     setIsSending(true)
     try {
+      const interviewScheduledAt =
+        decision === "invite" && interviewDate && interviewTime
+          ? new Date(`${interviewDate}T${interviewTime}`).toISOString()
+          : undefined
       await changeApplicationStatus(
         candidate.id,
-        decision === "invite" ? "interview" : "rejected",
+        STATUS_BY_DECISION[decision],
         emailBody,
         { subject: emailSubject, body: emailBody },
+        interviewScheduledAt,
       )
       setShowConfirmation(true)
       setTimeout(() => setOpen(false), 2500)
@@ -100,8 +117,8 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
   }
 
   const defaultTrigger = (
-    <Button variant={decision === "invite" ? "default" : "destructive"}>
-      {decision === "invite" ? "Jadwalkan Wawancara" : "Tolak Kandidat"}
+    <Button variant={decision === "reject" ? "destructive" : "default"}>
+      {decision === "invite" ? "Jadwalkan Wawancara" : decision === "accept" ? "Terima Kandidat" : "Tolak Kandidat"}
     </Button>
   )
 
@@ -120,12 +137,14 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
           <>
             <DialogHeader className="p-6 pb-4 border-b">
               <DialogTitle>
-                {decision === "invite" ? "Undang ke Wawancara" : "Tolak Lamaran"}
+                {decision === "invite" ? "Undang ke Wawancara" : decision === "accept" ? "Terima Kandidat" : "Tolak Lamaran"}
               </DialogTitle>
               <DialogDescription>
                 {decision === "invite"
                   ? "Siapin undangan wawancaranya, tinggal kirim ke kandidat."
-                  : "Kirim kabar penolakan yang tetap sopan dan berbasis data profil kandidat."}
+                  : decision === "accept"
+                    ? "Kirim kabar baik ke kandidat kalau dia diterima buat posisi ini."
+                    : "Kirim kabar penolakan yang tetap sopan dan berbasis data profil kandidat."}
               </DialogDescription>
             </DialogHeader>
             <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">
@@ -161,15 +180,15 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
               <Button
                 onClick={handleSend}
                 disabled={isSending}
-                variant={decision === "invite" ? "default" : "destructive"}
-                className="gap-2 min-w-[120px]"
+                variant={decision === "reject" ? "destructive" : "default"}
+                className={decision === "accept" ? "gap-2 min-w-[120px] bg-success hover:bg-success/90" : "gap-2 min-w-[120px]"}
               >
                 {isSending ? (
                   <>Mengirim...</>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    {decision === "invite" ? "Kirim Undangan" : "Kirim Penolakan"}
+                    {decision === "invite" ? "Kirim Undangan" : decision === "accept" ? "Kirim Keputusan" : "Kirim Penolakan"}
                   </>
                 )}
               </Button>

@@ -9,8 +9,8 @@ export interface StageFilter {
 export const STAGE_FILTERS: StageFilter[] = [
   { label: "Semua Tahapan", match: () => true },
   { label: "Administrasi", match: (a) => a.status === "under-review" },
-  { label: "Wawancara AI", match: (a) => a.status === "interview" },
-  { label: "Selesai / Ditolak", match: (a) => a.status === "rejected" },
+  { label: "Wawancara Teknis", match: (a) => a.status === "interview" || a.status === "interview_completed" },
+  { label: "Selesai / Ditolak", match: (a) => a.status === "accepted" || a.status === "rejected" },
 ]
 
 interface ApplicationStageFilterProps {

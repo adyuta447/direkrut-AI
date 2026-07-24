@@ -57,7 +57,8 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const candidate = row.original
-  const canDelete = candidate.status === "rejected" || candidate.status === "interview"
+  const canDelete = candidate.status === "rejected" || candidate.status === "accepted"
+  const isDecided = candidate.status === "accepted" || candidate.status === "rejected"
 
   return (
     <div className="flex items-center gap-1.5">
@@ -68,7 +69,9 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
           <Button
             variant="outline"
             size="icon"
-            className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive border-hairline"
+            className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive border-hairline disabled:opacity-40"
+            disabled={isDecided}
+            title={isDecided ? "Keputusan udah final" : "Tolak Kandidat"}
           >
             <IconX className="size-3.5" />
             <span className="sr-only">Tolak Kandidat</span>
@@ -89,7 +92,7 @@ function ActionsCell({ row }: { row: { original: Candidate } }) {
         size="icon"
         className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive border-hairline disabled:opacity-40"
         disabled={!canDelete}
-        title={canDelete ? "Hapus Kandidat" : "Kandidat harus ditolak atau lolos wawancara dulu sebelum bisa dihapus"}
+        title={canDelete ? "Hapus Kandidat" : "Kandidat harus diterima atau ditolak dulu sebelum bisa dihapus"}
         onClick={() => setConfirmDelete(true)}
       >
         <IconTrash className="size-3.5" />

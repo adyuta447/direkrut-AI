@@ -51,6 +51,8 @@ function useTabFilter(
     const STATUS_MAP: Record<string, string> = {
       administrasi: "under-review",
       wawancara: "interview",
+      "wawancara-selesai": "interview_completed",
+      diterima: "accepted",
       ditolak: "rejected",
     }
     const statusValue = STATUS_MAP[activeTab]

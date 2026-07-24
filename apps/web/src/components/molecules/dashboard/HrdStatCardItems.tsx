@@ -25,9 +25,9 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
   const delayedApps = administrasiApps.filter(
     (a) => daysSinceApplied(a.appliedDate) > 7
   ).length
-  const wawancara = applications.filter((a) => a.status === "interview").length
+  const wawancara = applications.filter((a) => a.status === "interview" || a.status === "interview_completed").length
   const belumDiscreen = applications.filter(
-    (a) => a.status !== "rejected" && a.recommendationScore == null
+    (a) => a.status !== "rejected" && a.status !== "accepted" && a.recommendationScore == null
   ).length
 
   return (

@@ -94,6 +94,8 @@ export function CandidateTableToolbar({
               <SelectItem value="all">Semua Kandidat</SelectItem>
               <SelectItem value="administrasi">Administrasi</SelectItem>
               <SelectItem value="wawancara">Wawancara</SelectItem>
+              <SelectItem value="wawancara-selesai">Wawancara Selesai</SelectItem>
+              <SelectItem value="diterima">Diterima</SelectItem>
               <SelectItem value="ditolak">Ditolak</SelectItem>
             </SelectContent>
           </Select>
@@ -108,6 +110,14 @@ export function CandidateTableToolbar({
             <TabsTrigger value="wawancara" className={PILL_TAB}>
               Wawancara{" "}
               <Badge variant="secondary">{statusCount("interview")}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="wawancara-selesai" className={PILL_TAB}>
+              Wawancara Selesai{" "}
+              <Badge variant="secondary">{statusCount("interview_completed")}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="diterima" className={PILL_TAB}>
+              Diterima{" "}
+              <Badge variant="secondary">{statusCount("accepted")}</Badge>
             </TabsTrigger>
             <TabsTrigger value="ditolak" className={PILL_TAB}>
               Ditolak{" "}
