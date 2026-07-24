@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { HeroSearchBar } from "../../molecules/landing/HeroSearchBar";
 
 const popularSearches = [
@@ -13,10 +12,6 @@ const popularSearches = [
 export function HeroSection() {
   return (
     <section className="sticky top-0 z-0 overflow-hidden">
-      {/* Image `fill` butuh ancestor position: absolute/fixed/relative --
-          `sticky` di <section> gak masuk allowlist Next.js meski secara CSS
-          sticky juga bikin containing block yang sama. Wrapper ini nge-skip
-          warning-nya tanpa ngubah layout (posisinya tetap ngisi section). */}
       <div className="absolute inset-0">
         <Image
           src="/hero-section.jpg"
@@ -71,13 +66,6 @@ export function HeroSection() {
                 </Link>
               ))}
             </div>
-            <Link
-              href="/auth/login"
-              className="hero-chip lg:ml-auto flex items-center gap-2 text-[14px] font-normal text-white hover:underline flex-shrink-0"
-            >
-              Kamu dari tim HRD? Masuk di sini
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         </div>
       </div>

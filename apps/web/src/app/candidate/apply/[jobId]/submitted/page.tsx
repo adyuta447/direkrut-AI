@@ -48,8 +48,8 @@ export default function SubmittedStepPage({ params }: { params: Promise<{ jobId:
       </Card>
       
       <div className="text-center">
-        <Button variant="link" asChild>
-          <Link href="/candidate">Kembali ke Dashboard</Link>
+        <Button variant="link" render={<Link href="/candidate" />}>
+          Kembali ke Dashboard
         </Button>
       </div>
     </div>
