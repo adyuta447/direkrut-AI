@@ -14,12 +14,14 @@ import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
 import { getScreeningResult, screenApplication, type ScreeningResult } from "@/services/aiService"
 import { ApiError } from "@/services/apiClient"
 import { getScoreLevel } from "@/lib/dashboard/status"
+import { useAIAssistantWidget } from "@/context/AIAssistantWidgetContext"
 
 interface CandidateDetailAnalysisProps {
   candidate: Application & ExtendedCandidateData
 }
 
 export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisProps) {
+  const { open: openAIAssistant } = useAIAssistantWidget()
   const [screening, setScreening] = React.useState<ScreeningResult | null>(null)
   const [isLoading, setIsLoading] = React.useState(true)
   const [isScreening, setIsScreening] = React.useState(false)
@@ -139,8 +141,8 @@ export function CandidateDetailAnalysis({ candidate }: CandidateDetailAnalysisPr
               const formData = new FormData(e.currentTarget)
               const q = formData.get("q")
               if (q) {
-                localStorage.setItem("pendingAiQuery", JSON.stringify({ q, candidate: candidate.id }))
-                window.open("/hrd/ai-assistant", "_blank")
+                openAIAssistant(String(q), candidate.id)
+                e.currentTarget.reset()
               }
             }}
             className="flex flex-col sm:flex-row gap-3 pt-1"

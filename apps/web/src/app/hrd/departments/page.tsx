@@ -15,7 +15,7 @@ import { Department } from "@/lib/types"
 const BANDS = ["bg-primary", "bg-success", "bg-brand-accent-strong", "bg-info", "bg-warning"]
 
 export default function DepartmentsPage() {
-  const { departments, jobs, addDepartment, updateDepartment, deleteDepartment } = useDashboard()
+  const { departments, myJobs, addDepartment, updateDepartment, deleteDepartment } = useDashboard()
   const [searchTerm, setSearchTerm] = useState("")
   const [formOpen, setFormOpen] = useState(false)
   const [editingDept, setEditingDept] = useState<Department | null>(null)
@@ -25,9 +25,9 @@ export default function DepartmentsPage() {
 
   const jobCountByDept = useMemo(() => {
     const counts: Record<string, number> = {}
-    for (const job of jobs) counts[job.department] = (counts[job.department] ?? 0) + 1
+    for (const job of myJobs) counts[job.department] = (counts[job.department] ?? 0) + 1
     return counts
-  }, [jobs])
+  }, [myJobs])
 
   const filteredDepartments = departments.filter((d) =>
     d.name.toLowerCase().includes(searchTerm.toLowerCase())

@@ -83,15 +83,20 @@ export function DecisionDialog({ candidate, decision, trigger }: DecisionDialogP
       return
     }
     setIsSending(true)
-    await changeApplicationStatus(
-      candidate.id,
-      decision === "invite" ? "interview" : "rejected",
-      undefined,
-      { subject: emailSubject, body: emailBody },
-    )
-    setIsSending(false)
-    setShowConfirmation(true)
-    setTimeout(() => setOpen(false), 2500)
+    try {
+      await changeApplicationStatus(
+        candidate.id,
+        decision === "invite" ? "interview" : "rejected",
+        emailBody,
+        { subject: emailSubject, body: emailBody },
+      )
+      setShowConfirmation(true)
+      setTimeout(() => setOpen(false), 2500)
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : "Gagal ngirim keputusan, coba lagi ya")
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const defaultTrigger = (

@@ -27,7 +27,6 @@ import {
   FileChartColumnIcon,
   FolderIcon,
   CircleHelpIcon,
-  SparklesIcon,
   Building2Icon,
 } from "lucide-react"
 import { useDashboard } from "@/context/DashboardContext"
@@ -36,7 +35,6 @@ const navMain = [
   { title: "Dasbor", url: "/hrd", icon: <LayoutDashboardIcon /> },
   { title: "Manajemen Lowongan", url: "/hrd/jobs", icon: <FolderIcon /> },
   { title: "Departemen", url: "/hrd/departments", icon: <Building2Icon /> },
-  { title: "Asisten AI", url: "/hrd/ai-assistant", icon: <SparklesIcon /> },
   { title: "Lintas Posisi", url: "/hrd/cross-role", icon: <UsersIcon /> },
 ]
 

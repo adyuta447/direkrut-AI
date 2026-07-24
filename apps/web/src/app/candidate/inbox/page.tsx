@@ -19,10 +19,6 @@ type Message = {
   type: "invitation" | "offer" | "rejection" | "update"
 }
 
-// Backend cuma punya satu jenis notifikasi in-app sejauh ini (perubahan
-// status lamaran) -- nama perusahaan/lowongan udah ditulis langsung di
-// title/body-nya server-side, jadi "company" di sini sengaja generik.
-// "starred" gak ada konsep-nya di backend, tetap lokal-only (dekoratif).
 function toMessage(n: Awaited<ReturnType<typeof listNotifications>>[number]): Message {
   return {
     id: n.id,

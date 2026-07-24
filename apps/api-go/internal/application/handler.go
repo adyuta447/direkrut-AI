@@ -469,6 +469,32 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Lamaran yang udah ditolak dikunci -- HRD gak bisa kirim keputusan
+	// (email) lagi ke kandidat yang sama biar gak boros traffic/biaya kirim.
+	// Satu-satunya jalan buka lagi: kandidat ngulang wawancara AI (assessment
+	// ai_interview-nya diselesaikan ULANG setelah waktu penolakan terakhir).
+	if appRow.Status == "rejected" {
+		var lastRejection appdb.ApplicationStatusHistory
+		rejErr := h.db.WithContext(ctx).
+			Where("application_id = ? AND to_status = ?", appRow.ID, "rejected").
+			Order("created_at DESC").First(&lastRejection).Error
+
+		var assessment appdb.Assessment
+		asmErr := h.db.WithContext(ctx).
+			Where("application_id = ? AND track_type = ?", appRow.ID, "ai_interview").
+			First(&assessment).Error
+
+		retookInterview := rejErr == nil && asmErr == nil &&
+			assessment.CompletedAt != nil && assessment.CompletedAt.After(lastRejection.CreatedAt)
+
+		if !retookInterview {
+			httpx.WriteError(w, http.StatusConflict, "already_rejected",
+				"lamaran ini udah ditolak -- gak bisa kirim keputusan lagi kecuali kandidat ngulang wawancara AI")
+			return
+		}
+	}
+
 	fromStatus := appRow.Status
 	txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
@@ -496,6 +522,14 @@ func (h *Handler) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 		}
 		title := "Status lamaran diperbarui"
 		body := fmt.Sprintf("Lamaranmu untuk %s di %s sekarang: %s", appRow.Job.Title, companyName, statusLabel(req.Status))
+		// Kalau HRD nulis pesan sendiri (subjek+isi email di dialog keputusan),
+		// itu pesan ASLI yang harus kandidat liat di Kotak Masuk in-app-nya --
+		// sebelumnya cuma baris generik di atas yang kekirim, jadi detail &
+		// rekomendasi yang HRD tulis serasa "gak pernah nyampe" walau emailnya
+		// sendiri sebenarnya kekirim.
+		if req.EmailBody != "" {
+			body = req.EmailBody
+		}
 		_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_status", title, body)
 
 		// Recipient SELALU dari data server-side (email kandidat pemilik
@@ -575,11 +609,15 @@ func (h *Handler) sendRejectionFeedback(appRow appdb.Application) {
 	subject := fmt.Sprintf("Feedback lamaranmu untuk %s di %s", appRow.Job.Title, companyName)
 	if err := h.mailer.Send(ctx, appRow.Candidate.User.Email, subject, resp.Feedback); err != nil {
 		log.Printf("[application] gagal kirim email feedback penolakan ke %s: %v", appRow.Candidate.User.Email, err)
-		return
+		// Tetep lanjut bikin notifikasi in-app di bawah -- itu jalur yang gak
+		// tergantung SMTP, jadi kandidat tetep keliatan feedback-nya walau
+		// pengiriman email gagal.
 	}
+	// Isi notifikasi = feedback ASLI (bukan cuma "cek email"), biar kandidat
+	// yang gak buka/gak nerima emailnya tetep bisa liat feedback-nya di
+	// Kotak Masuk in-app.
 	_ = notification.Create(ctx, h.db, appRow.Candidate.UserID, "application_feedback",
-		"Feedback pengembangan dari lamaranmu",
-		fmt.Sprintf("Kami kirim feedback + saran pengembangan buat lamaranmu di posisi %s lewat email. Semangat terus!", appRow.Job.Title))
+		"Feedback pengembangan dari lamaranmu", resp.Feedback)
 }
 
 // --- AI screening (CV parse + job-match score) ---
@@ -867,8 +905,6 @@ func (h *Handler) handleCrossRoleOffer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Lowongan target wajib milik company HRD ini & masih tayang -- jangan
-	// bisa nawarin lowongan company lain atau yang udah ditutup.
 	var targetJob appdb.Job
 	if err := h.db.WithContext(ctx).Preload("Company").First(&targetJob, "id = ?", req.JobID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lowongan yang ditawarkan gak ketemu")
@@ -883,7 +919,6 @@ func (h *Handler) handleCrossRoleOffer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Kalau kandidat udah pernah apply ke lowongan itu, gak perlu ditawarin lagi.
 	var existing appdb.Application
 	if err := h.db.WithContext(ctx).
 		Where("job_id = ? AND candidate_id = ?", req.JobID, appRow.CandidateID).First(&existing).Error; err == nil {

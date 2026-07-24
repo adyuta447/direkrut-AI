@@ -15,7 +15,7 @@ import { useDashboard } from "@/context/DashboardContext"
 import { LayoutDashboardIcon, FolderIcon, CircleHelpIcon, Settings2Icon, UserIcon, FileTextIcon, BriefcaseIcon } from "lucide-react"
 
 export function SearchDialog() {
-  const { searchOpen, setSearchOpen, applications, jobs } = useDashboard()
+  const { searchOpen, setSearchOpen, applications, myJobs } = useDashboard()
   const router = useRouter()
   const pathname = usePathname()
   const isHrd = pathname.startsWith("/hrd")
@@ -94,9 +94,9 @@ export function SearchDialog() {
           </CommandGroup>
         )}
 
-        {jobs.length > 0 && (
+        {myJobs.length > 0 && (
           <CommandGroup heading="Lowongan">
-            {jobs.slice(0, 5).map((job) => (
+            {myJobs.slice(0, 5).map((job) => (
               <CommandItem
                 key={job.id}
                 value={job.title}

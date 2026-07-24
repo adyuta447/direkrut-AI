@@ -40,8 +40,12 @@ export function JobCard({ job, onEdit }: JobCardProps) {
 
   const statusMeta = JOB_STATUS_META[job.status ?? "inactive"] ?? JOB_STATUS_META.inactive
 
-  const handleToggleStatus = (checked: boolean) => {
-    updateJob(job.id, { status: checked ? "active" : "inactive" })
+  const handleToggleStatus = async (checked: boolean) => {
+    try {
+      await updateJob(job.id, { status: checked ? "active" : "inactive" })
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Gagal ubah status lowongan, coba lagi ya")
+    }
   }
 
   return (
@@ -106,7 +110,9 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="border-hairline text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="border-hairline text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+            disabled={job.status !== "inactive"}
+            title={job.status !== "inactive" ? "Nonaktifin lowongan ini dulu sebelum dihapus" : "Hapus lowongan"}
             onClick={() => setConfirmDelete(true)}
           >
             <IconTrash className="size-4" />
@@ -118,8 +124,12 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             description={`Lowongan "${job.title}" bakal hilang permanen. Nggak bisa di-undo lho.`}
             confirmLabel="Ya, Hapus"
             onConfirm={async () => {
-              await deleteJob(job.id)
-              setNotice("Lowongan udah dihapus")
+              try {
+                await deleteJob(job.id)
+                setNotice("Lowongan udah dihapus")
+              } catch (err) {
+                setNotice(err instanceof Error ? err.message : "Gagal hapus lowongan, coba lagi ya")
+              }
             }}
           />
           <NoticeDialog message={notice} onClose={() => setNotice(null)} />

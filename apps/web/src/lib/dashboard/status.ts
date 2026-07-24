@@ -17,8 +17,8 @@ export interface StatusMeta {
 /** Sumber tunggal label + gaya status lamaran (glossary copywriting). */
 export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
   submitted: { label: "Terkirim", variant: "outline", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
-  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
-  interview: { label: "Wawancara", variant: "default", color: "var(--badge-neutral)", solidClass: "bg-badge-neutral" },
+  "under-review": { label: "Administrasi", variant: "secondary", color: "var(--status-pending)", solidClass: "bg-status-pending" },
+  interview: { label: "Wawancara", variant: "default", color: "var(--status-positive)", solidClass: "bg-status-positive" },
   rejected: { label: "Ditolak", variant: "outline", color: "var(--destructive)", solidClass: "bg-destructive" },
 };
 

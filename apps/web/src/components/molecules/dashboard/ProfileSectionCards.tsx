@@ -53,11 +53,11 @@ export function ProfileAboutCard({
         <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">Tentang Saya</CardTitle>
         {!isEditing && (
           about ? (
-            <Button variant="ghost" size="icon" className="rounded-full bg-white/95 text-ink hover:bg-white" onClick={startEditing}>
+            <Button variant="ghost" size="icon" className="rounded-full bg-white/95 text-neutral-900 hover:bg-white" onClick={startEditing}>
               <PenIcon className="size-4" />
             </Button>
           ) : (
-            <Button variant="ghost" className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1" onClick={startEditing}>
+            <Button variant="ghost" className="rounded-full bg-white/95 text-neutral-900 font-semibold hover:bg-white gap-1" onClick={startEditing}>
               <PlusIcon className="size-4" /> Tambah
             </Button>
           )
@@ -128,9 +128,9 @@ export function ProfileLinksCard({
 
   return (
     <Card id="section-links" className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-brand-accent-strong py-4 text-white">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-primary py-4 text-white">
         <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">Tautan Sosial &amp; Portofolio</CardTitle>
-        <Button variant="ghost" className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
+        <Button variant="ghost" className="rounded-full bg-white/95 text-neutral-900 font-semibold hover:bg-white gap-1" onClick={() => setEditingId("new")}>
           <PlusIcon className="size-4" /> Tambah
         </Button>
       </CardHeader>
@@ -204,15 +204,15 @@ export function ProfileSkillsCard({
 
   return (
     <Card id="section-skills" className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 scroll-mt-6 overflow-hidden pt-0">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-success py-4 text-white">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 rounded-t-3xl bg-primary py-4 text-white">
         <CardTitle className="flex items-center gap-3 text-[20px] font-semibold text-white">Keahlian (Skills)</CardTitle>
         {!isEditing && (
           skills.length > 0 ? (
-            <Button variant="ghost" size="icon" className="rounded-full bg-white/95 text-ink hover:bg-white" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="icon" className="rounded-full bg-white/95 text-neutral-900 hover:bg-white" onClick={() => setIsEditing(true)}>
               <PenIcon className="size-4" />
             </Button>
           ) : (
-            <Button variant="ghost" className="rounded-full bg-white/95 text-ink font-semibold hover:bg-white gap-1" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" className="rounded-full bg-white/95 text-neutral-900 font-semibold hover:bg-white gap-1" onClick={() => setIsEditing(true)}>
               <PlusIcon className="size-4" /> Tambah
             </Button>
           )

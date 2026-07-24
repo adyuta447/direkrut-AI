@@ -1,8 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   MailIcon,
   StarIcon,
@@ -10,6 +10,7 @@ import {
   Building2Icon,
   PaperclipIcon,
   CheckCircleIcon,
+  ExternalLinkIcon,
 } from "lucide-react"
 
 type Message = {
@@ -22,6 +23,8 @@ type Message = {
   starred: boolean
   content: string
   type: "invitation" | "offer" | "rejection" | "update"
+  /** Opsional -- kalau ada, render tombol "Lihat Kandidat" (dipakai sisi HRD). */
+  href?: string
 }
 
 interface InboxMessageViewProps {
@@ -32,17 +35,13 @@ interface InboxMessageViewProps {
 function getTypeBadge(type: string) {
   switch (type) {
     case "invitation":
-      return <Badge className="bg-info hover:bg-info/90">Undangan</Badge>
+      return <Badge className="border-transparent bg-status-positive text-white">Undangan</Badge>
     case "offer":
-      return <Badge className="bg-success hover:bg-success/90">Penerimaan</Badge>
+      return <Badge className="border-transparent bg-status-positive text-white">Penerimaan</Badge>
     case "rejection":
-      return (
-        <Badge variant="secondary" className="text-muted-foreground">
-          Pemberitahuan
-        </Badge>
-      )
+      return <Badge className="border-transparent bg-destructive text-white">Pemberitahuan</Badge>
     default:
-      return <Badge variant="outline">Info</Badge>
+      return <Badge className="border-transparent bg-badge-neutral text-white">Info</Badge>
   }
 }
 
@@ -57,7 +56,7 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
   }
 
   return (
-    <div className={`flex-1 flex flex-col bg-background ${!message ? "hidden md:flex" : "flex"}`}>
+    <div className={`flex-1 min-h-0 flex flex-col bg-background ${!message ? "hidden md:flex" : "flex"}`}>
       <div className="md:hidden p-2 border-b flex items-center bg-muted/20">
         <Button variant="ghost" size="sm" onClick={onBack}>
           &larr; Kembali
@@ -87,6 +86,11 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
           </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap pt-1 flex items-center gap-2">
             {message.date}
+            {message.href && (
+              <Button variant="outline" size="sm" className="gap-1.5 rounded-full" render={<Link href={message.href} />}>
+                <ExternalLinkIcon className="size-3.5" /> Lihat Kandidat
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8 text-warning">
               <StarIcon className={`size-5 ${message.starred ? "fill-current" : ""}`} />
             </Button>
@@ -94,7 +98,7 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-8">
           <div className="prose prose-sm dark:prose-invert max-w-none text-base leading-relaxed whitespace-pre-wrap">
             {message.content}
@@ -124,7 +128,7 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }

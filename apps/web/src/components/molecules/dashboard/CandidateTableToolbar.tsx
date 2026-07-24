@@ -12,16 +12,8 @@ import {
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { SearchInput } from "@/components/molecules/dashboard/SearchInput"
-import { StatusLegendPopover, type StatusLegendItem } from "@/components/molecules/dashboard/StatusLegendPopover"
 import { type Table } from "@tanstack/react-table"
 import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
-
-const HRD_STATUS_FLOW: StatusLegendItem[] = [
-  { status: "submitted", meaning: "Kandidat baru melamar -- CV otomatis discreen AI." },
-  { status: "under-review", meaning: "Lagi ditinjau HRD (skor AI + hasil wawancara AI jadi bahan pertimbangan)." },
-  { status: "interview", meaning: "Diundang wawancara lanjutan bareng tim (HR/teknis/user)." },
-  { status: "rejected", meaning: "Ditolak -- kandidat otomatis dapet email pemberitahuan & feedback." },
-]
 
 interface CandidateTableToolbarProps {
   table: Table<Candidate>
@@ -70,10 +62,6 @@ export function CandidateTableToolbar({
             Semua Detail
           </Button>
         </div>
-        <StatusLegendPopover
-          items={HRD_STATUS_FLOW}
-          footnote="AI cuma bantu screening & kasih evidence -- keputusan pindah status sepenuhnya di tangan HRD."
-        />
       </div>
 
       <div className="flex flex-col @4xl/main:flex-row items-start @4xl/main:items-center gap-4 px-4 lg:px-6 mb-2 w-full">

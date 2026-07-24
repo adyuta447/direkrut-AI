@@ -57,7 +57,10 @@
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
   --color-badge-neutral: var(--badge-neutral);
+  --color-status-pending: var(--status-pending);
+  --color-status-positive: var(--status-positive);
   --color-surface-soft: var(--surface-soft);
+  --color-surface-coral: var(--surface-coral);
   --color-surface-solid-1: var(--surface-solid-1);
   --color-surface-solid-2: var(--surface-solid-2);
   --color-surface-solid-3: var(--surface-solid-3);
@@ -109,7 +112,10 @@
   --sidebar-ring: oklch(0.708 0 0);
   --primary-strong: #08479e;
   --badge-neutral: #475569;
+  --status-pending: #a35904;
+  --status-positive: #107a38;
   --surface-soft: #a3604a;
+  --surface-coral: #b25938;
   --surface-solid-1: #0b5fd0;
   --surface-solid-2: #0a4c9e;
   --surface-solid-3: #093a75;
@@ -127,25 +133,25 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #222831;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: #2b333f;
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: #2b333f;
   --popover-foreground: oklch(0.985 0 0);
   --primary: #0b5fd0;
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.274 0.006 286.033);
+  --secondary: #353e4c;
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: #353e4c;
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: #353e4c;
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --success: #16a34a;
   --warning: #d97706;
   --info: #3b82f6;
-  --border: oklch(1 0 0 / 10%);
+  --border: #3f4a5b;
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.809 0.105 251.813);
@@ -153,13 +159,13 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: #1c2128;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.585 0.233 277.117);
   --sidebar-primary-foreground: oklch(0.962 0.018 272.314);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: #353e4c;
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: #3f4a5b;
   --sidebar-ring: oklch(0.556 0 0);
 
   --primary-strong: #08479e;
@@ -168,7 +174,10 @@
      5.90 / 8.27 / 11.21 / 14.19 :1 -- semua lolos WCAG AA.
      (Hijau success yang dipakai sebelumnya justru GAGAL: 3.30:1.) */
   --badge-neutral: #475569;
+  --status-pending: #a35904;
+  --status-positive: #107a38;
   --surface-soft: #a3604a;
+  --surface-coral: #b25938;
   --surface-solid-1: #0b5fd0;
   --surface-solid-2: #0a4c9e;
   --surface-solid-3: #093a75;
@@ -184,10 +193,6 @@
   --inverse-canvas: #161616;
 }
 
-/* Jembatan token: di dalam shell dashboard, token brand marketing
-   (canvas/ink/surface/hairline) di-remap ke token semantik shadcn
-   supaya komponen landing (JobListItem, Pagination, dst.) bisa dipakai
-   ulang di dashboard dan otomatis ikut dark mode. */
 [data-dashboard] {
   --canvas: var(--background);
   --ink: var(--foreground);
