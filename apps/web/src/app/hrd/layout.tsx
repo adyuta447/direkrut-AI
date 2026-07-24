@@ -28,10 +28,15 @@ export default function HrdLayout({ children }: { children: ReactNode }) {
   const mounted = useHasMounted();
 
   useEffect(() => {
-    if (mounted && !currentUser) router.replace("/auth");
+    if (!mounted) return;
+    if (!currentUser) router.replace("/auth");
+    // Guard-nya sebelumnya cuma cek "ada sesi apa nggak", jadi kandidat yang
+    // login tetep bisa buka /hrd langsung dari URL bar. Role yang salah
+    // diarahin ke dashboard-nya sendiri, bukan /auth -- dia kan udah login.
+    else if (currentUser.role !== "hrd") router.replace("/candidate");
   }, [mounted, currentUser, router]);
 
-  if (!mounted || !currentUser) return null;
+  if (!mounted || !currentUser || currentUser.role !== "hrd") return null;
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

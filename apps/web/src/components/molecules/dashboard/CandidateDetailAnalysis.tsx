@@ -19,8 +19,6 @@ import {
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { TypingDots } from "@/components/atoms/shared/TypingDots"
 import { Application } from "@/lib/types"
 import { ExtendedCandidateData } from "@/lib/dashboard/extended-data"
@@ -105,7 +103,7 @@ function ComponentScoreCard({ componentKey, data }: { componentKey: string; data
         <div className="px-4 pb-4 space-y-2 border-t border-hairline pt-3">
           <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Bukti dari CV</p>
           {evidenceList.map((ev, i) => (
-            <div key={i} className="rounded-xl border-l-4 border-l-primary/40 bg-canvas p-3 text-[12.5px] text-ink leading-relaxed italic">
+            <div key={i} className="rounded-xl border border-hairline bg-canvas p-3 text-[12.5px] text-ink leading-relaxed italic">
               &quot;{ev}&quot;
             </div>
           ))}
@@ -370,7 +368,7 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
                 <h4 className="text-[17px] font-semibold text-ink">Bukti Kunci dari CV</h4>
                 <div className="space-y-2">
                   {screening.quotes.map((quote, i) => (
-                    <div key={i} className="rounded-xl border-l-4 border-l-primary bg-primary/8 p-4 text-[14px] text-ink font-medium italic relative overflow-hidden">
+                    <div key={i} className="rounded-2xl border border-hairline bg-surface-1 p-4 text-[14px] text-ink font-medium italic relative overflow-hidden">
                       <IconSparkles className="size-5 text-primary/15 absolute -right-1 -top-1" />
                       &quot;{quote}&quot;
                     </div>
@@ -409,42 +407,6 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
             {error && <p className="text-sm text-destructive">{error}</p>}
           </>
         )}
-        <Separator className="bg-hairline" />
-
-        <div className="mt-2 mb-4">
-          <h4 className="text-[17px] font-semibold text-ink mb-1 flex items-center gap-2">
-            <IconSparkles className="size-4 text-primary" /> Asisten AI Interaktif
-          </h4>
-          <p className="text-sm text-ink-muted">Mau tau lebih dalam soal profil, pengalaman, atau wawancara kandidat ini? Tanya aja ke Asisten AI.</p>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            const formData = new FormData(e.currentTarget)
-            const q = formData.get("q")
-            if (q) {
-              localStorage.setItem("pendingAiQuery", JSON.stringify({ q, candidate: candidate.id }))
-              window.open("/hrd/ai-assistant", "_blank")
-            }
-          }}
-          className="flex flex-col sm:flex-row gap-3"
-        >
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <IconSparkles className="size-5 text-primary" />
-            </div>
-            <Input
-              name="q"
-              placeholder={`Tanya lebih lanjut soal ${candidate.applicantName}...`}
-              className="h-12 rounded-full border-hairline bg-canvas pl-12 pr-4 text-sm shadow-none focus-visible:border-primary"
-              required
-            />
-          </div>
-          <Button type="submit" className="h-12 rounded-full px-6 sm:w-auto w-full">
-            Tanya AI
-          </Button>
-        </form>
       </CardContent>
     </Card>
   )
