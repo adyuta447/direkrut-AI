@@ -42,7 +42,7 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
   }, [unwrappedParams.jobId])
 
   const {
-    step, formData, onFormDataChange, hasCv, isLoadingCv, isUploadingCv, cvUploadError, isSubmitting, isProfileComplete,
+    step, formData, onFormDataChange, hasCv, isLoadingCv, isUploadingCv, cvUploadError, isSubmitting, submitError, isProfileComplete,
     handleNext, handleBack, handleUploadCv, handleSubmit,
   } = useApplyFlow(job ?? undefined)
 
@@ -88,6 +88,9 @@ export default function ApplyJobPage({ params }: { params: Promise<{ jobId: stri
             <ApplyStep3Review job={job} formData={formData} isProfileComplete={isProfileComplete} />
           )}
         </CardContent>
+        {step === 3 && submitError && (
+          <p className="px-6 pt-4 text-center text-sm text-destructive">{submitError}</p>
+        )}
         <CardFooter className="flex justify-between border-t border-hairline p-6">
           <Button variant="outline" size="lg" className="rounded-full border-hairline" onClick={handleBack} disabled={isSubmitting}>
             <ArrowLeftIcon className="mr-2 size-4" /> {step === 1 ? "Batal" : "Kembali"}

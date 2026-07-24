@@ -203,8 +203,19 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 
 	ctx := r.Context()
 
-	if err := h.db.WithContext(ctx).First(&appdb.Job{}, "id = ?", req.JobID).Error; err != nil {
+	// Cek status juga, bukan cuma eksistensi -- client kandidat bisa nyimpen
+	// data lowongan yang udah basi (list publik cuma di-fetch sekali per
+	// sesi, lihat DashboardContext di FE), jadi tombol "Lamar" masih bisa
+	// kepencet buat lowongan yang baru aja dinonaktifin/ditutup HRD. Baris
+	// ini jadi penjaga terakhir di server biar gak ada lamaran nyangkut ke
+	// lowongan yang udah gak dibuka, apapun state di browser kandidat.
+	var jobRow appdb.Job
+	if err := h.db.WithContext(ctx).First(&jobRow, "id = ?", req.JobID).Error; err != nil {
 		httpx.WriteError(w, http.StatusNotFound, "not_found", "lowongan gak ditemukan")
+		return
+	}
+	if jobRow.Status != "published" {
+		httpx.WriteError(w, http.StatusConflict, "job_not_open", "lowongan ini udah gak dibuka lagi, gak bisa dilamar")
 		return
 	}
 
