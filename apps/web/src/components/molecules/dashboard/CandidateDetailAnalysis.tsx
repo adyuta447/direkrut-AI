@@ -32,64 +32,32 @@ interface CandidateDetailAnalysisProps {
   resumeUrl?: string
 }
 
-// --- Konfigurasi tampilan per komponen ---
-const COMPONENT_CONFIG: Record<string, {
-  label: string;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-}> = {
-  skill_match: {
-    label: "Kecocokan Skill",
-    icon: IconBriefcase,
-    color: "text-violet-600",
-    bgColor: "bg-violet-50",
-    borderColor: "border-violet-200",
-  },
-  experience: {
-    label: "Pengalaman Kerja",
-    icon: IconBookmark,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
-  },
-  education: {
-    label: "Pendidikan",
-    icon: IconSchool,
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    borderColor: "border-emerald-200",
-  },
-  responsibilities: {
-    label: "Relevansi Tanggung Jawab",
-    icon: IconListCheck,
-    color: "text-orange-600",
-    bgColor: "bg-orange-50",
-    borderColor: "border-orange-200",
-  },
-  additional: {
-    label: "Kualifikasi Tambahan",
-    icon: IconStar,
-    color: "text-pink-600",
-    bgColor: "bg-pink-50",
-    borderColor: "border-pink-200",
-  },
+// --- Konfigurasi label + ikon per komponen -- warna SENGAJA gak di sini,
+// biar semua kartu komponen konsisten netral. Warna cuma dipakai buat angka
+// skor (semantik: bagus/cukup/kurang), bukan identitas kategori. ---
+const COMPONENT_CONFIG: Record<string, { label: string; icon: React.ElementType }> = {
+  skill_match: { label: "Kecocokan Skill", icon: IconBriefcase },
+  experience: { label: "Pengalaman Kerja", icon: IconBookmark },
+  education: { label: "Pendidikan", icon: IconSchool },
+  responsibilities: { label: "Relevansi Tanggung Jawab", icon: IconListCheck },
+  additional: { label: "Kualifikasi Tambahan", icon: IconStar },
 }
 
 const COMPONENT_ORDER = ["skill_match", "experience", "education", "responsibilities", "additional"]
 
-// --- Helper: Warna score bar ---
-function getScoreColor(score: number) {
-  if (score >= 0.75) return "bg-emerald-500"
-  if (score >= 0.5) return "bg-amber-400"
-  return "bg-rose-400"
+// --- Warna semantik berbasis skor -- SATU-SATUNYA tempat warna dipakai
+// buat menyampaikan makna (bagus/cukup/kurang). `pct` diharapkan 0-100
+// (skala asli dari ai-engine, lihat vector_search.py -- BUKAN 0-1). ---
+function getScoreTone(pct: number) {
+  if (pct >= 75) return { bar: "bg-emerald-500", text: "text-emerald-600" }
+  if (pct >= 50) return { bar: "bg-amber-400", text: "text-amber-600" }
+  return { bar: "bg-rose-400", text: "text-rose-600" }
 }
 
-function getScoreLabel(score: number) {
-  if (score >= 0.8) return "Sangat Baik"
-  if (score >= 0.6) return "Baik"
-  if (score >= 0.4) return "Cukup"
+function getScoreLabel(pct: number) {
+  if (pct >= 80) return "Sangat Baik"
+  if (pct >= 60) return "Baik"
+  if (pct >= 40) return "Cukup"
   return "Perlu Pengembangan"
 }
 
@@ -97,47 +65,48 @@ function getScoreLabel(score: number) {
 function ComponentScoreCard({ componentKey, data }: { componentKey: string; data: ComponentScore }) {
   const cfg = COMPONENT_CONFIG[componentKey] || COMPONENT_CONFIG.skill_match
   const Icon = cfg.icon
-  const pct = Math.round(data.score * 100)
+  const pct = Math.round(data.score)
+  const tone = getScoreTone(pct)
   const evidenceList = (data.assessments ?? [])
     .map((a) => a.evidence_text || a.reasoning)
     .filter((e): e is string => Boolean(e))
 
   return (
-    <div className={`rounded-2xl border ${cfg.borderColor} ${cfg.bgColor} overflow-hidden`}>
+    <div className="rounded-2xl border border-hairline bg-surface-1 overflow-hidden">
       {/* Header baris skor */}
       <div className="flex items-center gap-3 p-4">
-        <div className={`rounded-xl p-2 bg-white/60 ${cfg.color}`}>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[13px] font-semibold text-ink truncate">{cfg.label}</span>
             <div className="flex items-center gap-2 shrink-0 ml-2">
-              <span className="text-[11px] text-ink-muted">Bobot: <strong>{data.weight}%</strong></span>
-              <span className={`text-[12px] font-bold ${cfg.color}`}>{pct}%</span>
+              <span className="text-[11px] text-ink-muted">Bobot <strong className="text-ink">{Math.round(data.weight)}%</strong></span>
+              <span className={`text-[12px] font-bold ${tone.text}`}>{pct}%</span>
             </div>
           </div>
           {/* Progress bar */}
-          <div className="h-1.5 w-full bg-white/70 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-hairline/70 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${getScoreColor(data.score)}`}
+              className={`h-full rounded-full transition-all ${tone.bar}`}
               style={{ width: `${pct}%` }}
             />
           </div>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-[11px] text-ink-muted">{getScoreLabel(data.score)}</span>
-            <span className="text-[11px] text-ink-muted">Kontribusi: <strong>{data.weighted_score.toFixed(1)}%</strong></span>
+            <span className="text-[11px] text-ink-muted">{getScoreLabel(pct)}</span>
+            <span className="text-[11px] text-ink-muted">Kontribusi <strong className="text-ink">{data.weighted_score.toFixed(1)}%</strong></span>
           </div>
         </div>
       </div>
 
       {/* Evidence selalu tampil */}
       {evidenceList.length > 0 && (
-        <div className="px-4 pb-4 space-y-2 border-t border-white/40 pt-3">
+        <div className="px-4 pb-4 space-y-2 border-t border-hairline pt-3">
           <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Bukti dari CV</p>
           {evidenceList.map((ev, i) => (
-            <div key={i} className={`rounded-xl border-l-4 ${cfg.borderColor} bg-white/60 p-3 text-[12.5px] text-ink leading-relaxed italic`}>
-              "{ev}"
+            <div key={i} className="rounded-xl border-l-4 border-l-primary/40 bg-canvas p-3 text-[12.5px] text-ink leading-relaxed italic">
+              &quot;{ev}&quot;
             </div>
           ))}
         </div>
@@ -150,7 +119,7 @@ function ComponentScoreCard({ componentKey, data }: { componentKey: string; data
 function CVPreviewPanel({ url }: { url: string }) {
   return (
     <div className="rounded-2xl border border-hairline bg-surface-1 overflow-hidden flex flex-col" style={{ minHeight: 480 }}>
-      <div className="flex items-center justify-between px-4 py-3 border-b border-hairline bg-white/60">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-hairline bg-canvas">
         <span className="text-[12px] font-semibold text-ink-muted uppercase tracking-wide flex items-center gap-1.5">
           <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Preview CV
@@ -169,21 +138,43 @@ function CVPreviewPanel({ url }: { url: string }) {
   )
 }
 
-// --- Kategori → warna ---
-function getCategoryStyle(category?: string) {
-  if (!category) return { text: "text-ink", bg: "bg-surface-1", border: "border-hairline" }
+// --- Kategori/Confidence → warna teks semantik (bukan bg kartu) ---
+function getCategoryTextColor(category?: string) {
+  if (!category) return "text-ink"
   const c = category.toLowerCase()
-  if (c.includes("sangat")) return { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" }
-  if (c.includes("sesuai")) return { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" }
-  if (c.includes("perlu dipertimbangkan")) return { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" }
-  return { text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200" }
+  if (c.includes("sangat")) return "text-emerald-600"
+  if (c.includes("sesuai")) return "text-primary"
+  if (c.includes("perlu dipertimbangkan")) return "text-amber-600"
+  return "text-rose-600"
 }
 
-function getConfidenceStyle(confidence?: string) {
-  if (confidence === "High") return { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" }
-  if (confidence === "High Potential") return { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" }
-  if (confidence === "Needs Validation") return { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" }
-  return { text: "text-ink-muted", bg: "bg-surface-1", border: "border-hairline" }
+function getConfidenceTextColor(confidence?: string) {
+  if (confidence === "High") return "text-emerald-600"
+  if (confidence === "High Potential") return "text-primary"
+  if (confidence === "Needs Validation") return "text-amber-600"
+  return "text-ink-muted"
+}
+
+/** Satu kartu ringkasan skor -- SEMUA kartu di baris ini pakai bg netral
+ * yang sama; cuma angka/labelnya yang diwarnai semantik. Konsisten & mudah
+ * discan HRD, gak kayak versi lama yang tiap kartu punya warna bg sendiri. */
+function StatTile({ icon: Icon, label, valueClassName, value, caption }: {
+  icon: React.ElementType
+  label: string
+  value: React.ReactNode
+  valueClassName: string
+  caption: string
+}) {
+  return (
+    <div className="rounded-2xl border border-hairline bg-surface-1 p-4 flex flex-col justify-center gap-1">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon className="size-4 text-primary" />
+        <span className="text-[12px] font-semibold text-ink-muted uppercase tracking-wider">{label}</span>
+      </div>
+      <p className={`text-[22px] font-bold tracking-[-0.02em] ${valueClassName}`}>{value}</p>
+      <p className="text-[12px] text-ink-muted mt-0.5">{caption}</p>
+    </div>
+  )
 }
 
 // --- Main Component ---
@@ -225,8 +216,7 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
 
   const hasComponentScores = screening?.componentScores && Object.keys(screening.componentScores).length > 0
   const overallScore = Math.round(screening?.finalWeightedScore ?? screening?.overallScore ?? 0)
-  const catStyle = getCategoryStyle(screening?.category)
-  const confStyle = getConfidenceStyle(interview?.evidenceConfidence)
+  const interviewScore = interview?.recommendationScore != null ? Math.round(interview.recommendationScore) : null
 
   return (
     <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0">
@@ -261,47 +251,27 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 1. CV Fit Score */}
-                <div className={`rounded-2xl border ${catStyle.border} ${catStyle.bg} p-4 flex flex-col justify-center gap-1`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <IconBriefcase className={`size-4 ${catStyle.text}`} />
-                    <span className="text-[12px] font-semibold text-ink-muted uppercase tracking-wider">CV Fit Score</span>
-                  </div>
-                  <p className={`text-[22px] font-bold tracking-[-0.02em] ${catStyle.text}`}>
-                    {overallScore}%
-                  </p>
-                  <p className="text-[12px] text-ink-muted mt-0.5">
-                    {screening.category || "Perlu Dipertimbangkan"}
-                  </p>
-                </div>
-
-                {/* 2. Interview Competency Score */}
-                <div className={`rounded-2xl border border-blue-200 bg-blue-50 p-4 flex flex-col justify-center gap-1`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <IconListCheck className="size-4 text-blue-700" />
-                    <span className="text-[12px] font-semibold text-ink-muted uppercase tracking-wider">Interview Score</span>
-                  </div>
-                  <p className="text-[22px] font-bold tracking-[-0.02em] text-blue-700">
-                    {interview?.recommendationScore ? Math.round(interview.recommendationScore) + "%" : "-"}
-                  </p>
-                  <p className="text-[12px] text-ink-muted mt-0.5">
-                    {interview?.status === "completed" ? "Udah divalidasi" : "Belum interview"}
-                  </p>
-                </div>
-
-                {/* 3. Evidence Confidence */}
-                <div className={`rounded-2xl border ${confStyle.border} ${confStyle.bg} p-4 flex flex-col justify-center gap-1`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <IconSparkles className={`size-4 ${confStyle.text}`} />
-                    <span className="text-[12px] font-semibold text-ink-muted uppercase tracking-wider">Evidence Confidence</span>
-                  </div>
-                  <p className={`text-[18px] font-bold tracking-[-0.02em] ${confStyle.text}`}>
-                    {interview?.evidenceConfidence || "-"}
-                  </p>
-                  <p className="text-[12px] text-ink-muted mt-0.5">
-                    Hubungan CV & wawancara
-                  </p>
-                </div>
+                <StatTile
+                  icon={IconBriefcase}
+                  label="CV Fit Score"
+                  value={`${overallScore}%`}
+                  valueClassName={getCategoryTextColor(screening.category)}
+                  caption={screening.category || "Perlu Dipertimbangkan"}
+                />
+                <StatTile
+                  icon={IconListCheck}
+                  label="Interview Score"
+                  value={interviewScore != null ? `${interviewScore}%` : "-"}
+                  valueClassName={interviewScore != null ? getScoreTone(interviewScore).text : "text-ink-muted"}
+                  caption={interview?.status === "completed" ? "Udah divalidasi" : "Belum interview"}
+                />
+                <StatTile
+                  icon={IconSparkles}
+                  label="Evidence Confidence"
+                  value={interview?.evidenceConfidence || "-"}
+                  valueClassName={getConfidenceTextColor(interview?.evidenceConfidence)}
+                  caption="Hubungan CV & wawancara"
+                />
               </div>
             </div>
 
@@ -310,22 +280,24 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
               <div className="space-y-3 pt-2">
                 <h4 className="text-[17px] font-semibold text-ink">Hasil Validasi Wawancara</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {Object.entries(interview.competencyScores).map(([compName, score]) => (
-                    <div key={compName} className="rounded-xl border border-hairline bg-surface-1 p-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[13px] font-semibold text-ink truncate">{compName}</span>
-                        <span className={`text-[12px] font-bold ${score >= 75 ? "text-emerald-600" : score >= 50 ? "text-amber-500" : "text-rose-500"}`}>
-                          {Math.round(score)}%
-                        </span>
+                  {Object.entries(interview.competencyScores).map(([compName, score]) => {
+                    const pct = Math.round(score)
+                    const tone = getScoreTone(pct)
+                    return (
+                      <div key={compName} className="rounded-xl border border-hairline bg-surface-1 p-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[13px] font-semibold text-ink truncate">{compName}</span>
+                          <span className={`text-[12px] font-bold ${tone.text}`}>{pct}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-hairline/70 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${tone.bar}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full bg-white/70 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${getScoreColor(score / 100)}`}
-                          style={{ width: `${Math.round(score)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -366,12 +338,11 @@ export function CandidateDetailAnalysis({ candidate, resumeUrl }: CandidateDetai
                   <div className="flex flex-wrap gap-1.5 text-[11.5px]">
                     {COMPONENT_ORDER.map((key, i) => {
                       const data = screening.componentScores?.[key as keyof typeof screening.componentScores]
-                      const cfg = COMPONENT_CONFIG[key]
                       if (!data) return null
                       return (
                         <React.Fragment key={key}>
-                          <span className={`${cfg.color} font-semibold`}>
-                            {Math.round(data.score * 100)}% × {data.weight}%
+                          <span className="text-ink font-semibold">
+                            {Math.round(data.score)}% × {Math.round(data.weight)}%
                           </span>
                           {i < COMPONENT_ORDER.length - 1 && <span className="text-ink-muted">+</span>}
                         </React.Fragment>
