@@ -34,7 +34,7 @@ export function HeroSection() {
       </div>
 
       <div className="hero-pin-content relative min-h-[calc(100svh-3.5rem)] flex flex-col justify-center pt-16 pb-28 px-6 lg:px-10 max-w-[1584px] mx-auto">
-        <p className="hero-kicker text-[12px] font-medium text-white/70 uppercase tracking-[0.2em] mb-8">
+        <p className="hero-kicker text-[12px] font-bold text-white uppercase tracking-[0.2em] mb-8">
           Ketemu Kerja Lebih Cepat Bareng AI
         </p>
 
