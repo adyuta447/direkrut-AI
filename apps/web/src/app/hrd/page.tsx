@@ -29,6 +29,22 @@ export default function HrdDashboardPage() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-8 py-6 md:py-8">
         <div className="px-4 lg:px-6">
+          <PageHeader
+            size="lg"
+            eyebrow="Ringkasan Hari Ini"
+            title={`Halo, ${currentUser?.name ?? "HRD"} 👋`}
+            description={
+              perluTinjauan > 0
+                ? `Ada ${perluTinjauan} lamaran nunggu ditinjau nih. Semua progres rekrutmen kepantau gampang dari sini.`
+                : "Mantap, semua lamaran udah ditinjau! Progres rekrutmen tetap kepantau dari sini."
+            }
+            action={
+              <Button render={<Link href="/hrd/jobs" />}>
+                <BriefcaseIcon className="size-4" />
+                Kelola Lowongan
+              </Button>
+            }
+          />
         </div>
 
         <HrdStatCards />
