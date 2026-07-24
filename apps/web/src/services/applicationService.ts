@@ -100,19 +100,17 @@ export async function listSentDecisions(): Promise<SentDecision[]> {
   }
 }
 
+// Lempar ApiError kalau gagal (mis. lowongan udah ditutup/dihapus, atau udah
+// pernah dilamar) -- sebelumnya di-catch-and-fallback ke objek mock lokal,
+// jadi kandidat kelihatan "berhasil melamar" (lompat ke layar sukses) padahal
+// di server GAGAL, termasuk buat lowongan yang udah dinonaktifin/dihapus HRD.
 export async function submitApplication(jobId: string): Promise<Application | null> {
-  if (isApiConfigured) {
-    try {
-      const apiApp = await apiFetch<ApiApplication>("/v1/applications", {
-        method: "POST",
-        body: JSON.stringify({ jobId }),
-      });
-      return mapApiApplicationToApplication(apiApp);
-    } catch (err) {
-      console.error("[applicationService] gagal submit lamaran lewat API, fallback ke mock lokal:", err);
-    }
-  }
-  return null;
+  if (!isApiConfigured) return null;
+  const apiApp = await apiFetch<ApiApplication>("/v1/applications", {
+    method: "POST",
+    body: JSON.stringify({ jobId }),
+  });
+  return mapApiApplicationToApplication(apiApp);
 }
 
 // Lempar ApiError kalau gagal (mis. lamaran udah ditolak & dikunci backend)

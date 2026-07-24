@@ -183,9 +183,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  // Submit lamaran beneran lewat applicationService; kalau backend gagal/gak
-  // diset, service-nya balikin null dan kita rakit sendiri objek lokal dari
-  // data yang udah ada di context (currentUser, jobs) -- tetap jalan tanpa API.
+  // Submit lamaran beneran lewat applicationService -- itu yang melempar
+  // ApiError kalau server nolak (lowongan udah ditutup/dihapus, dst), jadi
+  // errornya nyampe ke pemanggil (lihat useApplyFlow.handleSubmit), bukan
+  // ke-telan diam2. `result` cuma null kalau API emang gak diset sama
+  // sekali (bukan gagal) -- di situ doang kita rakit objek lokal dari data
+  // yang udah ada di context (currentUser, jobs), biar tetap jalan tanpa API.
   const applyToJob = async (jobId: string): Promise<Application> => {
     const result = await applicationService.submitApplication(jobId);
     const job = jobs.find((j) => j.id === jobId);
@@ -218,20 +221,41 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setApplications((prev) => prev.filter((a) => a.id !== id));
   };
 
+  // `jobs` (listing publik lintas-company buat kandidat) di-fetch SEKALI aja
+  // pas mount (lihat effect di atas) -- gak otomatis ke-refresh pas HRD
+  // ubah salah satu lowongannya sendiri. Tanpa ini, lowongan yang baru
+  // di-nonaktifin/aktifin-in ulang gak pernah ke-sync ke /jobs & /candidate/jobs
+  // dalam sesi browser yang sama, cuma nongol bener abis full reload.
+  const syncPublicJob = (job: Job) => {
+    setJobs((prev) => {
+      const isPublished = job.status === "active";
+      const exists = prev.some((j) => j.id === job.id);
+      if (isPublished) {
+        return exists ? prev.map((j) => (j.id === job.id ? job : j)) : [job, ...prev];
+      }
+      return exists ? prev.filter((j) => j.id !== job.id) : prev;
+    });
+  };
+
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
     setMyJobs((prev) => [saved, ...prev]);
+    syncPublicJob(saved);
   };
 
   const updateJob = async (id: string, updates: Partial<Job>) => {
     const existing = myJobs.find((j) => j.id === id);
     if (!existing) return;
-    setMyJobs((prev) => prev.map((j) => (j.id === id ? { ...existing, ...updates } : j)));
+    const optimistic = { ...existing, ...updates };
+    setMyJobs((prev) => prev.map((j) => (j.id === id ? optimistic : j)));
+    syncPublicJob(optimistic);
     try {
       const saved = await jobService.updateJob(id, { ...existing, ...updates });
       setMyJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
+      syncPublicJob(saved);
     } catch (err) {
       setMyJobs((prev) => prev.map((j) => (j.id === id ? existing : j)));
+      syncPublicJob(existing);
       throw err;
     }
   };
