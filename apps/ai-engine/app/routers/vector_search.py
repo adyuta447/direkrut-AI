@@ -15,11 +15,11 @@ import math
 import time
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.cache import get_or_set, make_cache_key
 from app.logging import log_ai_call
-from app.prompt_guard import INJECTION_GUARD, wrap_untrusted
+from app.prompt_guard import INJECTION_GUARD
 from app.providers import get_provider_for_task
 from app.rate_limit import limit
 
@@ -189,19 +189,28 @@ Balas HANYA dengan JSON valid tanpa markdown fence. Format JSON WAJIB seperti in
 def _get_base_score(relationship: str, evidence_strength: str) -> float:
     # DIRECT
     if relationship == "DIRECT":
-        if evidence_strength == "EXPLICIT": return 100.0
-        if evidence_strength == "STRONG_INFERENCE": return 85.0
-        if evidence_strength == "WEAK_INFERENCE": return 50.0
+        if evidence_strength == "EXPLICIT":
+            return 100.0
+        if evidence_strength == "STRONG_INFERENCE":
+            return 85.0
+        if evidence_strength == "WEAK_INFERENCE":
+            return 50.0
     # RELATED
     elif relationship == "RELATED":
-        if evidence_strength == "EXPLICIT": return 75.0
-        if evidence_strength == "STRONG_INFERENCE": return 60.0
-        if evidence_strength == "WEAK_INFERENCE": return 30.0
+        if evidence_strength == "EXPLICIT":
+            return 75.0
+        if evidence_strength == "STRONG_INFERENCE":
+            return 60.0
+        if evidence_strength == "WEAK_INFERENCE":
+            return 30.0
     # TRANSFERABLE
     elif relationship == "TRANSFERABLE":
-        if evidence_strength == "EXPLICIT": return 70.0
-        if evidence_strength == "STRONG_INFERENCE": return 50.0
-        if evidence_strength == "WEAK_INFERENCE": return 25.0
+        if evidence_strength == "EXPLICIT":
+            return 70.0
+        if evidence_strength == "STRONG_INFERENCE":
+            return 50.0
+        if evidence_strength == "WEAK_INFERENCE":
+            return 25.0
     return 0.0
 
 
@@ -428,9 +437,12 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
             partial_count = sum(1 for a in cat_assessments if a.match_status == "PARTIAL_MATCH")
             missing_count = sum(1 for a in cat_assessments if a.match_status in ("NO_EVIDENCE", "NOT_DEMONSTRATED", "FAILED_HARD_REQUIREMENT"))
             
-            if final_score >= 80: comp_status = "GOOD_MATCH"
-            elif final_score >= 40: comp_status = "PARTIAL_MATCH"
-            else: comp_status = "LOW_MATCH"
+            if final_score >= 80:
+                comp_status = "GOOD_MATCH"
+            elif final_score >= 40:
+                comp_status = "PARTIAL_MATCH"
+            else:
+                comp_status = "LOW_MATCH"
             
             raw_comp_results[w_key] = {
                 "score": round(final_score, 2),
@@ -474,10 +486,14 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
             recommendation_status = "REVIEW_REQUIRED"
         else:
             eligibility_status = "ELIGIBLE"
-            if final_match_score >= 80: recommendation_status = "STRONG_MATCH"
-            elif final_match_score >= 60: recommendation_status = "POTENTIAL_MATCH"
-            elif final_match_score >= 40: recommendation_status = "PARTIAL_MATCH"
-            else: recommendation_status = "INSUFFICIENT_EVIDENCE"
+            if final_match_score >= 80:
+                recommendation_status = "STRONG_MATCH"
+            elif final_match_score >= 60:
+                recommendation_status = "POTENTIAL_MATCH"
+            elif final_match_score >= 40:
+                recommendation_status = "PARTIAL_MATCH"
+            else:
+                recommendation_status = "INSUFFICIENT_EVIDENCE"
             
         # Evidence Coverage (Simplifikasi: % dari skor yang bukan WEAK/NO_EVIDENCE)
         high_evidence_count = sum(1 for a in assessments_obj if a.evidence_strength in ("EXPLICIT", "STRONG_INFERENCE"))
@@ -486,9 +502,12 @@ async def match_candidate_to_job(payload: MatchRequest) -> MatchResponse:
             evidence_coverage = "LOW"
         else:
             cov_ratio = high_evidence_count / total_assessed
-            if cov_ratio >= 0.7: evidence_coverage = "HIGH"
-            elif cov_ratio >= 0.4: evidence_coverage = "MEDIUM"
-            else: evidence_coverage = "LOW"
+            if cov_ratio >= 0.7:
+                evidence_coverage = "HIGH"
+            elif cov_ratio >= 0.4:
+                evidence_coverage = "MEDIUM"
+            else:
+                evidence_coverage = "LOW"
 
         return MatchResponse(
             similarity_score=round(similarity_score, 4),
