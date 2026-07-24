@@ -14,7 +14,7 @@
 
 import * as React from "react"
 import {
-  IconSparkles, IconBriefcase, IconRefresh, IconCheck, IconAlertTriangle,
+  IconSparkles, IconBriefcase, IconRefresh,
   IconBookmark, IconSchool, IconListCheck, IconStar,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
@@ -98,6 +98,9 @@ function ComponentScoreCard({ componentKey, data }: { componentKey: string; data
   const cfg = COMPONENT_CONFIG[componentKey] || COMPONENT_CONFIG.skill_match
   const Icon = cfg.icon
   const pct = Math.round(data.score * 100)
+  const evidenceList = (data.assessments ?? [])
+    .map((a) => a.evidence_text || a.reasoning)
+    .filter((e): e is string => Boolean(e))
 
   return (
     <div className={`rounded-2xl border ${cfg.borderColor} ${cfg.bgColor} overflow-hidden`}>
@@ -123,16 +126,16 @@ function ComponentScoreCard({ componentKey, data }: { componentKey: string; data
           </div>
           <div className="flex items-center justify-between mt-1">
             <span className="text-[11px] text-ink-muted">{getScoreLabel(data.score)}</span>
-            <span className="text-[11px] text-ink-muted">Kontribusi: <strong>{(data.weightedScore ?? (data as any).weighted_score ?? 0).toFixed(1)}%</strong></span>
+            <span className="text-[11px] text-ink-muted">Kontribusi: <strong>{data.weighted_score.toFixed(1)}%</strong></span>
           </div>
         </div>
       </div>
 
       {/* Evidence selalu tampil */}
-      {data.evidence && data.evidence.length > 0 && (
+      {evidenceList.length > 0 && (
         <div className="px-4 pb-4 space-y-2 border-t border-white/40 pt-3">
           <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Bukti dari CV</p>
-          {data.evidence.map((ev, i) => (
+          {evidenceList.map((ev, i) => (
             <div key={i} className={`rounded-xl border-l-4 ${cfg.borderColor} bg-white/60 p-3 text-[12.5px] text-ink leading-relaxed italic`}>
               "{ev}"
             </div>
@@ -174,14 +177,6 @@ function getCategoryStyle(category?: string) {
   if (c.includes("sesuai")) return { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" }
   if (c.includes("perlu dipertimbangkan")) return { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" }
   return { text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200" }
-}
-
-function getCategoryIcon(category?: string) {
-  if (!category) return IconSparkles
-  const c = category.toLowerCase()
-  if (c.includes("sangat") || c.includes("sesuai")) return IconCheck
-  if (c.includes("perlu dipertimbangkan")) return IconAlertTriangle
-  return IconAlertTriangle
 }
 
 function getConfidenceStyle(confidence?: string) {

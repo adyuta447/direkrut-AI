@@ -40,7 +40,7 @@ export interface JobFormValues {
   keyResponsibilities: string
   minExperienceYears: number
   educationRequirement: string
-  candidateType: string
+  candidateType: "any" | "fresh_graduate" | "professional"
 }
 
 export function parseJobFormValues(formData: FormData): JobFormValues {
@@ -76,7 +76,7 @@ export function parseJobFormValues(formData: FormData): JobFormValues {
     keyResponsibilities: (formData.get("keyResponsibilities") as string) || "",
     minExperienceYears: parseInt((formData.get("minExperienceYears") as string) || "0", 10),
     educationRequirement: (formData.get("educationRequirement") as string) || "",
-    candidateType: (formData.get("candidateType") as string) || "any",
+    candidateType: ((formData.get("candidateType") as string) || "any") as JobFormValues["candidateType"],
   }
 }
 
@@ -299,7 +299,10 @@ export function JobFormFields({ selectedJob }: JobFormFieldsProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Tipe Kandidat Dicari</Label>
-            <Select value={candidateType} onValueChange={(val: string) => setCandidateType(val)}>
+            <Select
+              value={candidateType}
+              onValueChange={(val: string | null) => val && setCandidateType(val as "any" | "fresh_graduate" | "professional")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pilih tipe kandidat..." />
               </SelectTrigger>

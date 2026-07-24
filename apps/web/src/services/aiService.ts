@@ -417,17 +417,10 @@ export interface ProctoringFlag {
   reason: string;
 }
 
-export interface InterviewCompetency {
-  score: number;
-  match_status: string;
-  reasoning: string;
-  quotes: string[];
-}
-
 export interface InterviewResult {
   status: string;
   recommendationScore?: number;
-  competencyScores?: Record<string, InterviewCompetency>;
+  competencyScores?: Record<string, number>;
   evidenceConfidence?: string;
   items: InterviewItem[];
   proctoringFlags: { at: string; reason: string }[];

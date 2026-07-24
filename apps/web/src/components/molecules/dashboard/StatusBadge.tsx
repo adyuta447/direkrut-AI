@@ -1,6 +1,6 @@
 import { IconCalendarEventFilled, IconCircleCheckFilled, IconCircleXFilled, IconLoader, IconTrophyFilled } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
-import { getScoreLevel, getStatusMeta } from "@/lib/dashboard/status";
+import { getStatusMeta } from "@/lib/dashboard/status";
 
 const STATUS_ICON: Record<string, typeof IconCircleCheckFilled> = {
   submitted: IconCircleCheckFilled,

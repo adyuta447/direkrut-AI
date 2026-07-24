@@ -1,6 +1,6 @@
 "use client"
 
-import { StatusLegendPopover, type StatusLegendItem } from "@/components/molecules/dashboard/StatusLegendPopover"
+import { StatusLegendPopover } from "@/components/molecules/dashboard/StatusLegendPopover"
 import { SearchInput } from "@/components/molecules/dashboard/SearchInput"
 import {
   Select,
@@ -11,16 +11,8 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Application } from "@/lib/types"
-
-const CANDIDATE_STATUS_FLOW: StatusLegendItem[] = [
-  { status: "submitted", meaning: "Lamaran terkirim. Menunggu proses screening awal." },
-  { status: "under-review", meaning: "CV Anda sedang ditinjau secara mendalam oleh sistem dan HRD." },
-  { status: "interview", meaning: "Anda diundang! Segera selesaikan Wawancara AI." },
-  { status: "rejected", meaning: "Maaf, kualifikasi Anda belum sesuai. Terus kembangkan diri!" },
-]
 
 interface CandidateAppTableToolbarProps {
   searchTerm: string
@@ -51,10 +43,7 @@ export function CandidateAppTableToolbar({
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold tracking-[-0.02em] md:text-2xl">Lamaran Saya</h2>
-        <StatusLegendPopover
-          items={CANDIDATE_STATUS_FLOW}
-          footnote="Pantau terus status ini. Keputusan akhir ada pada tim HRD masing-masing perusahaan."
-        />
+        <StatusLegendPopover role="candidate" />
       </div>
 
       <div className="flex flex-col @4xl/main:flex-row gap-4 items-start @4xl/main:items-center w-full">
@@ -71,7 +60,7 @@ export function CandidateAppTableToolbar({
           <Label htmlFor="status-filter" className="sr-only">
             Filter Status
           </Label>
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+          <Select value={statusFilter} onValueChange={(val: string | null) => val && onStatusFilterChange(val)}>
             <SelectTrigger
               id="status-filter"
               className="w-full sm:w-[180px] rounded-full border-hairline bg-canvas @4xl/main:hidden"
