@@ -17,10 +17,15 @@ export default function CandidateLayout({ children }: { children: ReactNode }) {
   const mounted = useHasMounted();
 
   useEffect(() => {
-    if (mounted && !currentUser) router.replace("/auth");
+    if (!mounted) return;
+    if (!currentUser) router.replace("/auth");
+    // Sama kayak hrd/layout.tsx -- guard lama cuma cek ada sesi, bukan
+    // role-nya cocok. HRD yang nyasar ke /candidate diarahin ke dashboard-nya
+    // sendiri.
+    else if (currentUser.role !== "candidate") router.replace("/hrd");
   }, [mounted, currentUser, router]);
 
-  if (!mounted || !currentUser) return null;
+  if (!mounted || !currentUser || currentUser.role !== "candidate") return null;
 
   return (
     <SidebarProvider
