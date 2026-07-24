@@ -6,18 +6,10 @@ import { useDashboard } from "@/context/DashboardContext"
 import { getMyProfile, uploadCV } from "@/services/candidateService"
 import type { Job } from "@/lib/types"
 
-/** State & handler buat alur 3-langkah lamar kerja kandidat (data diri ->
- * upload/cek CV -> tinjauan -> submit). Submit beneran manggil applyToJob
- * dari DashboardContext (real API + fallback), bukan lagi fabrikasi lokal.
- * CV bisa diupload langsung di sini (dikirim ke HRD & dipakai buat AI
- * screening) -- gak wajib pindah ke halaman profil dulu, walaupun secara
- * teknis tetap kesimpen di CV kandidat yang sama (satu CV per kandidat,
- * dipakai lintas lamaran). */
 export function useApplyFlow(job: Job | undefined) {
   const router = useRouter()
   const { applyToJob, isProfileComplete, currentUser } = useDashboard()
 
-  // Profil lengkap -> lompat ke tinjauan, gak perlu isi ulang data diri/CV.
   const [step, setStep] = React.useState(isProfileComplete ? 3 : 1)
   const [formData, setFormData] = React.useState({
     name: currentUser?.name ?? "",

@@ -1864,8 +1864,21 @@ func (h *Handler) handleGetInterview(w http.ResponseWriter, r *http.Request) {
 	var flags []proctoringFlag
 	_ = json.Unmarshal(assessment.ProctoringFlags, &flags)
 	
-	var competencyScores map[string]float64
-	_ = json.Unmarshal(assessment.CompetencyScores, &competencyScores)
+	// competency_scores kesimpen sebagai map kategori -> objek detail
+	// ({match_status, quotes, reasoning, score}, lihat ScoreValidationResponse
+	// di aiengine/client.go), BUKAN map kategori -> angka langsung. Unmarshal
+	// langsung ke map[string]float64 gagal per-key secara diam-diam (Go
+	// nyisain map-nya keisi tapi tiap value zero-value 0.0, errornya gak
+	// pernah kecek karena di-discard `_ =`) -- makanya sebelumnya semua
+	// kompetensi kelihatan 0% padahal skor aslinya ada.
+	var rawCompetencyScores map[string]struct {
+		Score float64 `json:"score"`
+	}
+	_ = json.Unmarshal(assessment.CompetencyScores, &rawCompetencyScores)
+	competencyScores := make(map[string]float64, len(rawCompetencyScores))
+	for category, detail := range rawCompetencyScores {
+		competencyScores[category] = detail.Score
+	}
 
 	httpx.WriteJSON(w, http.StatusOK, interviewResultResponse{
 		Status:              assessment.Status, 

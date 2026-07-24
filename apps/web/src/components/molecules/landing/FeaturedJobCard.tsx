@@ -19,18 +19,20 @@ export function FeaturedJobCard({ job }: FeaturedJobCardProps) {
         </div>
         <ArrowUpRight className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-none flex-shrink-0" />
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="text-[13px] rounded-full bg-surface-1 px-3 py-1.5 text-ink">{job.type}</span>
-        {job.salaryRange && (
-          <span className="text-[13px] rounded-full bg-surface-1 px-3 py-1.5 text-primary font-medium">
-            {job.salaryRange}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-[13px] rounded-full bg-surface-1 px-3 py-1.5 text-ink">{job.type}</span>
+          {job.salaryRange && (
+            <span className="text-[13px] rounded-full bg-surface-1 px-3 py-1.5 text-primary font-medium">
+              {job.salaryRange}
+            </span>
+          )}
+          <span className="flex items-center gap-1.5 text-[13px] text-ink-muted">
+            <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
+            {job.applicantCount} pelamar
           </span>
-        )}
-        <span className="flex items-center gap-1.5 text-[13px] text-ink-muted">
-          <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
-          {job.applicantCount} pelamar
-        </span>
-        <span className="text-[13px] text-ink-muted ml-auto">{job.posted}</span>
+        </div>
+        <span className="text-[13px] text-ink-muted text-right">{job.posted}</span>
       </div>
     </Link>
   );
