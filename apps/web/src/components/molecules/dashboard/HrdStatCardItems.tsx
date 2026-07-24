@@ -35,8 +35,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Total Lamaran"
         value={totalLamaran}
-        className={`bg-surface-solid-1 ${SOLID_CARD}`}
-        image="/dashboard/paper.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
@@ -50,8 +49,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Tahap Administrasi"
         value={tahapAdministrasi}
-        className={`bg-surface-solid-2 ${SOLID_CARD}`}
-        image="/dashboard/administrasi.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           delayedApps > 0 ? (
             <Badge variant="outline" className="border-white/40 bg-white text-destructive font-semibold">
@@ -71,8 +69,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Lolos Wawancara"
         value={wawancara}
-        className={`bg-surface-solid-3 ${SOLID_CARD}`}
-        image="/dashboard/conference.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           <Badge variant="outline" className={SOLID_BADGE}>
             <IconTrendingUp />
@@ -86,8 +83,7 @@ export function HrdStatCardItems({ applications }: HrdStatCardItemsProps) {
       <StatCard
         label="Belum Discreen AI"
         value={belumDiscreen}
-        className={`bg-surface-solid-4 ${SOLID_CARD}`}
-        image="/dashboard/resume.svg"
+        className={`bg-surface-coral ${SOLID_CARD}`}
         badge={
           belumDiscreen > 0 ? (
             <Badge variant="outline" className="border-white/40 bg-white text-warning font-semibold">

@@ -9,13 +9,16 @@ import { JobFormProgressCard } from "@/components/molecules/dashboard/JobFormPro
 import { DraftInfoCard } from "@/components/molecules/dashboard/DraftInfoCard"
 import { useJobFormProgress } from "@/lib/jobs/useJobFormProgress"
 import { useDashboard } from "@/context/DashboardContext"
+import { NoticeDialog } from "@/components/molecules/dashboard/NoticeDialog"
+import { useState } from "react"
 
 export default function NewJobPage() {
   const router = useRouter()
   const { addJob } = useDashboard()
   const { fields, filledFields, progress, handleFormInput } = useJobFormProgress()
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null
     const formData = new FormData(e.currentTarget, submitter ?? undefined)
@@ -23,23 +26,27 @@ export default function NewJobPage() {
     const status = intent === "draft" ? "draft" : "active"
     const values = parseJobFormValues(formData)
 
-    addJob({
-      id: crypto.randomUUID(),
-      company: "Perusahaan Kami",
-      detailedQualifications: values.requirements,
-      industry: values.department,
-      questions: [],
-      posted: new Date().toISOString(),
-      applicantCount: 0,
-      status,
-      ...values,
-    })
-
-    router.push(`/hrd/jobs?notice=${status === "draft" ? "draft" : "created"}`)
+    try {
+      await addJob({
+        id: crypto.randomUUID(),
+        company: "Perusahaan Kami",
+        detailedQualifications: values.requirements,
+        industry: values.department,
+        questions: [],
+        posted: new Date().toISOString(),
+        applicantCount: 0,
+        status,
+        ...values,
+      })
+      router.push(`/hrd/jobs?notice=${status === "draft" ? "draft" : "created"}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal buat lowongan, coba lagi ya")
+    }
   }
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 lg:p-8">
+      <NoticeDialog message={error} image="/status/warning.svg" onClose={() => setError(null)} />
       <BackButton href="/hrd/jobs" label="Kembali ke Manajemen Lowongan" />
 
       <NewJobHero />

@@ -44,6 +44,7 @@ func (h *Handler) Router() chi.Router {
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(h.requireAuth)
+		pr.With(appmw.RequireRole("hrd")).Get("/mine", h.handleListMyJobs)
 		pr.With(appmw.RequireRole("hrd")).Post("/", h.handleCreateJob)
 		pr.With(appmw.RequireRole("hrd")).Put("/{jobID}", h.handleUpdateJob)
 		pr.With(appmw.RequireRole("hrd")).Delete("/{jobID}", h.handleDeleteJob)
@@ -161,6 +162,34 @@ func (h *Handler) handleListJobs(w http.ResponseWriter, r *http.Request) {
 
 	_ = appcache.SetJSON(ctx, h.cache, cacheKey, resp, 60*time.Second)
 	w.Header().Set("Cache-Control", "public, max-age=60")
+	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+// handleListMyJobs: daftar lowongan milik company HRD yang login, SEMUA
+// status (draft/published/closed) -- beda dari handleListJobs (publik, cuma
+// published, lintas company) yang sebelumnya salah dipakai juga buat halaman
+// Manajemen Lowongan HRD. Akibatnya HRD lihat lowongan company LAIN (dengan
+// tombol edit/hapus yang percuma karena bakal ditolak loadOwnedJob), dan
+// lowongan draft/closed milik sendiri malah gak pernah muncul di grid-nya.
+func (h *Handler) handleListMyJobs(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CompanyID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun HRD ini belum terhubung ke perusahaan")
+		return
+	}
+
+	var jobs []appdb.Job
+	if err := h.db.WithContext(r.Context()).Preload("Company").
+		Where("company_id = ?", claims.CompanyID).
+		Order("created_at DESC").Find(&jobs).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal ambil daftar lowongan")
+		return
+	}
+
+	resp := jobListResponse{Items: make([]jobResponse, 0, len(jobs))}
+	for _, j := range jobs {
+		resp.Items = append(resp.Items, toJobResponse(j))
+	}
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
@@ -328,6 +357,31 @@ func (h *Handler) handleDeleteJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+
+	// Lowongan harus dinonaktifin dulu sebelum bisa dihapus -- cegah HRD gak
+	// sengaja hapus lowongan yang masih aktif dilamar orang.
+	if jobRow.Status != "closed" {
+		httpx.WriteError(w, http.StatusConflict, "must_be_closed",
+			"nonaktifin dulu lowongan ini sebelum dihapus")
+		return
+	}
+
+	// Kalau udah pernah kedatangan lamaran, jangan hard-delete -- job_id di
+	// tabel applications bakal jadi dangling reference dan riwayat lamaran
+	// kandidat rusak. Cukup dibiarkan closed (arsip), gak perlu row baru
+	// atau status baru buat "archived".
+	var appCount int64
+	if err := h.db.WithContext(ctx).Model(&appdb.Application{}).
+		Where("job_id = ?", jobRow.ID).Count(&appCount).Error; err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal cek lamaran lowongan ini")
+		return
+	}
+	if appCount > 0 {
+		httpx.WriteError(w, http.StatusConflict, "has_applications",
+			"lowongan ini udah pernah dilamar -- gak bisa dihapus permanen biar riwayat kandidat gak rusak, cukup dinonaktifkan aja")
+		return
+	}
+
 	if err := h.db.WithContext(ctx).Delete(jobRow).Error; err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal hapus lowongan")
 		return

@@ -117,7 +117,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead key={header.id} colSpan={header.colSpan} className="h-9 py-2">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -137,7 +137,7 @@ export function DataTable({ data }: { data: Candidate[] }) {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="py-2">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

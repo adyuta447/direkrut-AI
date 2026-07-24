@@ -45,7 +45,7 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger
-        render={<Button variant="outline" size="icon" className="relative size-9 rounded-full border-hairline" />}
+        render={<Button variant="outline" size="icon" className="relative size-9 rounded-full border-border" />}
         aria-label="Notifikasi"
       >
         <IconBell className="size-4" />
@@ -56,13 +56,13 @@ export function NotificationBell() {
         )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 p-0">
-        <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-          <p className="text-sm font-bold text-ink">Notifikasi</p>
-          {unread > 0 && <span className="text-xs text-ink-muted">{unread} belum dibaca</span>}
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <p className="text-sm font-bold text-foreground">Notifikasi</p>
+          {unread > 0 && <span className="text-xs text-muted-foreground">{unread} belum dibaca</span>}
         </div>
         <div className="max-h-96 overflow-y-auto">
           {items.length === 0 ? (
-            <div className="px-4 py-10 text-center text-sm text-ink-muted">
+            <div className="px-4 py-10 text-center text-sm text-muted-foreground">
               Belum ada notifikasi.
             </div>
           ) : (
@@ -70,16 +70,16 @@ export function NotificationBell() {
               <button
                 key={n.id}
                 onClick={() => onOpen(n)}
-                className={`flex w-full flex-col gap-0.5 border-b border-hairline px-4 py-3 text-left transition-colors hover:bg-surface-1 ${
+                className={`flex w-full flex-col gap-0.5 border-b border-border px-4 py-3 text-left transition-colors hover:bg-accent ${
                   n.isRead ? "" : "bg-primary/[0.04]"
                 }`}
               >
                 <div className="flex items-start gap-2">
                   {!n.isRead && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />}
                   <div className={n.isRead ? "pl-4" : ""}>
-                    <p className="text-sm font-semibold text-ink">{n.title}</p>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">{n.body}</p>
-                    <p className="mt-1 text-[11px] text-ink-muted">
+                    <p className="text-sm font-semibold text-foreground">{n.title}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
                       {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: id })}
                     </p>
                   </div>
@@ -90,7 +90,7 @@ export function NotificationBell() {
         </div>
         <button
           onClick={() => router.push(inboxHref)}
-          className="w-full border-t border-hairline px-4 py-3 text-center text-sm font-semibold text-primary hover:bg-surface-1"
+          className="w-full border-t border-border px-4 py-3 text-center text-sm font-semibold text-primary hover:bg-accent"
         >
           Lihat semua di Kotak Masuk
         </button>

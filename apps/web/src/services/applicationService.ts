@@ -115,26 +115,23 @@ export async function submitApplication(jobId: string): Promise<Application | nu
   return null;
 }
 
+// Lempar ApiError kalau gagal (mis. lamaran udah ditolak & dikunci backend)
+// -- pemanggilnya (DecisionDialog) butuh tau itu buat nampilin pesan yang
+// benar, bukan optimis nunjukin "terkirim" padahal ditolak backend.
 export async function updateApplicationStatus(
   id: string,
   status: Application["status"],
   note?: string,
   email?: { subject: string; body: string }
 ): Promise<Application | null> {
-  if (isApiConfigured) {
-    try {
-      const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status,
-          note,
-          ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
-        }),
-      });
-      return mapApiApplicationToApplication(apiApp);
-    } catch (err) {
-      console.error("[applicationService] gagal update status lamaran lewat API, fallback ke mock lokal:", err);
-    }
-  }
-  return null;
+  if (!isApiConfigured) return null;
+  const apiApp = await apiFetch<ApiApplication>(`/v1/applications/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status,
+      note,
+      ...(email ? { emailSubject: email.subject, emailBody: email.body } : {}),
+    }),
+  });
+  return mapApiApplicationToApplication(apiApp);
 }

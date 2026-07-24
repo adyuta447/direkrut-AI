@@ -37,6 +37,9 @@ interface DashboardContextType {
     email?: { subject: string; body: string },
   ) => Promise<void>;
   jobs: Job[];
+  /** Lowongan MILIK company HRD yang login, semua status -- sumber buat
+   * halaman Manajemen Lowongan (bukan `jobs`, itu publik lintas-company). */
+  myJobs: Job[];
   addJob: (job: Job) => Promise<void>;
   updateJob: (id: string, updates: Partial<Job>) => Promise<void>;
   deleteJob: (id: string) => Promise<void>;
@@ -72,23 +75,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.restoreSession());
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [currentPage, setCurrentPage] = useState("landing");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
 
-  // Tarik lamaran asli begitu ada yang login -- endpoint /v1/applications
-  // scoped otomatis dari JWT claims: kandidat liat punya dia sendiri, HRD
-  // (tanpa ?jobId=) liat semua lamaran ke lowongan-lowongan company-nya.
-  // Ini yang bikin dashboard HRD (stat cards, chart, cross-role, detail
-  // kandidat) kebagian data asli dari kandidat, bukan mock selamanya.
-  //
-  // ponytail: cuma di-fetch sekali pas login/mount, gak ada polling atau
-  // websocket -- kalau HRD udah buka dashboard-nya SEBELUM kandidat
-  // melamar, lamaran baru gak nongol sampai refetchApplications() dipanggil
-  // manual (lihat hrd/page.tsx, hrd/cross-role/page.tsx) atau reload
-  // penuh. Upgrade: polling interval pendek atau SSE/websocket kalau
-  // real-time beneran dibutuhin.
   const refetchApplications = async () => {
     if (!currentUser?.id) return;
     const fetched = await applicationService.listApplications();
@@ -106,13 +98,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     };
   }, [currentUser?.id, currentUser?.role]);
 
-  // Re-sync sesi lintas-tab. localStorage dibagi antar tab dengan origin yang
-  // sama, jadi kalau user login sebagai KANDIDAT di tab lain, token di tab
-  // HRD ini ikut ketimpa -- tapi React state di sini masih nyimpen user HRD.
-  // Akibatnya request (mis. "Jalankan Screening AI") kekirim pakai token
-  // kandidat -> 403 "insufficient role for this action". Dengerin storage
-  // event biar tab ini nyusul state terbaru (atau ke-logout) dan gak ngirim
-  // aksi HRD dengan token kandidat.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== null && !e.key.startsWith("direkrut_")) return;
@@ -152,6 +137,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.role !== "hrd") return;
+    let cancelled = false;
+    jobService.listMyJobs().then((fetched) => {
+      if (!cancelled) setMyJobs(fetched);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.id, currentUser?.role]);
 
   const login = async (email: string, password: string) => {
     const { user } = await authService.login(email, password);
@@ -218,19 +214,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
-    setJobs((prev) => [...prev, saved]);
+    setMyJobs((prev) => [saved, ...prev]);
   };
 
   const updateJob = async (id: string, updates: Partial<Job>) => {
-    const existing = jobs.find((j) => j.id === id);
+    const existing = myJobs.find((j) => j.id === id);
     if (!existing) return;
     const saved = await jobService.updateJob(id, { ...existing, ...updates });
-    setJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
+    setMyJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
   };
 
   const deleteJob = async (id: string) => {
     await jobService.deleteJob(id);
-    setJobs((prev) => prev.filter((j) => j.id !== id));
+    setMyJobs((prev) => prev.filter((j) => j.id !== id));
   };
 
   const addDepartment = (department: Department) => {
@@ -263,6 +259,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         applyToJob,
         changeApplicationStatus,
         jobs,
+        myJobs,
         addJob,
         updateJob,
         deleteJob,
