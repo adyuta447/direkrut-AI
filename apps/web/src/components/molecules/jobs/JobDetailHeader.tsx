@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, CheckCircle, Bookmark } from "lucide-react";
+import { Users, Bookmark } from "lucide-react";
 import { Job } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/context/DashboardContext";

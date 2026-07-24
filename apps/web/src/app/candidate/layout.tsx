@@ -4,7 +4,6 @@ import { ReactNode, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/context/DashboardContext";
-import { ThemeProvider } from "@/components/theme-provider";
 import { CandidateSidebar } from "@/components/organisms/dashboard/CandidateSidebar";
 import { DashboardHeader } from "@/components/organisms/dashboard/DashboardHeader";
 import { SearchDialog } from "@/components/organisms/dashboard/SearchDialog";

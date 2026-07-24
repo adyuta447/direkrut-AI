@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { IconX } from "@tabler/icons-react"
-import { Input } from "@/components/ui/input"
 
 interface TagInputProps {
   tags: string[]

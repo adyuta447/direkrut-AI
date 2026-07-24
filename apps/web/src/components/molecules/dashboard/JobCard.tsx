@@ -133,7 +133,6 @@ export function JobCard({ job, onEdit }: JobCardProps) {
             disabled={job.status !== "inactive"}
             title={job.status !== "inactive" ? "Nonaktifin lowongan ini dulu sebelum dihapus" : "Hapus lowongan"}
             onClick={() => setConfirmDelete(true)}
-            title="Hapus Lowongan"
           >
             <IconTrash className="size-4" />
           </Button>

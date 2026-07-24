@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 import { ConfirmDialog } from "@/components/molecules/dashboard/ConfirmDialog"
 
-type InterviewState = "setup" | "prescreen" | "interview" | "finalizing" | "feedback"
+type InterviewState = "setup" | "guidelines" | "prescreen" | "interview" | "finalizing" | "feedback"
 
 const PROCTOR_INTERVAL_MS = 20000
 const ANSWER_WINDOW_SECONDS = 120

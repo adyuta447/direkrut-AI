@@ -14,7 +14,6 @@ import {
 import { FileTextIcon } from "lucide-react";
 import { Application, Job } from "@/lib/types";
 import { CandidateAppTableToolbar } from "./CandidateAppTableToolbar";
-import { Badge } from "@/components/ui/badge";
 
 interface CandidateRecentApplicationsProps {
   applications: Application[];
