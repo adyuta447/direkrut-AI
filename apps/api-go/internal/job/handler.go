@@ -126,6 +126,19 @@ func nilIfEmpty(s string) *string {
 	return &s
 }
 
+// skillsJSON serialize slice skill ke JSON array string -- SELALU balikin
+// "[]" (bukan NULL) kalau kosong, biar konsisten sama DEFAULT kolomnya dan
+// gak numpuk NULL yang bikin ai-engine nolak request (dia butuh list, bukan
+// null) begitu nilai ini di-unmarshal ulang buat dikirim ke MatchCandidate.
+func skillsJSON(skills []string) *string {
+	if skills == nil {
+		skills = []string{}
+	}
+	b, _ := json.Marshal(skills)
+	s := string(b)
+	return &s
+}
+
 type jobListResponse struct {
 	Items      []jobResponse `json:"items"`
 	NextCursor string        `json:"nextCursor,omitempty"`
@@ -334,18 +347,10 @@ func (h *Handler) handleCreateJob(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Serialize skills arrays ke JSON
-	var requiredSkillsJSON, preferredSkillsJSON *string
-	if len(req.RequiredSkills) > 0 {
-		b, _ := json.Marshal(req.RequiredSkills)
-		s := string(b)
-		requiredSkillsJSON = &s
-	}
-	if len(req.PreferredSkills) > 0 {
-		b, _ := json.Marshal(req.PreferredSkills)
-		s := string(b)
-		preferredSkillsJSON = &s
-	}
+	// Serialize skills arrays ke JSON -- selalu "[]" kalau kosong, jangan NULL
+	// (lihat skillsJSON).
+	requiredSkillsJSON := skillsJSON(req.RequiredSkills)
+	preferredSkillsJSON := skillsJSON(req.PreferredSkills)
 	candidateType := req.CandidateType
 	if candidateType == "" {
 		candidateType = "any"
@@ -417,18 +422,10 @@ func (h *Handler) handleUpdateJob(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Serialize skills arrays ke JSON
-	var requiredSkillsJSON, preferredSkillsJSON *string
-	if len(req.RequiredSkills) > 0 {
-		b, _ := json.Marshal(req.RequiredSkills)
-		s := string(b)
-		requiredSkillsJSON = &s
-	}
-	if len(req.PreferredSkills) > 0 {
-		b, _ := json.Marshal(req.PreferredSkills)
-		s := string(b)
-		preferredSkillsJSON = &s
-	}
+	// Serialize skills arrays ke JSON -- selalu "[]" kalau kosong, jangan NULL
+	// (lihat skillsJSON).
+	requiredSkillsJSON := skillsJSON(req.RequiredSkills)
+	preferredSkillsJSON := skillsJSON(req.PreferredSkills)
 	candidateType := req.CandidateType
 	if candidateType == "" {
 		candidateType = "any"
