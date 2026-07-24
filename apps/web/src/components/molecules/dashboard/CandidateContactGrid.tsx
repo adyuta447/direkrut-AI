@@ -25,7 +25,7 @@ export function CandidateContactGrid({ candidate }: CandidateContactGridProps) {
           <span className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted">
             {item.label}
           </span>
-          <span className="truncate text-base font-semibold text-ink">{item.val}</span>
+          <span className="text-base font-semibold text-ink wrap-break-word">{item.val}</span>
         </div>
       ))}
     </div>

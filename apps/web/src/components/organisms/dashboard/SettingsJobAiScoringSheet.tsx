@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetClose,
-} from "@/components/ui/sheet"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { getJobScoringWeights, updateJobScoringWeights } from "@/services/jobService"
 import { ScoringWeightConfig, Job } from "@/lib/types"
 
@@ -102,20 +102,20 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
   const total = weights ? (weights.weightSkillMatch + weights.weightExperience + weights.weightEducation + weights.weightResponsibilities + weights.weightAdditional) : 0
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto border-hairline p-0">
-        <form onSubmit={handleSubmit} className="flex min-h-full flex-col">
-          <SheetHeader className="gap-1 bg-violet-600 px-6 py-6 text-white">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <form onSubmit={handleSubmit} className="flex max-h-[85vh] flex-col">
+          <DialogHeader className="gap-1 rounded-t-3xl bg-primary px-6 py-6 text-white">
             <div className="flex items-center gap-2">
               <IconSparkles className="size-6 text-white" />
-              <SheetTitle className="text-[22px] font-bold text-white">Bobot AI: {selectedJob?.title}</SheetTitle>
+              <DialogTitle className="text-[22px] font-bold text-white">Bobot AI: {selectedJob?.title}</DialogTitle>
             </div>
-            <SheetDescription className="text-white/80">
+            <DialogDescription className="text-white/80">
               Timpa konfigurasi default perusahaan khusus untuk lowongan ini.
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="flex-1 p-6 space-y-6">
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {isLoading ? (
               <div className="text-center text-ink-muted py-8">Memuat konfigurasi...</div>
             ) : !weights ? (
@@ -123,10 +123,10 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
             ) : (
               <>
                 {weights.isCustom ? (
-                  <div className="rounded-xl bg-violet-50 border border-violet-200 p-4 flex gap-3 text-sm text-violet-800">
-                    <IconCheck className="size-5 shrink-0 text-violet-600 mt-0.5" />
+                  <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 flex gap-3 text-sm text-blue-800">
+                    <IconCheck className="size-5 shrink-0 text-blue-600 mt-0.5" />
                     <div>
-                      <strong className="block mb-0.5 text-violet-900">Lowongan ini menggunakan bobot kustom</strong>
+                      <strong className="block mb-0.5 text-blue-900">Lowongan ini menggunakan bobot kustom</strong>
                       Bobot ini akan mengabaikan settingan default dari pengaturan perusahaan.
                     </div>
                   </div>
@@ -242,15 +242,15 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
             )}
           </div>
           <div className="flex justify-end gap-3 border-t border-hairline p-6">
-            <SheetClose render={<Button type="button" variant="outline" className="border-hairline" />}>
+            <DialogClose render={<Button type="button" variant="outline" className="border-hairline" />}>
               Tutup
-            </SheetClose>
+            </DialogClose>
             <Button type="submit" disabled={isSaving || Math.abs(total - 100) > 0.1 || isLoading}>
               {isSaving ? "Menyimpan..." : "Simpan Bobot AI Khusus"}
             </Button>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
