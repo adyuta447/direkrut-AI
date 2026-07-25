@@ -69,6 +69,22 @@ export default function CandidateInboxPage() {
         <InboxMessageView
           message={selectedMessage}
           onBack={() => setSelectedMessageId(null)}
+          viewer="candidate"
+          onConfirm={async () => {
+            try {
+              // Panggil endpoint backend untuk konfirmasi kehadiran
+              const token = localStorage.getItem("token")
+              await fetch("http://localhost:8080/v1/candidates/me/confirm-interview", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                }
+              })
+            } catch (err) {
+              console.error(err)
+            }
+          }}
         />
       </div>
     </div>

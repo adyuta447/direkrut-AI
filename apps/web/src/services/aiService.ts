@@ -201,16 +201,27 @@ export async function matchCandidate(
 // job-match, DAN nyimpen hasilnya ke Postgres, jadi gak perlu dihitung ulang
 // tiap kali halaman detail kandidat dibuka.
 
+export interface DimensionFactors {
+  skill_usage_level?: string;
+  experience_relevance?: string;
+  candidate_duration_months?: number;
+  required_duration_months?: number;
+  responsibility_scope?: string;
+  ownership_level?: string;
+  education_match?: string;
+  certification_status?: string;
+  additional_evidence_type?: string;
+}
+
 export interface LLMAssessment {
   requirement: string;
   category: string;
   importance: string;
   match_status: string;
-  evidence_strength: string;
-  relationship: string;
   evidence_text?: string;
   source_section?: string;
   reasoning: string;
+  dimension_factors: DimensionFactors;
   score: number;
 }
 

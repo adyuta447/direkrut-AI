@@ -182,17 +182,28 @@ type MatchRequest struct {
 	Weights              *WeightConfig `json:"weights,omitempty"`
 }
 
+type DimensionFactors struct {
+	SkillUsageLevel         *string `json:"skill_usage_level"`
+	ExperienceRelevance     *string `json:"experience_relevance"`
+	CandidateDurationMonths *int    `json:"candidate_duration_months"`
+	RequiredDurationMonths  *int    `json:"required_duration_months"`
+	ResponsibilityScope     *string `json:"responsibility_scope"`
+	OwnershipLevel          *string `json:"ownership_level"`
+	EducationMatch          *string `json:"education_match"`
+	CertificationStatus     *string `json:"certification_status"`
+	AdditionalEvidenceType  *string `json:"additional_evidence_type"`
+}
+
 type LLMAssessment struct {
-	Requirement      string  `json:"requirement"`
-	Category         string  `json:"category"`
-	Importance       string  `json:"importance"`
-	MatchStatus      string  `json:"match_status"`
-	EvidenceStrength string  `json:"evidence_strength"`
-	Relationship     string  `json:"relationship"`
-	EvidenceText     *string `json:"evidence_text"`
-	SourceSection    *string `json:"source_section"`
-	Reasoning        string  `json:"reasoning"`
-	Score            float64 `json:"score"`
+	Requirement      string           `json:"requirement"`
+	Category         string           `json:"category"`
+	Importance       string           `json:"importance"`
+	MatchStatus      string           `json:"match_status"`
+	EvidenceText     *string          `json:"evidence_text"`
+	SourceSection    *string          `json:"source_section"`
+	Reasoning        string           `json:"reasoning"`
+	DimensionFactors DimensionFactors `json:"dimension_factors"`
+	Score            float64          `json:"score"`
 }
 
 // ComponentScore berisi skor satu dimensi penilaian beserta buktinya.

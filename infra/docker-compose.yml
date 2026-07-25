@@ -38,9 +38,10 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_API_CORS_ALLOW_ORIGIN: "*"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9500:9000"
+      - "9501:9001"
     volumes:
       - minio_data:/data
     healthcheck:
