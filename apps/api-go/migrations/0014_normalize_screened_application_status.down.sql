@@ -1,0 +1,2 @@
+-- Data migration only. Status "screened" sengaja tidak dibuat ulang karena
+-- nilainya tidak didukung oleh kontrak API maupun dashboard.
