@@ -14,13 +14,8 @@ import { useDashboard } from "@/context/DashboardContext"
 
 export default function HrdDashboardPage() {
   const { applications, currentUser, refetchApplications } = useDashboard()
-
-  // Context cuma fetch applications sekali pas login -- refetch tiap kali
-  // dashboard ini ke-mount biar lamaran yang masuk sesudah login (mis.
-  // kandidat baru aja apply) langsung kelihatan tanpa perlu reload penuh.
   useEffect(() => {
     void refetchApplications()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const perluTinjauan = applications.filter((a) => a.status === "under-review").length

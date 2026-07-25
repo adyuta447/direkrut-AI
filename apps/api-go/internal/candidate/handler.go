@@ -39,9 +39,54 @@ func (h *Handler) Router() chi.Router {
 		pr.With(appmw.RequireRole("candidate")).Get("/me", h.handleGetMe)
 		pr.With(appmw.RequireRole("candidate")).Put("/me", h.handleUpdateMe)
 		pr.With(appmw.RequireRole("candidate")).Post("/me/cv-upload-url", h.handleCVUploadURL)
+		pr.With(appmw.RequireRole("candidate")).Get("/me/cv-download-url", h.handleCVDownloadURL)
 		pr.With(appmw.RequireRole("candidate")).Patch("/me/cv", h.handleSaveCV)
+		pr.With(appmw.RequireRole("candidate")).Post("/me/confirm-interview", h.handleConfirmInterview)
 	})
 	return r
+}
+
+func (h *Handler) handleConfirmInterview(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CandidateID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "unauthorized")
+		return
+	}
+
+	// Find the most recent application in "interview" state
+	var appRow appdb.Application
+	err := h.db.WithContext(r.Context()).
+		Where("candidate_id = ? AND status = ?", claims.CandidateID, "interview").
+		Order("created_at desc").
+		First(&appRow).Error
+	if err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "Tidak ada undangan wawancara aktif.")
+		return
+	}
+
+	// Change status to interview_confirmed
+	txErr := h.db.WithContext(r.Context()).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&appRow).Update("status", "interview_confirmed").Error; err != nil {
+			return err
+		}
+		
+		fromStatus := "interview"
+		note := "Kandidat telah mengonfirmasi kehadiran wawancara."
+		history := appdb.ApplicationStatusHistory{
+			ApplicationID: appRow.ID,
+			FromStatus:    &fromStatus,
+			ToStatus:      "interview_confirmed",
+			ChangedBy:     &claims.UserID,
+			Note:          &note,
+		}
+		return tx.Create(&history).Error
+	})
+	if txErr != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "Gagal konfirmasi kehadiran")
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"message": "Kehadiran dikonfirmasi"})
 }
 
 type experienceItem struct {
@@ -283,7 +328,39 @@ func (h *Handler) handleCVUploadURL(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal buat upload URL")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]string{"uploadUrl": uploadURL, "objectKey": objectKey})
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{
+		"uploadUrl": uploadURL,
+		"objectKey": objectKey,
+	})
+}
+
+func (h *Handler) handleCVDownloadURL(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CandidateID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun kandidat ini belum lengkap")
+		return
+	}
+
+	var c appdb.Candidate
+	if err := h.db.WithContext(r.Context()).Select("cv_file_url").First(&c, "id = ?", claims.CandidateID).Error; err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "not_found", "profil kandidat gak ditemukan")
+		return
+	}
+
+	if c.CvFileURL == nil || *c.CvFileURL == "" {
+		httpx.WriteError(w, http.StatusNotFound, "no_cv", "Kandidat belum mengunggah CV")
+		return
+	}
+
+	downloadURL, err := h.storage.PresignGetObject(r.Context(), *c.CvFileURL, 1*time.Hour)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal buat download URL")
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{
+		"downloadUrl": downloadURL,
+	})
 }
 
 type saveCVRequest struct {

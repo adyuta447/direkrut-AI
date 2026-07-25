@@ -161,3 +161,14 @@ export async function uploadCV(file: File, registerAsOfficialCv = true): Promise
     return null;
   }
 }
+
+export async function getCVDownloadUrl(): Promise<string | null> {
+  if (!isApiConfigured) return null;
+  try {
+    const data = await apiFetch<{ downloadUrl: string }>("/v1/candidates/me/cv-download-url");
+    return data.downloadUrl;
+  } catch (err) {
+    console.error("[candidateService] gagal ambil URL download CV:", err);
+    return null;
+  }
+}

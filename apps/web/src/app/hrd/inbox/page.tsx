@@ -104,6 +104,7 @@ export default function InboxPage() {
         <InboxMessageView
           message={selectedMessage}
           onBack={() => setSelectedMessageId(null)}
+          viewer="hrd"
         />
       </div>
     </div>

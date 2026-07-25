@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,6 +31,8 @@ type Message = {
 interface InboxMessageViewProps {
   message: Message | undefined
   onBack: () => void
+  viewer?: "hrd" | "candidate"
+  onConfirm?: () => void
 }
 
 function getTypeBadge(type: string) {
@@ -45,7 +48,9 @@ function getTypeBadge(type: string) {
   }
 }
 
-export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
+export function InboxMessageView({ message, onBack, viewer, onConfirm }: InboxMessageViewProps) {
+  const [isConfirmed, setIsConfirmed] = React.useState(false)
+
   if (!message) {
     return (
       <div className="flex-1 hidden md:flex flex-col items-center justify-center text-muted-foreground">
@@ -53,6 +58,11 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
         <p>Pilih pesan buat dibaca</p>
       </div>
     )
+  }
+
+  const handleConfirmClick = () => {
+    setIsConfirmed(true)
+    if (onConfirm) onConfirm()
   }
 
   return (
@@ -117,10 +127,10 @@ export function InboxMessageView({ message, onBack }: InboxMessageViewProps) {
             </div>
           )}
 
-          {message.type === "invitation" && (
+          {message.type === "invitation" && viewer === "candidate" && (
             <div className="mt-12 flex items-center gap-3">
-              <Button className="gap-2">
-                <CheckCircleIcon className="size-4" /> Konfirmasi Kehadiran
+              <Button className="gap-2" onClick={handleConfirmClick} disabled={isConfirmed}>
+                <CheckCircleIcon className="size-4" /> {isConfirmed ? "Kehadiran Dikonfirmasi" : "Konfirmasi Kehadiran"}
               </Button>
               <Button variant="outline" className="gap-2">
                 <ReplyIcon className="size-4" /> Balas Pesan
