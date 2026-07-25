@@ -1,5 +1,6 @@
 "use client"
 
+import type { DragEvent } from "react"
 import Image from "next/image"
 import { IconBuildingSkyscraper, IconChevronDown } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
@@ -12,15 +13,51 @@ interface DepartmentJobGroupProps {
   isOpen: boolean
   onToggle: () => void
   onEdit: (job: Job) => void
+  dragEnabled: boolean
+  draggedJobID: string | null
+  movingJobID: string | null
+  isDropTarget: boolean
+  canReceiveDrop: boolean
+  onJobDragStart: (event: DragEvent<HTMLDivElement>, job: Job) => void
+  onJobDragEnd: () => void
+  onDragOver: (event: DragEvent<HTMLDivElement>) => void
+  onDragLeave: (event: DragEvent<HTMLDivElement>) => void
+  onDrop: (event: DragEvent<HTMLDivElement>) => void
 }
 
 /** Satu divisi = satu folder yang bisa dibuka-tutup, biar HRD lihat struktur
     tim dulu sebelum tenggelam di daftar lowongan yang panjang. Header selalu
     biru (bg-primary) buat semua divisi -- konsisten, bukan warna-warni per
     departemen. */
-export function DepartmentJobGroup({ name, jobsInGroup, isOpen, onToggle, onEdit }: DepartmentJobGroupProps) {
+export function DepartmentJobGroup({
+  name,
+  jobsInGroup,
+  isOpen,
+  onToggle,
+  onEdit,
+  dragEnabled,
+  draggedJobID,
+  movingJobID,
+  isDropTarget,
+  canReceiveDrop,
+  onJobDragStart,
+  onJobDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: DepartmentJobGroupProps) {
   return (
-    <div className="rounded-3xl border border-hairline bg-canvas overflow-hidden">
+    <div
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      className={cn(
+        "rounded-3xl border bg-canvas overflow-hidden transition-[border-color,box-shadow,transform]",
+        isDropTarget
+          ? "border-primary ring-4 ring-primary/15 scale-[1.005]"
+          : "border-hairline",
+      )}
+    >
       <button
         type="button"
         onClick={onToggle}
@@ -33,7 +70,11 @@ export function DepartmentJobGroup({ name, jobsInGroup, isOpen, onToggle, onEdit
           </span>
           <div className="min-w-0">
             <h3 className="truncate text-xl font-bold sm:text-2xl">{name}</h3>
-            <p className="text-sm text-white/80">{jobsInGroup.length} lowongan</p>
+            <p className="text-sm text-white/80">
+              {isDropTarget
+                ? `Lepaskan untuk pindah ke ${name}`
+                : `${jobsInGroup.length} lowongan`}
+            </p>
           </div>
         </div>
         <IconChevronDown className={cn("size-6 shrink-0 transition-transform", isOpen && "rotate-180")} />
@@ -55,11 +96,25 @@ export function DepartmentJobGroup({ name, jobsInGroup, isOpen, onToggle, onEdit
         ) : (
           <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-2">
             {jobsInGroup.map((job) => (
-              <JobCard key={job.id} job={job} onEdit={onEdit} />
+              <JobCard
+                key={job.id}
+                job={job}
+                onEdit={onEdit}
+                dragEnabled={dragEnabled}
+                isDragging={draggedJobID === job.id}
+                isMoving={movingJobID === job.id}
+                onDragStart={onJobDragStart}
+                onDragEnd={onJobDragEnd}
+              />
             ))}
           </div>
         )
       )}
+      {dragEnabled && draggedJobID && !canReceiveDrop ? (
+        <p className="border-t border-hairline bg-surface-1 px-6 py-3 text-center text-xs text-ink-muted">
+          “Lainnya” bukan departemen tujuan. Pilih departemen yang terdaftar.
+        </p>
+      ) : null}
     </div>
   )
 }

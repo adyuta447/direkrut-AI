@@ -61,9 +61,12 @@ export default function DepartmentsPage() {
     setFormOpen(true);
   };
 
-  const handleSubmit = (values: { name: string; description: string }) => {
+  const handleSubmit = async (values: {
+    name: string;
+    description: string;
+  }) => {
     if (editingDept) {
-      updateDepartment(editingDept.id, values);
+      await updateDepartment(editingDept.id, values);
       setNoticeImage("/status/success.svg");
       setNotice("Departemen berhasil diperbarui");
     } else {

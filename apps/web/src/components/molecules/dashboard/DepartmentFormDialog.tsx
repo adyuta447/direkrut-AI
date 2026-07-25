@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { IconBuildingSkyscraper } from "@tabler/icons-react";
+import {
+  IconBuildingSkyscraper,
+  IconLoader2,
+} from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,28 +27,54 @@ export function DepartmentFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   department: Department | null;
-  onSubmit: (values: { name: string; description: string }) => void;
+  onSubmit: (values: {
+    name: string;
+    description: string;
+  }) => void | Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [prevOpen, setPrevOpen] = useState(open);
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
       setName(department?.name ?? "");
       setDescription(department?.description ?? "");
+      setSubmitError("");
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    onSubmit({ name: name.trim(), description: description.trim() });
-    onOpenChange(false);
+    if (!name.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      await onSubmit({
+        name: name.trim(),
+        description: description.trim(),
+      });
+      onOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Departemen belum berhasil diperbarui. Coba lagi ya.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isSubmitting) onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -88,17 +117,36 @@ export function DepartmentFormDialog({
             </div>
           </div>
 
+          {submitError ? (
+            <p
+              role="alert"
+              className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            >
+              {submitError}
+            </p>
+          ) : null}
+
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
               className="border-hairline"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Batal
             </Button>
-            <Button type="submit">
-              {department ? "Simpan Perubahan" : "Tambah Departemen"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <IconLoader2 className="mr-2 size-4 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : department ? (
+                "Simpan Perubahan"
+              ) : (
+                "Tambah Departemen"
+              )}
             </Button>
           </DialogFooter>
         </form>

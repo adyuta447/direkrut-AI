@@ -231,6 +231,21 @@ export async function deleteJob(id: string): Promise<void> {
   await apiFetch<void>(`/v1/jobs/${id}`, { method: "DELETE" });
 }
 
+export async function renameDepartment(
+  fromDepartment: string,
+  toDepartment: string,
+): Promise<number> {
+  if (!isApiConfigured) return 0;
+  const result = await apiFetch<{ updatedCount: number }>(
+    "/v1/jobs/departments/rename",
+    {
+      method: "PATCH",
+      body: JSON.stringify({ fromDepartment, toDepartment }),
+    },
+  );
+  return result.updatedCount;
+}
+
 // --- API Scoring Weights ---
 import { ScoringWeightConfig } from "../lib/types";
 

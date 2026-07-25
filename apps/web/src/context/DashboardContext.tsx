@@ -53,7 +53,7 @@ interface DashboardContextType {
   deleteJob: (id: string) => Promise<void>;
   departments: Department[];
   addDepartment: (department: Department) => void;
-  updateDepartment: (id: string, updates: Partial<Department>) => void;
+  updateDepartment: (id: string, updates: Partial<Department>) => Promise<void>;
   deleteDepartment: (id: string) => void;
   currentPage: string;
   setCurrentPage: (page: string) => void;
@@ -98,7 +98,8 @@ function mergeApplications(current: Application[], incoming: Application[]): App
 
 type JobSyncMessage =
   | { type: "upsert"; job: Job }
-  | { type: "delete"; jobID: string };
+  | { type: "delete"; jobID: string }
+  | { type: "rename-department"; fromDepartment: string; toDepartment: string };
 
 const JOB_SYNC_CHANNEL = "direkrut-public-jobs";
 const JOB_REVALIDATE_INTERVAL_MS = 15_000;
@@ -131,7 +132,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   // Load saved jobs from localStorage on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const restoreSavedJobs = () => {
       const saved = localStorage.getItem("direkrut-saved-jobs");
       if (saved) {
         try {
@@ -140,7 +141,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           console.error("Failed to parse saved jobs", e);
         }
       }
-    }
+    };
+    const timeoutID = window.setTimeout(restoreSavedJobs, 0);
+    return () => window.clearTimeout(timeoutID);
   }, []);
 
   const toggleSavedJob = (jobId: string) => {
@@ -242,6 +245,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const message = event.data;
       if (message.type === "delete") {
         setJobs((prev) => prev.filter((job) => job.id !== message.jobID));
+        return;
+      }
+      if (message.type === "rename-department") {
+        const { fromDepartment, toDepartment } = message;
+        const renameJobs = (current: Job[]) =>
+          current.map((job) =>
+            job.department === fromDepartment
+              ? { ...job, department: toDepartment }
+              : job,
+          );
+        setJobs(renameJobs);
+        setMyJobs(renameJobs);
+        setDepartments((prev) => {
+          const source = prev.find((department) => department.name === fromDepartment);
+          if (!source) return prev;
+          if (prev.some((department) => department.name === toDepartment)) {
+            return prev.filter((department) => department.id !== source.id);
+          }
+          return prev.map((department) =>
+            department.id === source.id
+              ? { ...department, name: toDepartment }
+              : department,
+          );
+        });
         return;
       }
       const job = message.job;
@@ -412,10 +439,43 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setDepartments((prev) => [...prev, department]);
   };
 
-  const updateDepartment = (id: string, updates: Partial<Department>) => {
-    setDepartments((prev) =>
-      prev.map((dept) => (dept.id === id ? { ...dept, ...updates } : dept)),
-    );
+  const updateDepartment = async (id: string, updates: Partial<Department>) => {
+    const existing = departments.find((department) => department.id === id);
+    if (!existing) return;
+
+    const nextName = updates.name?.trim() || existing.name;
+    if (nextName !== existing.name) {
+      await jobService.renameDepartment(existing.name, nextName);
+
+      const renameJobs = (current: Job[]) =>
+        current.map((job) =>
+          job.department === existing.name
+            ? { ...job, department: nextName }
+            : job,
+        );
+      setMyJobs(renameJobs);
+      setJobs(renameJobs);
+      jobSyncChannelRef.current?.postMessage({
+        type: "rename-department",
+        fromDepartment: existing.name,
+        toDepartment: nextName,
+      } satisfies JobSyncMessage);
+    }
+
+    setDepartments((prev) => {
+      const targetExists = prev.some(
+        (department) =>
+          department.id !== id && department.name === nextName,
+      );
+      if (targetExists) {
+        return prev.filter((department) => department.id !== id);
+      }
+      return prev.map((department) =>
+        department.id === id
+          ? { ...department, ...updates, name: nextName }
+          : department,
+      );
+    });
   };
 
   const deleteDepartment = (id: string) => {
