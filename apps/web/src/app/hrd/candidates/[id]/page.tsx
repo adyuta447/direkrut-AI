@@ -23,29 +23,71 @@ import { CandidateCharts } from "@/components/molecules/dashboard/CandidateChart
 import { CandidateDetailAnalysis } from "@/components/molecules/dashboard/CandidateDetailAnalysis"
 import { InterviewLogCard, PortfolioCard } from "@/components/molecules/dashboard/CandidateDetailCV"
 import { StatusBadge } from "@/components/molecules/dashboard/StatusBadge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ApplicationStatsTab } from "@/components/organisms/dashboard/ApplicationStatsTab"
-import type { Application } from "@/lib/types"
+
+function CandidateDetailSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col gap-6 p-4 lg:p-8">
+      <Skeleton className="h-9 w-56" />
+      <Card className="overflow-hidden rounded-3xl border-hairline p-0">
+        <Skeleton className="h-24 w-full rounded-none" />
+        <CardContent className="flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-end gap-4">
+            <Skeleton className="-mt-14 size-24 shrink-0 rounded-full border-4 border-card" />
+            <div className="space-y-3">
+              <Skeleton className="h-8 w-52" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-36 rounded-lg" />
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="space-y-4 rounded-3xl p-6">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-28 w-full rounded-2xl" />
+          </Card>
+        ))}
+      </div>
+      <Skeleton className="h-10 w-80 rounded-lg" />
+      <Card className="space-y-4 rounded-3xl p-6">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
+      </Card>
+    </div>
+  )
+}
 
 export default function CandidateDetailPage() {
   const params = useParams<{ id: string }>()
-  const { applications, myJobs } = useDashboard()
+  const { applications, myJobs, upsertApplications } = useDashboard()
 
   // Diambil langsung by-id (bukan cuma applications.find dari context) --
   // context butuh waktu buat fetch lamaran asli pas mount, jadi deep-link
   // langsung ke halaman ini gak boleh nunjukin "nggak ketemu" prematur.
-  const [rawCandidate, setRawCandidate] = React.useState<Application | null | undefined>(() =>
-    applications.find((app) => app.id === params.id)
+  const [isCandidateLoading, setIsCandidateLoading] = React.useState(
+    () => !applications.some((app) => app.id === params.id),
   )
   React.useEffect(() => {
     let cancelled = false
     getApplicationById(params.id).then((fetched) => {
-      if (!cancelled && fetched) setRawCandidate(fetched)
+      if (!cancelled && fetched) upsertApplications([fetched])
+    }).finally(() => {
+      if (!cancelled) setIsCandidateLoading(false)
     })
     return () => {
       cancelled = true
     }
-  }, [params.id])
+  }, [params.id, upsertApplications])
 
+  const rawCandidate = applications.find((app) => app.id === params.id)
   const candidate = rawCandidate
     ? { ...rawCandidate, ...getExtendedData(rawCandidate) }
     : null
@@ -53,17 +95,23 @@ export default function CandidateDetailPage() {
   // Lamaran lain buat lowongan yang sama -- dasar funnel di tab Statistik.
   // Discope server-side lewat listApplicationsForJob (HRD cuma liat lowongan
   // miliknya sendiri), bukan filter applications di client.
-  const [jobApplications, setJobApplications] = React.useState<Application[]>([])
   React.useEffect(() => {
     if (!candidate?.jobId) return
     let cancelled = false
     listApplicationsForJob(candidate.jobId).then((fetched) => {
-      if (!cancelled) setJobApplications(fetched)
+      if (!cancelled) upsertApplications(fetched)
     })
     return () => {
       cancelled = true
     }
-  }, [candidate?.jobId])
+  }, [candidate?.jobId, upsertApplications])
+  const jobApplications = candidate?.jobId
+    ? applications.filter((application) => application.jobId === candidate.jobId)
+    : []
+
+  if (!candidate && isCandidateLoading) {
+    return <CandidateDetailSkeleton />
+  }
 
   if (!candidate) {
     return (

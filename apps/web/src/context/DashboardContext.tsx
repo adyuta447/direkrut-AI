@@ -5,6 +5,8 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import { User, UserRole, Application, Job, Department } from "@/lib/types";
@@ -26,7 +28,9 @@ interface DashboardContextType {
   logout: () => void;
   applications: Application[];
   myApplications: Application[];
+  isApplicationsLoading: boolean;
   refetchApplications: () => Promise<void>;
+  upsertApplications: (apps: Application[]) => void;
   addApplication: (app: Application) => void;
   updateApplication: (id: string, updates: Partial<Application>) => void;
   applyToJob: (jobId: string) => Promise<Application>;
@@ -39,6 +43,8 @@ interface DashboardContextType {
   ) => Promise<void>;
   deleteApplication: (id: string) => Promise<void>;
   jobs: Job[];
+  isJobsLoading: boolean;
+  refetchJobs: () => Promise<void>;
   /** Lowongan MILIK company HRD yang login, semua status -- sumber buat
    * halaman Manajemen Lowongan (bukan `jobs`, itu publik lintas-company). */
   myJobs: Job[];
@@ -82,6 +88,21 @@ function mergeJobDepartments(current: Department[], sourceJobs: Job[]): Departme
   ];
 }
 
+function mergeApplications(current: Application[], incoming: Application[]): Application[] {
+  if (incoming.length === 0) return current;
+  const incomingByID = new Map(incoming.map((application) => [application.id, application]));
+  const merged = current.map((application) => incomingByID.get(application.id) ?? application);
+  const existingIDs = new Set(current.map((application) => application.id));
+  return [...incoming.filter((application) => !existingIDs.has(application.id)), ...merged];
+}
+
+type JobSyncMessage =
+  | { type: "upsert"; job: Job }
+  | { type: "delete"; jobID: string };
+
+const JOB_SYNC_CHANNEL = "direkrut-public-jobs";
+const JOB_REVALIDATE_INTERVAL_MS = 15_000;
+
 /**
  * Provider tunggal buat seluruh app -- landing page, dashboard hrd, dan
  * dashboard candidate semua baca dari sini (dipasang sekali di
@@ -97,13 +118,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   // "ke-logout" secara visual walau token-nya masih valid.
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.restoreSession());
   const [applications, setApplications] = useState<Application[]>([]);
+  const [isApplicationsLoading, setIsApplicationsLoading] = useState(() => Boolean(currentUser?.id));
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [isJobsLoading, setIsJobsLoading] = useState(true);
   const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [currentPage, setCurrentPage] = useState("landing");
   const [searchOpen, setSearchOpen] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const jobSyncChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Load saved jobs from localStorage on mount
   useEffect(() => {
@@ -131,8 +155,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const refetchApplications = async () => {
     if (!currentUser?.id) return;
-    const fetched = await applicationService.listApplications();
-    setApplications(fetched);
+    setIsApplicationsLoading(true);
+    try {
+      const fetched = await applicationService.listApplications();
+      setApplications(fetched);
+    } finally {
+      setIsApplicationsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -140,6 +169,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     applicationService.listApplications().then((fetched) => {
       if (!cancelled) setApplications(fetched);
+    }).finally(() => {
+      if (!cancelled) setIsApplicationsLoading(false);
     });
     return () => {
       cancelled = true;
@@ -150,14 +181,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== null && !e.key.startsWith("direkrut_")) return;
       const synced = authService.restoreSession();
-      setCurrentUser((prev) => {
-        if (prev?.id === synced?.id && prev?.role === synced?.role) return prev;
-        return synced;
-      });
+      if (currentUser?.id === synced?.id && currentUser?.role === synced?.role) return;
+      setIsApplicationsLoading(Boolean(synced?.id));
+      setCurrentUser(synced);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+  }, [currentUser?.id, currentUser?.role]);
+
+  const loadPublicJobs = useCallback(async (finishInitialLoading: boolean) => {
+    try {
+      const fetchedJobs = await jobService.listJobs();
+      setJobs(fetchedJobs);
+      setDepartments((prev) => mergeJobDepartments(prev, fetchedJobs));
+    } catch (err) {
+      console.error("[DashboardContext] gagal sinkronisasi lowongan publik:", err);
+    } finally {
+      if (finishInitialLoading) setIsJobsLoading(false);
+    }
   }, []);
+
+  const refetchJobs = useCallback(async () => {
+    const showLoading = jobs.length === 0;
+    if (showLoading) setIsJobsLoading(true);
+    await loadPublicJobs(showLoading);
+  }, [jobs.length, loadPublicJobs]);
 
   useEffect(() => {
     let cancelled = false;
@@ -165,10 +213,51 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setJobs(fetchedJobs);
       setDepartments((prev) => mergeJobDepartments(prev, fetchedJobs));
+    }).catch((err) => {
+      console.error("[DashboardContext] gagal memuat lowongan publik:", err);
+    }).finally(() => {
+      if (!cancelled) setIsJobsLoading(false);
     });
+
+    const refreshInBackground = () => {
+      if (document.visibilityState === "visible") void loadPublicJobs(false);
+    };
+    const intervalID = window.setInterval(refreshInBackground, JOB_REVALIDATE_INTERVAL_MS);
+    window.addEventListener("focus", refreshInBackground);
+    document.addEventListener("visibilitychange", refreshInBackground);
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalID);
+      window.removeEventListener("focus", refreshInBackground);
+      document.removeEventListener("visibilitychange", refreshInBackground);
+    };
+  }, [loadPublicJobs]);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(JOB_SYNC_CHANNEL);
+    jobSyncChannelRef.current = channel;
+    channel.onmessage = (event: MessageEvent<JobSyncMessage>) => {
+      const message = event.data;
+      if (message.type === "delete") {
+        setJobs((prev) => prev.filter((job) => job.id !== message.jobID));
+        return;
+      }
+      const job = message.job;
+      setJobs((prev) => {
+        const exists = prev.some((item) => item.id === job.id);
+        if (job.status !== "active") {
+          return exists ? prev.filter((item) => item.id !== job.id) : prev;
+        }
+        return exists
+          ? prev.map((item) => (item.id === job.id ? job : item))
+          : [job, ...prev];
+      });
+    };
+    return () => {
+      jobSyncChannelRef.current = null;
+      channel.close();
     };
   }, []);
 
@@ -187,6 +276,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const { user } = await authService.login(email, password);
+    setIsApplicationsLoading(true);
     setCurrentUser(user);
     return user;
   };
@@ -199,6 +289,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     companyName?: string,
   ) => {
     const { user } = await authService.register(name, email, password, role, companyName);
+    setIsApplicationsLoading(true);
     setCurrentUser(user);
     return user;
   };
@@ -206,11 +297,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authService.logout();
     setCurrentUser(null);
+    setApplications([]);
+    setIsApplicationsLoading(false);
   };
 
   const addApplication = (app: Application) => {
     setApplications((prev) => [...prev, app]);
   };
+
+  const upsertApplications = useCallback((apps: Application[]) => {
+    setApplications((prev) => mergeApplications(prev, apps));
+  }, []);
 
   const updateApplication = (id: string, updates: Partial<Application>) => {
     setApplications((prev) =>
@@ -248,15 +345,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     email?: { subject: string; body: string },
     interviewScheduledAt?: string,
   ) => {
-    const existing = applications.find((a) => a.id === id);
-    const optimistic: Partial<Application> = { status, ...(interviewScheduledAt ? { interviewScheduledAt } : {}) };
-    updateApplication(id, optimistic);
-    try {
-      const result = await applicationService.updateApplicationStatus(id, status, note, email, interviewScheduledAt);
-      updateApplication(id, result ?? optimistic);
-    } catch (err) {
-      if (existing) updateApplication(id, existing);
-      throw err;
+    const result = await applicationService.updateApplicationStatus(id, status, note, email, interviewScheduledAt);
+    if (result) {
+      upsertApplications([result]);
+    } else {
+      updateApplication(id, {
+        status,
+        ...(interviewScheduledAt ? { interviewScheduledAt } : {}),
+      });
     }
   };
 
@@ -265,11 +361,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setApplications((prev) => prev.filter((a) => a.id !== id));
   };
 
-  // `jobs` (listing publik lintas-company buat kandidat) di-fetch SEKALI aja
-  // pas mount (lihat effect di atas) -- gak otomatis ke-refresh pas HRD
-  // ubah salah satu lowongannya sendiri. Tanpa ini, lowongan yang baru
-  // di-nonaktifin/aktifin-in ulang gak pernah ke-sync ke /jobs & /candidate/jobs
-  // dalam sesi browser yang sama, cuma nongol bener abis full reload.
+  // Sinkronkan hasil mutation HRD ke listing publik pada tab aktif saat ini.
+  // Tab lain menerima event BroadcastChannel, sedangkan browser/perangkat
+  // lain mendapat state terbaru lewat background revalidation di atas.
   const syncPublicJob = (job: Job) => {
     setJobs((prev) => {
       const isPublished = job.status === "active";
@@ -286,6 +380,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setMyJobs((prev) => [saved, ...prev]);
     setDepartments((prev) => mergeJobDepartments(prev, [saved]));
     syncPublicJob(saved);
+    jobSyncChannelRef.current?.postMessage({ type: "upsert", job: saved } satisfies JobSyncMessage);
   };
 
   const updateJob = async (id: string, updates: Partial<Job>) => {
@@ -298,6 +393,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const saved = await jobService.updateJob(id, { ...existing, ...updates });
       setMyJobs((prev) => prev.map((j) => (j.id === id ? saved : j)));
       syncPublicJob(saved);
+      jobSyncChannelRef.current?.postMessage({ type: "upsert", job: saved } satisfies JobSyncMessage);
     } catch (err) {
       setMyJobs((prev) => prev.map((j) => (j.id === id ? existing : j)));
       syncPublicJob(existing);
@@ -309,6 +405,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     await jobService.deleteJob(id);
     setMyJobs((prev) => prev.filter((j) => j.id !== id));
     setJobs((prev) => prev.filter((j) => j.id !== id));
+    jobSyncChannelRef.current?.postMessage({ type: "delete", jobID: id } satisfies JobSyncMessage);
   };
 
   const addDepartment = (department: Department) => {
@@ -335,13 +432,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         logout,
         applications,
         myApplications: applications,
+        isApplicationsLoading,
         refetchApplications,
+        upsertApplications,
         addApplication,
         updateApplication,
         applyToJob,
         changeApplicationStatus,
         deleteApplication,
         jobs,
+        isJobsLoading,
+        refetchJobs,
         myJobs,
         addJob,
         updateJob,

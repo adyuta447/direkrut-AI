@@ -11,6 +11,7 @@ import { JobList } from "../../components/organisms/jobs/JobList";
 import { JobDetailPanel } from "../../components/organisms/jobs/JobDetailPanel";
 import { JobDetailSheet } from "../../components/organisms/jobs/JobDetailSheet";
 import { JobsEmptyState } from "../../components/molecules/jobs/JobsEmptyState";
+import { JobsListSkeleton } from "../../components/organisms/jobs/JobsListSkeleton";
 
 
 export default function JobsPage() {
@@ -22,7 +23,7 @@ export default function JobsPage() {
 }
 
 function JobsPageContent() {
-  const { jobs, applications } = useDashboard();
+  const { jobs, applications, isJobsLoading } = useDashboard();
   const searchParams = useSearchParams();
   const filters = useJobFilters(jobs, {
     search: searchParams.get("q") ?? undefined,
@@ -43,7 +44,9 @@ function JobsPageContent() {
           id="job-results"
           className="flex-1 max-w-[1584px] mx-auto w-full px-6 lg:px-10 py-8 scroll-mt-20"
         >
-          {filters.filteredJobs.length === 0 ? (
+          {isJobsLoading ? (
+            <JobsListSkeleton />
+          ) : filters.filteredJobs.length === 0 ? (
             <JobsEmptyState onClearFilters={filters.clearFilters} />
           ) : (
             <div className="flex flex-col lg:flex-row gap-6 items-start">

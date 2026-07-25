@@ -165,12 +165,13 @@ function mapApiJobToJob(apiJob: ApiJob): Job {
 
 export async function listJobs(): Promise<Job[]> {
   if (isApiConfigured) {
-    try {
-      const data = await apiFetch<ApiJobListResponse>("/v1/jobs?limit=50");
-      return data.items.map(mapApiJobToJob);
-    } catch (err) {
-      console.error("[jobService] gagal ambil daftar lowongan dari API:", err);
-    }
+    // Browser/CDN boleh menyimpan GET /jobs sampai 60 detik, tetapi context
+    // melakukan background revalidation agar publish/close dari HRD cepat
+    // terlihat di portal kandidat dan landing page.
+    const data = await apiFetch<ApiJobListResponse>("/v1/jobs?limit=50", {
+      cache: "no-store",
+    });
+    return data.items.map(mapApiJobToJob);
   }
   return [];
 }

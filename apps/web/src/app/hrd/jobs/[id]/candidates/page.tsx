@@ -14,14 +14,14 @@ import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
 import { NotFoundCard } from "@/components/molecules/dashboard/NotFoundCard"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import type { Application, Job } from "@/lib/types"
+import type { Job } from "@/lib/types"
 
 export default function JobCandidatesPage() {
   const params = useParams()
   const jobId = params.id as string
   const [showChart, setShowChart] = useState(false)
 
-  const { jobs, applications } = useDashboard()
+  const { jobs, applications, upsertApplications } = useDashboard()
   const [job, setJob] = useState<Job | null | undefined>(() => jobs.find((j) => j.id === jobId))
   useEffect(() => {
     let cancelled = false
@@ -32,18 +32,21 @@ export default function JobCandidatesPage() {
       cancelled = true
     }
   }, [jobId])
-  const [jobApplications, setJobApplications] = useState<Application[]>(() =>
-    applications.filter((app) => app.jobId === jobId)
+  const [isApplicationsLoading, setIsApplicationsLoading] = useState(
+    () => !applications.some((app) => app.jobId === jobId),
   )
   useEffect(() => {
     let cancelled = false
     listApplicationsForJob(jobId).then((fetched) => {
-      if (!cancelled) setJobApplications(fetched)
+      if (!cancelled) upsertApplications(fetched)
+    }).finally(() => {
+      if (!cancelled) setIsApplicationsLoading(false)
     })
     return () => {
       cancelled = true
     }
-  }, [jobId])
+  }, [jobId, upsertApplications])
+  const jobApplications = applications.filter((app) => app.jobId === jobId)
   const { statusData, scoreData, expData } = useCandidateAnalytics(jobApplications)
 
   if (!job) {
@@ -89,7 +92,7 @@ export default function JobCandidatesPage() {
       )}
 
       <div className="bg-background rounded-xl border pt-4 pb-2">
-        <DataTable data={jobApplications} />
+        <DataTable data={jobApplications} isLoading={isApplicationsLoading} />
       </div>
     </div>
   )

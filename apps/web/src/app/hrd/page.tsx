@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
 import { BriefcaseIcon } from "lucide-react"
 import { PageHeader } from "@/components/molecules/dashboard/PageHeader"
@@ -13,10 +12,7 @@ import { Button } from "@/components/ui/button"
 import { useDashboard } from "@/context/DashboardContext"
 
 export default function HrdDashboardPage() {
-  const { applications, currentUser, refetchApplications } = useDashboard()
-  useEffect(() => {
-    void refetchApplications()
-  }, [])
+  const { applications, currentUser, isApplicationsLoading } = useDashboard()
 
   const perluTinjauan = applications.filter((a) => a.status === "under-review").length
 
@@ -48,7 +44,7 @@ export default function HrdDashboardPage() {
           <ChartAreaInteractive />
         </div>
 
-        <DataTable data={applications} />
+        <DataTable data={applications} isLoading={isApplicationsLoading} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 lg:px-6 pb-6">
           <ChartBarMixed />
