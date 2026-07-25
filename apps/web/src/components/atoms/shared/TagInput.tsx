@@ -31,7 +31,7 @@ export function TagInput({ tags, setTags, placeholder = "Ketik skill lalu Enter.
   }
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus-within:ring-1 focus-within:ring-ring ${className || ""}`}>
+    <div className={`flex min-h-12 w-full flex-wrap items-center gap-2 rounded-xl border border-input bg-background px-4 py-2 text-base transition-colors outline-none hover:border-foreground/40 focus-within:border-foreground focus-within:ring-1 focus-within:ring-foreground ${className || ""}`}>
       {tags.map((tag, index) => (
         <span
           key={index}
@@ -53,7 +53,7 @@ export function TagInput({ tags, setTags, placeholder = "Ketik skill lalu Enter.
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={tags.length === 0 ? placeholder : ""}
-        className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground min-w-[120px]"
+        className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground min-w-30 md:text-sm"
       />
     </div>
   )

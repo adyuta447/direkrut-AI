@@ -77,13 +77,6 @@ export default function CandidateDashboardPage() {
             footerDetail={wawancara > 0 ? "Gas, siapin dirimu!" : "Belum ada jadwal"}
           />
           <StatCard
-            label="Diterima"
-            value={diterima}
-            className="bg-success border-transparent text-white [&_.text-muted-foreground]:text-white/80"
-            image="/dashboard/conference.svg"
-            footerDetail={diterima > 0 ? "Selamat!" : "Belum ada"}
-          />
-          <StatCard
             label="Ditolak"
             value={ditolak}
             className="bg-destructive border-transparent text-white [&_.text-muted-foreground]:text-white/80"

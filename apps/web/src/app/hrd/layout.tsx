@@ -17,22 +17,11 @@ import { useHasMounted } from "@/hooks/use-has-mounted";
 export default function HrdLayout({ children }: { children: ReactNode }) {
   const { currentUser } = useDashboard();
   const router = useRouter();
-  // currentUser dipulihin dari localStorage (lihat DashboardContext) --
-  // server SELALU render null (gak ada localStorage di SSR), tapi hydration
-  // pass pertama di client udah punya currentUser keisi. Tanpa `mounted`,
-  // dua pass itu render tree yang beda -> React tandain hydration mismatch
-  // ("Hydration failed...") di SETIAP load, biarpun user tetep kepake abis
-  // React regenerate treenya sendiri. Guard ini masangin render pertama di
-  // client biar SAMA kaya server (sama-sama null), baru nampilin isi
-  // beneran di render berikutnya.
   const mounted = useHasMounted();
 
   useEffect(() => {
     if (!mounted) return;
     if (!currentUser) router.replace("/auth");
-    // Guard-nya sebelumnya cuma cek "ada sesi apa nggak", jadi kandidat yang
-    // login tetep bisa buka /hrd langsung dari URL bar. Role yang salah
-    // diarahin ke dashboard-nya sendiri, bukan /auth -- dia kan udah login.
     else if (currentUser.role !== "hrd") router.replace("/candidate");
   }, [mounted, currentUser, router]);
 
