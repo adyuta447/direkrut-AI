@@ -51,9 +51,25 @@ export function ApplyStep2({ hasCv, isLoadingCv, isUploadingCv, cvUploadError, j
                 Bakal dikirim ke HRD &amp; discreen AI
               </p>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full border-hairline" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
-              Ganti CV
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border-hairline"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  const { getCVDownloadUrl } = await import("@/services/candidateService")
+                  const url = await getCVDownloadUrl()
+                  if (url) window.open(url, "_blank")
+                  else alert("Gagal mengambil preview CV")
+                }}
+              >
+                Lihat CV
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full border-hairline" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
+                Ganti CV
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">

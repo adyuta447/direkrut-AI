@@ -241,6 +241,7 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 		return tx.Create(&history).Error
 	})
 	if txErr != nil {
+		log.Printf("txErr in submit lamaran: %v", txErr)
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal submit lamaran")
 		return
 	}
@@ -259,8 +260,22 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 	if appRow.Candidate != nil && appRow.Candidate.CvFileURL != nil && *appRow.Candidate.CvFileURL != "" && h.aiClient.IsConfigured() {
 		go func() {
 			ctxBg := context.Background()
-			if _, err := h.runScreening(ctxBg, &appRow, false); err != nil {
-				log.Printf("[application] background auto-screening gagal buat lamaran %s: %v", appRow.ID, err)
+			
+			// Auto-retry up to 3 times for LLM rate limits/timeouts
+			var err error
+			for attempt := 1; attempt <= 3; attempt++ {
+				_, err = h.runScreening(ctxBg, &appRow, false)
+				if err == nil {
+					break
+				}
+				log.Printf("[application] background auto-screening attempt %d gagal buat lamaran %s: %v", attempt, appRow.ID, err)
+				if attempt < 3 {
+					time.Sleep(time.Duration(attempt * 5) * time.Second) // Exponential backoff: 5s, 10s
+				}
+			}
+
+			if err != nil {
+				log.Printf("[application] background auto-screening gagal FINAL buat lamaran %s setelah 3 attempt", appRow.ID)
 			} else {
 				// Update status otomatis menjadi "screened" jika masih "submitted"
 				h.db.WithContext(ctxBg).Model(&appdb.Application{}).
@@ -1930,6 +1945,8 @@ func statusLabel(status string) string {
 		return "Administrasi"
 	case "interview":
 		return "Sedang Wawancara Teknis"
+	case "interview_confirmed":
+		return "Wawancara Dikonfirmasi"
 	case "interview_completed":
 		return "Sudah Wawancara Teknis"
 	case "accepted":

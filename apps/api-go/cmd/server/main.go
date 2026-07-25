@@ -30,6 +30,7 @@ import (
 	"github.com/adyuta447/direkrut-ai/api-go/internal/payment"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/storage"
 	"github.com/adyuta447/direkrut-ai/api-go/internal/subscription"
+	"github.com/adyuta447/direkrut-ai/api-go/migrations"
 )
 
 func main() {
@@ -41,6 +42,14 @@ func main() {
 	gdb, err := appdb.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("db: %v", err)
+	}
+
+	sqlDB, err := gdb.DB()
+	if err != nil {
+		log.Fatalf("db (sql): %v", err)
+	}
+	if err := migrations.RunAutoMigrate(sqlDB); err != nil {
+		log.Fatalf("migrations: %v", err)
 	}
 
 	redisCache, err := appcache.New(cfg.RedisURL)

@@ -47,6 +47,7 @@ export function ApplyFlowProvider({ children, jobId }: { children: React.ReactNo
     portfolio: "",
   })
   
+  const [fullProfile, setFullProfile] = React.useState<any>(null)
   const [hasCv, setHasCv] = React.useState(false)
   const [isLoadingCv, setIsLoadingCv] = React.useState(true)
   const [isUploadingCv, setIsUploadingCv] = React.useState(false)
@@ -64,12 +65,41 @@ export function ApplyFlowProvider({ children, jobId }: { children: React.ReactNo
   }, [jobId])
 
   React.useEffect(() => {
+    setFormData((prev) => {
+      const next = { ...prev }
+      let changed = false
+      if (!prev.email && currentUser?.email) {
+        next.email = currentUser.email
+        changed = true
+      }
+      if (!prev.name && currentUser?.name && !fullProfile?.name) {
+        next.name = currentUser.name
+        changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [currentUser, fullProfile])
+
+  React.useEffect(() => {
     let cancelled = false
     getMyProfile().then((profile) => {
       if (!cancelled) {
-        // override name from real profile so it's not the email prefix
-        if (profile?.name) {
-          setFormData((prev) => ({ ...prev, name: profile.name }))
+        setFullProfile(profile)
+        // override form data from real profile
+        const updates: Partial<FormData> = {}
+        if (profile?.name) updates.name = profile.name
+        if (profile?.phone) updates.phone = profile.phone
+        
+        if (profile?.links && profile.links.length > 0) {
+          const linkedin = profile.links.find(l => l.platform.toLowerCase() === "linkedin" || l.platform.toLowerCase().includes("linked"))
+          if (linkedin) updates.linkedin = linkedin.url
+          
+          const portfolio = profile.links.find(l => l.platform.toLowerCase() === "portfolio" || l.platform.toLowerCase() === "github" || l.platform.toLowerCase() === "website" || l.platform.toLowerCase() === "other")
+          if (portfolio) updates.portfolio = portfolio.url
+        }
+
+        if (Object.keys(updates).length > 0) {
+          setFormData((prev) => ({ ...prev, ...updates }))
         }
         const has = Boolean(profile?.cvFileUrl)
         setHasCv(has)
@@ -97,6 +127,35 @@ export function ApplyFlowProvider({ children, jobId }: { children: React.ReactNo
     if (!job) return
     setIsSubmitting(true)
     try {
+      // Update candidate profile first with the form data if fullProfile is available
+      if (fullProfile) {
+        import("@/services/candidateService").then(async ({ updateMyProfile }) => {
+          const newLinks = [...(fullProfile.links || [])]
+          
+          // Update or add linkedin
+          if (formData.linkedin) {
+            const lIdx = newLinks.findIndex(l => l.platform.toLowerCase() === "linkedin" || l.platform.toLowerCase().includes("linked"))
+            if (lIdx >= 0) newLinks[lIdx].url = formData.linkedin
+            else newLinks.push({ id: `link-${Date.now()}`, platform: "LinkedIn", url: formData.linkedin, status: "saved" })
+          }
+          
+          // Update or add portfolio
+          if (formData.portfolio) {
+            const pIdx = newLinks.findIndex(l => l.platform.toLowerCase() === "portfolio" || l.platform.toLowerCase() === "github" || l.platform.toLowerCase() === "website" || l.platform.toLowerCase() === "other")
+            if (pIdx >= 0) newLinks[pIdx].url = formData.portfolio
+            else newLinks.push({ id: `link-${Date.now()+1}`, platform: "Portfolio", url: formData.portfolio, status: "saved" })
+          }
+
+          const updatedProfile = {
+            ...fullProfile,
+            name: formData.name,
+            phone: formData.phone,
+            links: newLinks
+          }
+          await updateMyProfile(updatedProfile)
+        })
+      }
+      
       await applyToJob(job.id)
       router.push(`/candidate/apply/${job.id}/submitted`)
     } catch (e) {
