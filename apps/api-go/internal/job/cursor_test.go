@@ -31,3 +31,28 @@ func TestDecodeCursorRejectsGarbage(t *testing.T) {
 		t.Fatal("expected an error for a cursor with no underscore separator, got nil")
 	}
 }
+
+func TestNormalizeDepartment(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "keeps department", in: "Engineering", want: "Engineering"},
+		{name: "trims department", in: "  Product  ", want: "Product"},
+		{name: "defaults empty", in: "", want: "Umum"},
+		{name: "defaults whitespace", in: "   ", want: "Umum"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := normalizeDepartment(tt.in); got != tt.want {
+				t.Fatalf("normalizeDepartment(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}

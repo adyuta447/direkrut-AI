@@ -63,6 +63,7 @@ type jobResponse struct {
 	CompanyName     string     `json:"companyName,omitempty"`
 	CompanyIndustry string     `json:"companyIndustry,omitempty"`
 	Title           string     `json:"title"`
+	Department      string     `json:"department"`
 	Description     string     `json:"description"`
 	Requirements    string     `json:"requirements,omitempty"`
 	Location        string     `json:"location,omitempty"`
@@ -84,7 +85,7 @@ type jobResponse struct {
 
 func toJobResponse(j appdb.Job) jobResponse {
 	resp := jobResponse{
-		ID: j.ID, CompanyID: j.CompanyID, Title: j.Title, Description: j.Description,
+		ID: j.ID, CompanyID: j.CompanyID, Title: j.Title, Department: j.Department, Description: j.Description,
 		Requirements: derefStr(j.Requirements), Location: derefStr(j.Location),
 		EmploymentType: j.EmploymentType, SalaryMin: j.SalaryMin, SalaryMax: j.SalaryMax,
 		Status: j.Status, PublishedAt: j.PublishedAt, CreatedAt: j.CreatedAt,
@@ -124,6 +125,13 @@ func nilIfEmpty(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func normalizeDepartment(s string) string {
+	if department := strings.TrimSpace(s); department != "" {
+		return department
+	}
+	return "Umum"
 }
 
 // skillsJSON serialize slice skill ke JSON array string -- SELALU balikin
@@ -308,6 +316,7 @@ func (h *Handler) handleGetJob(w http.ResponseWriter, r *http.Request) {
 
 type jobWriteRequest struct {
 	Title                string   `json:"title" validate:"required,min=3,max=200"`
+	Department           string   `json:"department" validate:"omitempty,max=120"`
 	Description          string   `json:"description" validate:"required,min=10"`
 	Requirements         string   `json:"requirements"`
 	Location             string   `json:"location"`
@@ -359,7 +368,7 @@ func (h *Handler) handleCreateJob(w http.ResponseWriter, r *http.Request) {
 
 	jobRow := appdb.Job{
 		CompanyID: claims.CompanyID, CreatedBy: claims.HrdUserID,
-		Title: req.Title, Description: req.Description,
+		Title: req.Title, Department: normalizeDepartment(req.Department), Description: req.Description,
 		Requirements: nilIfEmpty(req.Requirements), Location: nilIfEmpty(req.Location),
 		EmploymentType: req.EmploymentType, SalaryMin: req.SalaryMin, SalaryMax: req.SalaryMax,
 		Status: req.Status,
@@ -433,6 +442,7 @@ func (h *Handler) handleUpdateJob(w http.ResponseWriter, r *http.Request) {
 	minExp := req.MinExperienceYears
 
 	jobRow.Title = req.Title
+	jobRow.Department = normalizeDepartment(req.Department)
 	jobRow.Description = req.Description
 	jobRow.Requirements = nilIfEmpty(req.Requirements)
 	jobRow.Location = nilIfEmpty(req.Location)

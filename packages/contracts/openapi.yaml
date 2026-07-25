@@ -940,6 +940,7 @@ components:
         companyName: { type: string }
         companyIndustry: { type: string }
         title: { type: string }
+        department: { type: string, example: Engineering }
         description: { type: string }
         requirements:
           type: string
@@ -957,6 +958,7 @@ components:
       required: [title, description, employmentType, status]
       properties:
         title: { type: string, minLength: 3, maxLength: 200 }
+        department: { type: string, maxLength: 120, default: Umum }
         description: { type: string, minLength: 10 }
         requirements: { type: string }
         location: { type: string }

@@ -54,6 +54,7 @@ export default function JobManagementPage() {
         onOpenChange={setIsSheetOpen}
         selectedJob={selectedJob}
         onSaved={() => setNotice("Perubahan berhasil disimpan")}
+        onSaveError={setNotice}
       />
 
       <div className="max-w-md">

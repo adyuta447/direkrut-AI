@@ -10,6 +10,7 @@ interface ApiJob {
   companyName?: string;
   companyIndustry?: string;
   title: string;
+  department?: string;
   description: string;
   requirements?: string;
   location?: string;
@@ -87,6 +88,7 @@ function parseSalaryRange(range: string): { salaryMin?: number; salaryMax?: numb
 
 interface JobWriteRequestBody {
   title: string;
+  department: string;
   description: string;
   requirements: string;
   location: string;
@@ -106,6 +108,7 @@ interface JobWriteRequestBody {
 function buildJobWriteRequest(job: Omit<Job, "id" | "applicantCount">): JobWriteRequestBody {
   return {
     title: job.title,
+    department: job.department.trim() || "Umum",
     description: job.description,
     requirements: job.requirements.join("\n"),
     location: job.location,
@@ -138,7 +141,7 @@ function mapApiJobToJob(apiJob: ApiJob): Job {
     location: apiJob.location || "-",
     type: EMPLOYMENT_TYPE_LABELS[apiJob.employmentType] ?? apiJob.employmentType,
     description: apiJob.description,
-    department: apiJob.companyIndustry || "Umum",
+    department: apiJob.department || apiJob.companyIndustry || "Umum",
     requirements: requirementsList,
     detailedQualifications: requirementsList,
     salaryRange: formatSalaryRange(apiJob.salaryMin, apiJob.salaryMax),
