@@ -46,6 +46,7 @@ func (h *Handler) Router() chi.Router {
 		pr.Use(h.requireAuth)
 		pr.With(appmw.RequireRole("hrd")).Get("/mine", h.handleListMyJobs)
 		pr.With(appmw.RequireRole("hrd")).Post("/", h.handleCreateJob)
+		pr.With(appmw.RequireRole("hrd")).Patch("/departments/rename", h.handleRenameDepartment)
 		pr.With(appmw.RequireRole("hrd")).Put("/{jobID}", h.handleUpdateJob)
 		pr.With(appmw.RequireRole("hrd")).Delete("/{jobID}", h.handleDeleteJob)
 		pr.With(appmw.RequireRole("candidate")).Post("/{jobID}/cv-upload-url", h.handleCVUploadURL)
@@ -132,6 +133,42 @@ func normalizeDepartment(s string) string {
 		return department
 	}
 	return "Umum"
+}
+
+type renameDepartmentRequest struct {
+	FromDepartment string `json:"fromDepartment" validate:"required,max=120"`
+	ToDepartment   string `json:"toDepartment" validate:"required,max=120"`
+}
+
+type renameDepartmentResponse struct {
+	UpdatedCount int `json:"updatedCount"`
+}
+
+// renameDepartmentJobs mengganti nama departemen seluruh lowongan dalam satu
+// transaksi dan selalu dibatasi ke company HRD yang sedang login. Daftar ID
+// dikembalikan supaya cache detail tiap lowongan ikut bisa diinvalidasi.
+func renameDepartmentJobs(
+	ctx context.Context,
+	gdb *gorm.DB,
+	companyID string,
+	fromDepartment string,
+	toDepartment string,
+) ([]string, error) {
+	jobIDs := make([]string, 0)
+	err := gdb.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		query := tx.Model(&appdb.Job{}).
+			Where("company_id = ? AND department = ?", companyID, fromDepartment)
+		if err := query.Pluck("id", &jobIDs).Error; err != nil {
+			return err
+		}
+		if len(jobIDs) == 0 {
+			return nil
+		}
+		return tx.Model(&appdb.Job{}).
+			Where("company_id = ? AND department = ?", companyID, fromDepartment).
+			Update("department", toDepartment).Error
+	})
+	return jobIDs, err
 }
 
 // skillsJSON serialize slice skill ke JSON array string -- SELALU balikin
@@ -270,6 +307,52 @@ func (h *Handler) handleListMyJobs(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
+func (h *Handler) handleRenameDepartment(w http.ResponseWriter, r *http.Request) {
+	claims, ok := appmw.ClaimsFromContext(r.Context())
+	if !ok || claims.CompanyID == "" {
+		httpx.WriteError(w, http.StatusForbidden, "forbidden", "akun HRD ini belum terhubung ke perusahaan")
+		return
+	}
+
+	var req renameDepartmentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_request", "request body gak valid")
+		return
+	}
+	if err := validate.Struct(req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", httpx.ValidationMessage(err))
+		return
+	}
+
+	fromDepartment := strings.TrimSpace(req.FromDepartment)
+	toDepartment := strings.TrimSpace(req.ToDepartment)
+	if fromDepartment == "" || toDepartment == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "validation_failed", "nama departemen wajib diisi")
+		return
+	}
+	if fromDepartment == toDepartment {
+		httpx.WriteJSON(w, http.StatusOK, renameDepartmentResponse{})
+		return
+	}
+
+	ctx := r.Context()
+	jobIDs, err := renameDepartmentJobs(ctx, h.db, claims.CompanyID, fromDepartment, toDepartment)
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error", "gagal memperbarui departemen lowongan")
+		return
+	}
+
+	if len(jobIDs) > 0 {
+		h.invalidateListCache(ctx)
+		detailKeys := make([]string, 0, len(jobIDs))
+		for _, jobID := range jobIDs {
+			detailKeys = append(detailKeys, "jobs:detail:"+jobID)
+		}
+		_ = h.cache.Del(ctx, detailKeys...)
+	}
+	httpx.WriteJSON(w, http.StatusOK, renameDepartmentResponse{UpdatedCount: len(jobIDs)})
+}
+
 func encodeCursor(t time.Time, id string) string {
 	raw := t.Format(time.RFC3339Nano) + "_" + id
 	return base64.RawURLEncoding.EncodeToString([]byte(raw))
@@ -315,15 +398,15 @@ func (h *Handler) handleGetJob(w http.ResponseWriter, r *http.Request) {
 }
 
 type jobWriteRequest struct {
-	Title                string   `json:"title" validate:"required,min=3,max=200"`
-	Department           string   `json:"department" validate:"omitempty,max=120"`
-	Description          string   `json:"description" validate:"required,min=10"`
-	Requirements         string   `json:"requirements"`
-	Location             string   `json:"location"`
-	EmploymentType       string   `json:"employmentType" validate:"required"`
-	SalaryMin            *int64   `json:"salaryMin"`
-	SalaryMax            *int64   `json:"salaryMax"`
-	Status               string   `json:"status" validate:"required,oneof=draft published closed"`
+	Title          string `json:"title" validate:"required,min=3,max=200"`
+	Department     string `json:"department" validate:"omitempty,max=120"`
+	Description    string `json:"description" validate:"required,min=10"`
+	Requirements   string `json:"requirements"`
+	Location       string `json:"location"`
+	EmploymentType string `json:"employmentType" validate:"required"`
+	SalaryMin      *int64 `json:"salaryMin"`
+	SalaryMax      *int64 `json:"salaryMax"`
+	Status         string `json:"status" validate:"required,oneof=draft published closed"`
 	// Field terstruktur AI Evidence-Based Scoring
 	RequiredSkills       []string `json:"requiredSkills"`
 	PreferredSkills      []string `json:"preferredSkills"`

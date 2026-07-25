@@ -49,6 +49,15 @@ export function useJobManagementFilters(jobs: Job[], departments: Department[]) 
     });
   };
 
+  const openGroup = (id: string) => {
+    setOpenGroups((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
   const tabCounts = (status: string) =>
     status === "all" ? jobs.length : jobs.filter((j) => j.status === status).length;
 
@@ -61,6 +70,7 @@ export function useJobManagementFilters(jobs: Job[], departments: Department[]) 
     setActiveTab,
     groupedByDept,
     toggleGroup,
+    openGroup,
     isGroupOpen,
     tabCounts,
   };

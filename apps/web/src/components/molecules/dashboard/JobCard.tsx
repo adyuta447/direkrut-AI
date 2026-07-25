@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type DragEvent } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -8,6 +8,8 @@ import {
   IconEdit,
   IconTrash,
   IconBriefcase,
+  IconGripVertical,
+  IconLoader2,
 } from "@tabler/icons-react"
 import { useDashboard } from "@/context/DashboardContext"
 import { Button } from "@/components/ui/button"
@@ -24,6 +26,11 @@ import type { Job } from "@/lib/types"
 interface JobCardProps {
   job: Job
   onEdit: (job: Job) => void
+  dragEnabled?: boolean
+  isDragging?: boolean
+  isMoving?: boolean
+  onDragStart?: (event: DragEvent<HTMLDivElement>, job: Job) => void
+  onDragEnd?: () => void
 }
 
 const JOB_STATUS_META: Record<string, { label: string; band: string }> = {
@@ -33,7 +40,15 @@ const JOB_STATUS_META: Record<string, { label: string; band: string }> = {
   draft: { label: "Draft", band: "bg-info" },
 }
 
-export function JobCard({ job, onEdit }: JobCardProps) {
+export function JobCard({
+  job,
+  onEdit,
+  dragEnabled = false,
+  isDragging = false,
+  isMoving = false,
+  onDragStart,
+  onDragEnd,
+}: JobCardProps) {
   const { updateJob, deleteJob } = useDashboard()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -57,12 +72,39 @@ export function JobCard({ job, onEdit }: JobCardProps) {
   }
 
   return (
-    <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0 flex flex-col">
+    <div
+      draggable={dragEnabled && !isMoving}
+      onDragStart={(event) => onDragStart?.(event, job)}
+      onDragEnd={onDragEnd}
+      className={[
+        "relative rounded-3xl transition-[opacity,transform,box-shadow]",
+        dragEnabled ? "cursor-grab active:cursor-grabbing" : "",
+        isDragging ? "opacity-45 scale-[0.98]" : "",
+      ].join(" ")}
+    >
+      {isMoving ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center gap-2 rounded-3xl bg-canvas/80 text-sm font-semibold text-primary backdrop-blur-[2px]">
+          <IconLoader2 className="size-5 animate-spin" />
+          Memindahkan...
+        </div>
+      ) : null}
+      <Card className="rounded-3xl border border-hairline bg-canvas shadow-none ring-0 overflow-hidden pt-0 flex h-full flex-col">
       <div className={`${statusMeta.band} p-4`}>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-lg leading-snug text-white line-clamp-2" title={job.title}>
-            {job.title}
-          </h3>
+          <div className="flex min-w-0 items-start gap-2">
+            {dragEnabled ? (
+              <span
+                className="mt-0.5 hidden shrink-0 rounded-md bg-white/15 p-1 text-white/80 lg:block"
+                title="Tarik untuk pindah departemen"
+                aria-hidden="true"
+              >
+                <IconGripVertical className="size-4" />
+              </span>
+            ) : null}
+            <h3 className="font-semibold text-lg leading-snug text-white line-clamp-2" title={job.title}>
+              {job.title}
+            </h3>
+          </div>
           <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-xs font-semibold text-white whitespace-nowrap">
             {statusMeta.label}
           </span>
@@ -159,6 +201,7 @@ export function JobCard({ job, onEdit }: JobCardProps) {
           <NoticeDialog message={notice} onClose={() => setNotice(null)} />
         </div>
       </CardFooter>
-    </Card>
+      </Card>
+    </div>
   )
 }
