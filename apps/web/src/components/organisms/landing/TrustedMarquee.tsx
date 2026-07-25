@@ -4,8 +4,12 @@ const companies = [
   { name: "ByteDance", logo: "/company/ByteDance_Logo.svg" },
   { name: "Grab", logo: "/company/Grab_Logo.webp" },
   { name: "Nestlé", logo: "/company/Nestlé_Logo.webp" },
-  { name: "Universitas Indonesia", logo: "/company/UniversitasIndonesia_Logo.png" },
+  {
+    name: "Universitas Indonesia",
+    logo: "/company/UniversitasIndonesia_Logo.png",
+  },
   { name: "CSG", logo: "/company/CSG_Logo.jpg" },
+  { name: "Politeknik Negeri Jakarta", logo: "/company/PNJ_Logo.jpg" },
 ];
 
 function LogoRow({ ariaHidden }: { ariaHidden?: boolean }) {

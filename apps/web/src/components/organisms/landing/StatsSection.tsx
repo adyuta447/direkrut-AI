@@ -1,6 +1,6 @@
 const stats = [
-  { count: 8, suffix: "+", display: "8+", label: "Expert reviewers" },
-  { count: 3, suffix: "", display: "3", label: "Industry sectors" },
+  { count: 6, suffix: "+", display: "8+", label: "Expert reviewers" },
+  { count: 4, suffix: "", display: "3", label: "Industry sectors" },
   {
     count: 100,
     suffix: "%",
