@@ -148,24 +148,66 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
   // --- Kamera & mikrofon wajib buat proctoring, bukan dekorasi ---
   const [mediaStream, setMediaStream] = React.useState<MediaStream | null>(null)
   const [mediaError, setMediaError] = React.useState<string | null>(null)
+  const [isRequestingMedia, setIsRequestingMedia] = React.useState(false)
   const videoRef = React.useRef<HTMLVideoElement>(null)
 
   const requestMedia = React.useCallback(async () => {
     setMediaError(null)
+    setIsRequestingMedia(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("MEDIA_DEVICES_UNAVAILABLE")
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      })
       setMediaStream(stream)
-    } catch {
-      setMediaError("Gagal akses kamera/mikrofon. Interview ini wajib pakai kamera buat verifikasi integritas -- izinkan akses lalu coba lagi.")
+    } catch (error) {
+      const permissionDenied =
+        error instanceof DOMException &&
+        (error.name === "NotAllowedError" || error.name === "SecurityError")
+      setMediaError(
+        permissionDenied
+          ? "Akses kamera atau mikrofon ditolak. Izinkan akses lewat pengaturan browser, lalu coba lagi."
+          : "Kamera atau mikrofon tidak dapat digunakan. Pastikan perangkat tersambung dan tidak sedang dipakai aplikasi lain.",
+      )
+    } finally {
+      setIsRequestingMedia(false)
     }
   }, [])
 
-  React.useEffect(() => {
-    if (videoRef.current && mediaStream) videoRef.current.srcObject = mediaStream
+  // Setup dan sesi interview merender elemen <video> yang berbeda. Callback
+  // ref memastikan stream yang sama selalu dipasang ulang ketika layar berganti.
+  const attachVideoStream = React.useCallback((video: HTMLVideoElement | null) => {
+    videoRef.current = video
+    if (!video || !mediaStream) return
+    video.srcObject = mediaStream
+    void video.play().catch(() => {
+      // Atribut autoPlay tetap akan mencoba lagi setelah browser mengizinkan playback.
+    })
   }, [mediaStream])
 
   React.useEffect(() => {
+    if (!mediaStream) return
+
+    const handleTrackEnded = () => {
+      setMediaError("Kamera atau mikrofon terputus. Sambungkan kembali perangkat lalu coba lagi.")
+      setMediaStream(null)
+    }
+    mediaStream.getTracks().forEach((track) => track.addEventListener("ended", handleTrackEnded))
+
     return () => {
+      mediaStream.getTracks().forEach((track) => track.removeEventListener("ended", handleTrackEnded))
       mediaStream?.getTracks().forEach((t) => t.stop())
     }
   }, [mediaStream])
@@ -405,15 +447,15 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
         <div className="space-y-4">
           <div className="relative aspect-video overflow-hidden rounded-3xl border border-hairline bg-muted">
             {mediaStream ? (
-              <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
+              <video ref={attachVideoStream} autoPlay muted playsInline className="h-full w-full scale-x-[-1] object-cover" />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/90 px-6 text-center text-white/70">
                 <div className="flex size-14 items-center justify-center rounded-2xl border border-white/20">
                   <CameraIcon className="size-7" />
                 </div>
                 <p className="text-sm">{mediaError ? mediaError : "Kamera & mikrofon wajib diaktifkan buat mulai wawancara"}</p>
-                <Button size="sm" className="rounded-full" onClick={requestMedia}>
-                  {mediaError ? "Coba Lagi" : "Aktifkan Kamera & Mikrofon"}
+                <Button size="sm" className="rounded-full" onClick={requestMedia} disabled={isRequestingMedia}>
+                  {isRequestingMedia ? "Menghubungkan..." : mediaError ? "Coba Lagi" : "Aktifkan Kamera & Mikrofon"}
                 </Button>
               </div>
             )}
@@ -526,7 +568,7 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
           <div className="space-y-1">
             <h4 className="font-semibold text-destructive">Komitmen Penyelesaian</h4>
             <p className="text-sm text-destructive/90 leading-relaxed">
-              Setelah Anda menekan tombol "Mulai Test Tertulis" di bawah, Anda <strong>TIDAK DAPAT KEMBALI</strong>, menjeda proses, atau keluar dari halaman ini hingga seluruh tahapan wawancara lisan selesai.
+              Setelah Anda menekan tombol &ldquo;Mulai Test Tertulis&rdquo; di bawah, Anda <strong>TIDAK DAPAT KEMBALI</strong>, menjeda proses, atau keluar dari halaman ini hingga seluruh tahapan wawancara lisan selesai.
             </p>
           </div>
         </div>
@@ -705,10 +747,25 @@ export default function InterviewPage({ params }: { params: Promise<{ jobId: str
 
           <div className={`absolute bottom-8 right-8 w-48 md:w-64 aspect-video bg-black/90 rounded-xl overflow-hidden border-2 shadow-2xl transition-all duration-500 ${isAiSpeaking ? 'border-white/20 scale-95' : 'border-brand-accent scale-100'}`}>
             {mediaStream ? (
-              <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
+              <video ref={attachVideoStream} autoPlay muted playsInline className="h-full w-full scale-x-[-1] object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-white/50">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-3 text-center text-white/60">
                 <VideoOffIcon className="size-8" />
+                <p className="text-[10px] leading-relaxed">{mediaError ?? "Kamera tidak aktif"}</p>
+                <Button
+                  size="sm"
+                  className="h-7 rounded-full px-3 text-[10px]"
+                  onClick={requestMedia}
+                  disabled={isRequestingMedia}
+                >
+                  {isRequestingMedia ? "Menghubungkan..." : "Aktifkan Kamera"}
+                </Button>
+              </div>
+            )}
+            {mediaStream && (
+              <div className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white">
+                <span className="size-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.9)]" />
+                Kamera aktif
               </div>
             )}
             {isRecording && (
