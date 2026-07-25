@@ -276,18 +276,6 @@ func (h *Handler) handleSubmitApplication(w http.ResponseWriter, r *http.Request
 
 			if err != nil {
 				log.Printf("[application] background auto-screening gagal FINAL buat lamaran %s setelah 3 attempt", appRow.ID)
-			} else {
-				// Update status otomatis menjadi "screened" jika masih "submitted"
-				h.db.WithContext(ctxBg).Model(&appdb.Application{}).
-					Where("id = ? AND status = ?", appRow.ID, "submitted").
-					Update("status", "screened")
-				
-				fromStatus := "submitted"
-				history := appdb.ApplicationStatusHistory{
-					ApplicationID: appRow.ID, FromStatus: &fromStatus, ToStatus: "screened",
-					Note: nilIfEmpty("Auto-screening AI selesai"),
-				}
-				h.db.WithContext(ctxBg).Create(&history)
 			}
 		}()
 	}
@@ -1699,6 +1687,14 @@ type finalizeInterviewResponse struct {
 	AuthenticityScore   map[string]float64  `json:"authenticityScore,omitempty"`
 }
 
+// Status "screened" sempat ditulis oleh background CV screening, walaupun
+// status itu bukan bagian dari pipeline aplikasi yang didukung frontend/API.
+// Tetap terima nilainya di sini supaya request finalize dari kandidat lama
+// bisa memulihkan lamaran tersebut ke tahap review HRD.
+func shouldMoveToReviewAfterAIInterview(status string) bool {
+	return status == "submitted" || status == "screened"
+}
+
 func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request) {
 	claims, ok := appmw.ClaimsFromContext(r.Context())
 	if !ok {
@@ -1775,7 +1771,7 @@ func (h *Handler) handleInterviewFinalize(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if appRow.Status == "submitted" {
+	if shouldMoveToReviewAfterAIInterview(appRow.Status) {
 		fromStatus := appRow.Status
 		txErr := h.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(&appdb.Application{}).Where("id = ?", appRow.ID).
