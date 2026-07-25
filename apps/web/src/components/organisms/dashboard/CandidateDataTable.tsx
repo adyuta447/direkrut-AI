@@ -27,6 +27,7 @@ import { Candidate } from "@/components/molecules/dashboard/CandidateTableTypes"
 import { candidateColumns } from "@/components/molecules/dashboard/CandidateTableColumns"
 import { CandidateTableToolbar } from "@/components/molecules/dashboard/CandidateTableToolbar"
 import { CandidateTablePagination } from "@/components/molecules/dashboard/CandidateTablePagination"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export type { Candidate }
 
@@ -62,7 +63,7 @@ function useTabFilter(
   return { activeTab, setActiveTab }
 }
 
-export function DataTable({ data }: { data: Candidate[] }) {
+export function DataTable({ data, isLoading = false }: { data: Candidate[]; isLoading?: boolean }) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -132,7 +133,25 @@ export function DataTable({ data }: { data: Candidate[] }) {
               ))}
             </TableHeader>
             <TableBody className="**:data-[slot=table-cell]:first:w-8">
-              {table.getRowModel().rows?.length ? (
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, rowIndex) => (
+                  <TableRow key={`skeleton-${rowIndex}`}>
+                    {table.getVisibleLeafColumns().map((column, columnIndex) => (
+                      <TableCell key={column.id} className="py-3">
+                        <Skeleton
+                          className={
+                            columnIndex === 0
+                              ? "size-4 rounded"
+                              : columnIndex % 3 === 0
+                                ? "h-4 w-16"
+                                : "h-4 w-full max-w-32"
+                          }
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}

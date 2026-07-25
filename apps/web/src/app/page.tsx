@@ -13,7 +13,7 @@ import { FeaturedJobsSection } from "../components/organisms/landing/FeaturedJob
 import { CtaBanner } from "../components/organisms/landing/CtaBanner";
 
 export default function HomePage() {
-  const { jobs } = useDashboard();
+  const { jobs, isJobsLoading } = useDashboard();
   useLandingAnimations();
 
   return (
@@ -24,7 +24,7 @@ export default function HomePage() {
         <div className="landing-pin sticky bg-canvas">
           <TrustedMarquee />
           <StatsSection />
-          <FeaturedJobsSection jobs={jobs} />
+          <FeaturedJobsSection jobs={jobs} isLoading={isJobsLoading} />
           <HowItWorksSection />
           <FeaturesSection />
           <CtaBanner />

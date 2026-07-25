@@ -10,9 +10,10 @@ import { JobList } from "@/components/organisms/jobs/JobList"
 import { JobDetailPanel } from "@/components/organisms/jobs/JobDetailPanel"
 import { JobDetailSheet } from "@/components/organisms/jobs/JobDetailSheet"
 import { JobsEmptyState } from "@/components/molecules/jobs/JobsEmptyState"
+import { JobsListSkeleton } from "@/components/organisms/jobs/JobsListSkeleton"
 
 export default function CandidateJobsPage() {
-  const { jobs, applications } = useDashboard()
+  const { jobs, applications, isJobsLoading } = useDashboard()
   const filters = useJobFilters(jobs)
 
   const applyHref = (id: string) => `/candidate/apply/${id}`
@@ -78,7 +79,9 @@ export default function CandidateJobsPage() {
         </div>
       </div>
 
-      {filters.filteredJobs.length === 0 ? (
+      {isJobsLoading ? (
+        <JobsListSkeleton />
+      ) : filters.filteredJobs.length === 0 ? (
         <JobsEmptyState onClearFilters={filters.clearFilters} />
       ) : (
         <div className="flex flex-col lg:flex-row gap-6 items-start">

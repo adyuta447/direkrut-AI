@@ -6,12 +6,14 @@ import { ArrowRight } from "lucide-react";
 import { Job } from "@/lib/types";
 import { FeaturedJobCard } from "../../molecules/landing/FeaturedJobCard";
 import { TiltCard } from "../../atoms/shared/TiltCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FeaturedJobsSectionProps {
   jobs: Job[];
+  isLoading?: boolean;
 }
 
-export function FeaturedJobsSection({ jobs }: FeaturedJobsSectionProps) {
+export function FeaturedJobsSection({ jobs, isLoading = false }: FeaturedJobsSectionProps) {
   const categories = useMemo(
     () => ["Semua", ...Array.from(new Set(jobs.map((job) => job.industry))).slice(0, 5)],
     [jobs]
@@ -60,7 +62,22 @@ export function FeaturedJobsSection({ jobs }: FeaturedJobsSectionProps) {
           ))}
         </div>
 
-        {featuredJobs.length > 0 ? (
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2" aria-label="Memuat lowongan pilihan" aria-busy="true">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="space-y-4 rounded-3xl border border-hairline bg-canvas p-6">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-2/5" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-7 w-24 rounded-full" />
+                  <Skeleton className="h-7 w-28 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
+              </div>
+            ))}
+          </div>
+        ) : featuredJobs.length > 0 ? (
           <div className="grid md:grid-cols-2 gap-4">
             {featuredJobs.map((job) => (
               <TiltCard key={job.id} maxTilt={4}>
