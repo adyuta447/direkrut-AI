@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useDashboard } from "@/context/DashboardContext"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,21 +19,30 @@ interface EditJobSheetProps {
   onOpenChange: (open: boolean) => void
   selectedJob: Job | null
   onSaved: () => void
+  onSaveError: (message: string) => void
 }
 
 /** Dialog edit lowongan HRD -- nyimpen state form-nya sendiri lewat FormData
  * (bukan controlled state terpisah), dan langsung manggil updateJob (yang
  * beneran PUT ke apps/api-go) begitu disubmit. */
-export function EditJobSheet({ open, onOpenChange, selectedJob, onSaved }: EditJobSheetProps) {
+export function EditJobSheet({ open, onOpenChange, selectedJob, onSaved, onSaveError }: EditJobSheetProps) {
   const { updateJob } = useDashboard()
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!selectedJob) return
     const formData = new FormData(e.currentTarget)
-    updateJob(selectedJob.id, parseJobFormValues(formData))
-    onOpenChange(false)
-    onSaved()
+    setIsSaving(true)
+    try {
+      await updateJob(selectedJob.id, parseJobFormValues(formData))
+      onOpenChange(false)
+      onSaved()
+    } catch (err) {
+      onSaveError(err instanceof Error ? err.message : "Gagal memperbarui lowongan, coba lagi ya")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -46,13 +56,15 @@ export function EditJobSheet({ open, onOpenChange, selectedJob, onSaved }: EditJ
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6">
-            <JobFormFields selectedJob={selectedJob} />
+            <JobFormFields key={selectedJob?.id} selectedJob={selectedJob} />
           </div>
           <div className="flex justify-end gap-3 border-t border-hairline p-6">
             <DialogClose render={<Button type="button" variant="outline" className="border-hairline" />}>
               Batal
             </DialogClose>
-            <Button type="submit">Simpan Perubahan</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
           </div>
         </form>
       </DialogContent>

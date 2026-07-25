@@ -63,6 +63,25 @@ const DashboardContext = createContext<DashboardContextType | undefined>(
   undefined,
 );
 
+function mergeJobDepartments(current: Department[], sourceJobs: Job[]): Department[] {
+  const existingNames = new Set(current.map((department) => department.name));
+  const newNames = Array.from(
+    new Set(sourceJobs.map((job) => job.department.trim()).filter(Boolean)),
+  ).filter((name) => !existingNames.has(name));
+  if (newNames.length === 0) return current;
+
+  return [
+    ...current,
+    ...newNames.map((name) => ({
+      id: name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, ""),
+      name,
+    })),
+  ];
+}
+
 /**
  * Provider tunggal buat seluruh app -- landing page, dashboard hrd, dan
  * dashboard candidate semua baca dari sini (dipasang sekali di
@@ -145,21 +164,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     jobService.listJobs().then((fetchedJobs) => {
       if (cancelled) return;
       setJobs(fetchedJobs);
-      setDepartments((prev) => {
-        const existingNames = new Set(prev.map((d) => d.name));
-        const newNames = Array.from(
-          new Set(fetchedJobs.map((j) => j.department)),
-        ).filter((name) => !existingNames.has(name));
-        if (newNames.length === 0) return prev;
-        const added = newNames.map((name) => ({
-          id: name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, ""),
-          name,
-        }));
-        return [...prev, ...added];
-      });
+      setDepartments((prev) => mergeJobDepartments(prev, fetchedJobs));
     });
 
     return () => {
@@ -171,7 +176,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     if (currentUser?.role !== "hrd") return;
     let cancelled = false;
     jobService.listMyJobs().then((fetched) => {
-      if (!cancelled) setMyJobs(fetched);
+      if (cancelled) return;
+      setMyJobs(fetched);
+      setDepartments((prev) => mergeJobDepartments(prev, fetched));
     });
     return () => {
       cancelled = true;
@@ -277,6 +284,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const addJob = async (job: Job) => {
     const saved = await jobService.createJob(job);
     setMyJobs((prev) => [saved, ...prev]);
+    setDepartments((prev) => mergeJobDepartments(prev, [saved]));
     syncPublicJob(saved);
   };
 
@@ -300,6 +308,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const deleteJob = async (id: string) => {
     await jobService.deleteJob(id);
     setMyJobs((prev) => prev.filter((j) => j.id !== id));
+    setJobs((prev) => prev.filter((j) => j.id !== id));
   };
 
   const addDepartment = (department: Department) => {

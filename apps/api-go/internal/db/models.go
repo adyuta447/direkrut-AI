@@ -255,6 +255,7 @@ type Job struct {
 	CompanyID      string     `gorm:"column:company_id"`
 	CreatedBy      string     `gorm:"column:created_by"`
 	Title          string     `gorm:"column:title"`
+	Department     string     `gorm:"column:department"`
 	Description    string     `gorm:"column:description"`
 	Requirements   *string    `gorm:"column:requirements"`
 	Location       *string    `gorm:"column:location"`
