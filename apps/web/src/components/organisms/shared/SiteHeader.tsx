@@ -28,6 +28,7 @@ export function SiteHeader({
   registerLabel = "Gabung Sekarang",
 }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { currentUser, logout } = useDashboard();
   const dashboardUrl = currentUser?.role === "hrd" ? "/hrd" : "/candidate";
@@ -80,15 +81,14 @@ export function SiteHeader({
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-6">
               {currentUser ? (
-                <DropdownMenu>
+                <DropdownMenu
+                  open={isProfileMenuOpen}
+                  onOpenChange={setIsProfileMenuOpen}
+                >
                   <DropdownMenuTrigger
-                    render={
-                      <button
-                        type="button"
-                        aria-label={`Buka menu profil ${currentUser.name}`}
-                        className="rounded-full outline-none ring-offset-2 ring-offset-canvas hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary"
-                      />
-                    }
+                    type="button"
+                    aria-label={`Buka menu profil ${currentUser.name}`}
+                    className="rounded-full outline-none ring-offset-2 ring-offset-canvas hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <Avatar size="lg">
                       <AvatarFallback className="bg-primary font-bold text-white">
@@ -119,7 +119,10 @@ export function SiteHeader({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onClick={logout}
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        logout();
+                      }}
                       className="cursor-pointer"
                     >
                       <LogOut />
