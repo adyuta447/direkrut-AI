@@ -26,6 +26,7 @@ type Role = "candidate" | "hrd";
 
 interface AuthScreenProps {
   mode: "login" | "register";
+  initialRole?: Role;
 }
 
 const COPY = {
@@ -39,11 +40,14 @@ const COPY = {
   },
 };
 
-export function AuthScreen({ mode }: AuthScreenProps) {
+export function AuthScreen({
+  mode,
+  initialRole = "candidate",
+}: AuthScreenProps) {
   const isLogin = mode === "login";
   const { login, register } = useDashboard();
   const router = useRouter();
-  const [role, setRole] = useState<Role>("candidate");
+  const [role, setRole] = useState<Role>(initialRole);
   const [formData, setFormData] = useState<AuthFormData>({
     name: "",
     email: "",

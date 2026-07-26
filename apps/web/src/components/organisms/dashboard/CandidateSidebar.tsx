@@ -13,7 +13,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
@@ -52,13 +51,13 @@ export function CandidateSidebar({ ...props }: React.ComponentProps<typeof Sideb
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:p-1.5! flex items-center"
-              render={<Link href="/candidate" />}
+            <Link
+              href="/candidate"
+              className="flex h-9 items-center rounded-xl px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             >
               <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
               <Image src="/logo/DirekrutAI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
-            </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
