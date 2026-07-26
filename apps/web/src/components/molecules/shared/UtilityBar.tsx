@@ -6,11 +6,14 @@ interface UtilityBarProps {
 
 export function UtilityBar({ contactLabel }: UtilityBarProps) {
   return (
-    <div className="bg-surface-1 h-8 flex items-center px-6 lg:px-10 justify-between text-[12px] text-ink-muted">
-      <Link href="/auth/login" className="hover:text-ink">
+    <div className="bg-surface-1 min-h-8 flex items-center justify-center px-4 py-2 text-[12px] text-ink-muted sm:justify-between sm:px-6 sm:py-0 lg:px-10">
+      <Link
+        href="/auth/login?role=hrd"
+        className="text-center leading-4 hover:text-ink sm:text-left"
+      >
         Kamu dari tim HRD? Masuk di sini
       </Link>
-      <div className="flex gap-4">
+      <div className="hidden gap-4 sm:flex">
         <span className="hover:text-ink cursor-pointer">Butuh Bantuan?</span>
         <span className="hover:text-ink cursor-pointer">{contactLabel}</span>
       </div>

@@ -14,7 +14,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
@@ -65,9 +64,9 @@ export function HrdSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:p-1.5! flex items-center"
-              render={<Link href="/hrd" />}
+            <Link
+              href="/hrd"
+              className="flex h-9 items-center rounded-xl px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             >
               <Image
                 src="/logo/Direkrut%20AI_WhiteMode.png"
@@ -83,7 +82,7 @@ export function HrdSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 height={28}
                 alt="Direkrut AI Logo"
               />
-            </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

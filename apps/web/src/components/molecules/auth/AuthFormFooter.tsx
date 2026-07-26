@@ -13,7 +13,7 @@ export function AuthFormFooter({ isLogin, role }: AuthFormFooterProps) {
       <p className="text-[14px] text-ink-muted mt-8 text-center">
         {isLogin ? "Belum punya akun? " : "Udah punya akun? "}
         <Link
-          href={isLogin ? "/auth/register" : "/auth/login"}
+          href={`${isLogin ? "/auth/register" : "/auth/login"}?role=${role}`}
           className="text-primary font-medium hover:underline"
         >
           {isLogin ? "Daftar sekarang" : "Masuk di sini"}

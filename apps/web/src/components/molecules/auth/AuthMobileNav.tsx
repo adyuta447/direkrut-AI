@@ -9,14 +9,7 @@ export function AuthMobileNav() {
         <Link href="/" className="flex lg:hidden items-center hover:opacity-90 transition-opacity">
           <Image
             src="/logo/Direkrut%20AI_WhiteMode.png"
-            className="block dark:hidden h-6 w-auto"
-            width={117}
-            height={24}
-            alt="Direkrut AI Logo"
-          />
-          <Image
-            src="/logo/DirekrutAI_DarkMode.png"
-            className="hidden dark:block h-6 w-auto"
+            className="h-6 w-auto"
             width={117}
             height={24}
             alt="Direkrut AI Logo"

@@ -50,8 +50,13 @@ export function SiteHeader({
               href="/"
               className="flex items-center hover:opacity-90 transition-opacity"
             >
-              <Image src="/logo/Direkrut%20AI_WhiteMode.png" className="block dark:hidden h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
-              <Image src="/logo/DirekrutAI_DarkMode.png" className="hidden dark:block h-7 w-auto" width={137} height={28} alt="Direkrut AI Logo" />
+              <Image
+                src="/logo/Direkrut%20AI_WhiteMode.png"
+                className="h-7 w-auto"
+                width={137}
+                height={28}
+                alt="Direkrut AI Logo"
+              />
             </Link>
             <NavLinks />
           </div>
