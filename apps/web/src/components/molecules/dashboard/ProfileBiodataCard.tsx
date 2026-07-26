@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { PenIcon, UploadCloudIcon, ImageIcon, XIcon, MapPinIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -86,7 +87,14 @@ export function ProfileBiodataCard({ profile, onChangeProfile, onSaveProfile, on
     >
       <div className="h-36 sm:h-44 bg-primary relative overflow-hidden">
         {profile.coverUrl && (
-          <img src={profile.coverUrl} alt="" className="absolute inset-0 size-full object-cover" />
+          <Image
+            src={profile.coverUrl}
+            alt=""
+            fill
+            unoptimized
+            sizes="100vw"
+            className="object-cover"
+          />
         )}
         {profile.coverUrl && <div className="absolute inset-0 bg-black/15" />}
 
@@ -126,7 +134,14 @@ export function ProfileBiodataCard({ profile, onChangeProfile, onSaveProfile, on
             >
               {coverPreview ? (
                 <div className="group/cover relative h-44">
-                  <img src={coverPreview} alt="" className="size-full object-cover" />
+                  <Image
+                    src={coverPreview}
+                    alt=""
+                    fill
+                    unoptimized
+                    sizes="(min-width: 640px) 32rem, 100vw"
+                    className="object-cover"
+                  />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 flex items-center justify-center transition-opacity">
                     <span className="text-white text-sm font-semibold flex items-center gap-2">
                       <UploadCloudIcon className="size-4" /> Ganti Foto

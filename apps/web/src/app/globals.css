@@ -258,6 +258,15 @@
   }
 }
 
+@keyframes testimonialMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -280,6 +289,11 @@
 
 .animate-marquee {
   animation: marquee 32s linear infinite;
+}
+
+.animate-testimonial-marquee {
+  animation: testimonialMarquee 64s linear infinite;
+  will-change: transform;
 }
 
 @layer components {

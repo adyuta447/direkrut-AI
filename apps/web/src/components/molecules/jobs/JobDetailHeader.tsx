@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Users, Bookmark } from "lucide-react";
 import { Job } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -38,9 +39,12 @@ export function JobDetailHeader({ job, applyHref = "/auth/register", application
   return (
     <div className="p-6 md:p-8 border-b border-hairline bg-surface-1">
       <div className="flex flex-col md:flex-row md:items-start gap-4 mb-4">
-        <img 
+        <Image
           src={logoUrl} 
           alt={`${job.company} logo`} 
+          width={80}
+          height={80}
+          unoptimized
           className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-contain bg-white border border-hairline p-2"
         />
         <div className="flex-1">

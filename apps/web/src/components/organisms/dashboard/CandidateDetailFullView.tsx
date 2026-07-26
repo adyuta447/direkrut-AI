@@ -1001,7 +1001,7 @@ export function CandidateDetailFullView({
 
                               {/* Bukti Utama (Multi-line text with Bold Key Terms) */}
                               <td className="py-3.5 px-3.5 text-xs text-slate-700 italic leading-relaxed align-top">
-                                "{item.evidence_text || item.reasoning}"
+                                &ldquo;{item.evidence_text || item.reasoning}&rdquo;
                               </td>
 
                               {/* Lihat di CV Button */}
@@ -1066,7 +1066,7 @@ export function CandidateDetailFullView({
                               {hl.category}
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">"{hl.text}"</p>
+                          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">&ldquo;{hl.text}&rdquo;</p>
                           <div className="pt-1 flex justify-end">
                             <button
                               onClick={() => setCvModalItem({ req: hl.title, status: "Sorotan Utama", evidence: hl.text })}
@@ -1181,25 +1181,17 @@ export function CandidateDetailFullView({
                 {interview.competencyScores && Object.keys(interview.competencyScores).length > 0 && (
                   <div className="space-y-3 mt-4">
                     <h4 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">Penilaian Kompetensi (Evidence-Based)</h4>
-                    {Object.entries(interview.competencyScores).map(([name, comp]: [string, any], idx) => (
-                      <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-2">
+                    {Object.entries(interview.competencyScores).map(([name, score]) => (
+                      <div key={name} className="border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-sm text-slate-900">{name}</span>
-                          <Badge variant={comp.match_status === "STRONG_EVIDENCE" ? "default" : comp.match_status === "PARTIAL_EVIDENCE" ? "secondary" : "destructive"}>
-                            {comp.match_status} ({comp.score})
+                          <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>
+                            {score >= 75 ? "STRONG_EVIDENCE" : score >= 50 ? "PARTIAL_EVIDENCE" : "INSUFFICIENT_EVIDENCE"} ({score})
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-700">{comp.reasoning}</p>
-                        {comp.quotes && comp.quotes.length > 0 && (
-                          <div className="mt-2 bg-slate-50 p-2 rounded border border-slate-200">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase">Kutipan Transkrip:</span>
-                            <ul className="list-disc pl-4 text-xs text-slate-600 mt-1">
-                              {comp.quotes.map((q: string, qIdx: number) => (
-                                <li key={qIdx} className="italic">&quot;{q}&quot;</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        <p className="text-xs text-slate-700">
+                          Skor kompetensi dihitung dari evidence jawaban interview yang tersimpan.
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -1404,7 +1396,7 @@ export function CandidateDetailFullView({
                         <span className="text-xs text-slate-500 font-normal mt-0.5 block">{row.jobSpec}</span>
                       </td>
                       <td className="py-3.5 px-4 text-xs text-slate-800 italic leading-relaxed align-top">
-                        "{row.candidateCv}"
+                        &ldquo;{row.candidateCv}&rdquo;
                       </td>
                       <td className="py-3.5 px-4 text-xs text-slate-600 leading-relaxed align-top">
                         {row.aiAssessment}
@@ -1592,7 +1584,7 @@ export function CandidateDetailFullView({
                         {row.algorithm}
                       </td>
                       <td className="py-3.5 px-4 text-xs text-slate-800 italic leading-relaxed align-top">
-                        "{row.cvResult}"
+                        &ldquo;{row.cvResult}&rdquo;
                       </td>
                       <td className="py-3.5 px-3 text-right align-top whitespace-nowrap">
                         <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${row.badgeColor}`}>
@@ -1698,7 +1690,7 @@ export function CandidateDetailFullView({
                     <IconSparkles className="size-4 text-slate-700" />
                     Fokus Requirement: {cvModalItem.req} ({cvModalItem.status})
                   </span>
-                  <p className="text-slate-700 italic">"{cvModalItem.evidence}"</p>
+                  <p className="text-slate-700 italic">&ldquo;{cvModalItem.evidence}&rdquo;</p>
                 </div>
 
                 {/* Candidate Header */}

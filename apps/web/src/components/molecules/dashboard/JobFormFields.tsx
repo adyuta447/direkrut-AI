@@ -58,7 +58,7 @@ export function parseJobFormValues(formData: FormData): JobFormValues {
   try {
     requiredSkills = JSON.parse((formData.get("requiredSkills") as string) || "[]")
     preferredSkills = JSON.parse((formData.get("preferredSkills") as string) || "[]")
-  } catch (e) {
+  } catch {
     // skip
   }
 

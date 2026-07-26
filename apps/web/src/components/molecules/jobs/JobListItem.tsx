@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Job } from "@/lib/types";
 
 interface JobListItemProps {
@@ -22,9 +23,12 @@ export function JobListItem({ job, isActive, onSelect }: JobListItemProps) {
     >
       <div className="flex justify-between items-start gap-4">
         <div className="flex items-start gap-3 flex-1">
-          <img 
+          <Image
             src={logoUrl} 
             alt={`${job.company} logo`} 
+            width={48}
+            height={48}
+            unoptimized
             className="w-12 h-12 rounded-lg object-contain bg-white border border-hairline p-1.5 shrink-0"
           />
           <div>
