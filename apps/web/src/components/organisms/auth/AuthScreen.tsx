@@ -5,10 +5,6 @@ import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { ApiError } from "@/services/apiClient";
-import {
-  uploadCompanyDocument,
-  saveCompanyDocumentKeys,
-} from "@/services/companyService";
 import { AuthMarketingPanel } from "./AuthMarketingPanel";
 import { AuthMobileNav } from "../../molecules/auth/AuthMobileNav";
 import { RoleToggle } from "../../molecules/auth/RoleToggle";
@@ -66,25 +62,6 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     }
     router.push(role === "candidate" ? "/candidate" : "/hrd");
   };
-  const uploadCompanyDocsIfAny = async () => {
-    const entries: [keyof CompanyDocs, string][] = [
-      ["aktaPendirian", "aktaPendirianKey"],
-      ["nib", "nibKey"],
-      ["npwp", "npwpKey"],
-      ["suratKuasa", "suratKuasaKey"],
-    ];
-    const keys: Record<string, string> = {};
-    for (const [docType, keyName] of entries) {
-      const file = companyDocs[docType];
-      if (!file) continue;
-      const objectKey = await uploadCompanyDocument(docType, file);
-      if (objectKey) keys[keyName] = objectKey;
-    }
-    if (Object.keys(keys).length > 0) {
-      await saveCompanyDocumentKeys(keys);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -92,6 +69,11 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     try {
       if (isLogin) {
         await login(formData.email, formData.password);
+      } else if (role === "hrd") {
+        // Alur HRD masih berupa dummy sampai proses verifikasi tersedia.
+        // Jangan buat akun, sesi, atau unggah dokumen ke backend terlebih dulu.
+        router.replace("/auth/verification-success");
+        return;
       } else {
         await register(
           formData.name,
@@ -100,7 +82,6 @@ export function AuthScreen({ mode }: AuthScreenProps) {
           role,
           formData.company,
         );
-        if (role === "hrd") await uploadCompanyDocsIfAny();
       }
       goToNextPage();
     } catch (err) {

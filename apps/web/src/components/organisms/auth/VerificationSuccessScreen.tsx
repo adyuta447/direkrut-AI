@@ -1,6 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { AuthMarketingPanel } from "./AuthMarketingPanel";
 import { AuthMobileNav } from "../../molecules/auth/AuthMobileNav";
 
@@ -33,17 +31,9 @@ export function VerificationSuccessScreen() {
                 Verifikasi perusahaan sedang diproses.
               </h1>
               <p className="mx-auto mt-6 max-w-[500px] text-[15px] leading-7 text-ink-muted sm:text-[17px]">
-                Tim kami akan mengecek dokumen legalitas perusahaanmu. Kamu bisa
-                lanjut ke dashboard sementara proses verifikasi berjalan.
+                Tim kami akan mengecek dokumen legalitas perusahaanmu. Akses akun
+                akan tersedia setelah proses verifikasi selesai.
               </p>
-
-              <Link
-                href="/hrd"
-                className="btn-primary mt-8 inline-flex items-center justify-center gap-2 !px-7 !py-4 !text-[15px]"
-              >
-                Lanjut ke Dashboard
-                <ArrowRight className="size-4" />
-              </Link>
             </div>
           </div>
         </div>
