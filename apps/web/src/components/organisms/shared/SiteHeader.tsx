@@ -3,12 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu } from "lucide-react";
 import { UtilityBar } from "../../molecules/shared/UtilityBar";
 import { NavLinks } from "../../molecules/shared/NavLinks";
 import { MobileMenu } from "./MobileMenu";
-
 import { useDashboard } from "@/context/DashboardContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SiteHeaderProps {
   contactLabel?: string;
@@ -22,6 +30,14 @@ export function SiteHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { currentUser, logout } = useDashboard();
+  const dashboardUrl = currentUser?.role === "hrd" ? "/hrd" : "/candidate";
+  const initials =
+    currentUser?.name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "U";
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
@@ -64,23 +80,53 @@ export function SiteHeader({
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-6">
               {currentUser ? (
-                <div className="flex items-center gap-3">
-                  <Link href={currentUser.role === "hrd" ? "/hrd" : "/candidate"} className="btn-primary font-sans font-bold flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] uppercase">
-                      {currentUser.name?.[0] ?? "U"}
-                    </div>
-                    Ke Dashboard
-                  </Link>
-                  <button 
-                    onClick={() => {
-                      logout();
-                      window.location.href = "/";
-                    }}
-                    className="text-[14px] font-sans font-bold text-ink-muted hover:text-danger transition-colors px-2"
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label={`Buka menu profil ${currentUser.name}`}
+                        className="rounded-full outline-none ring-offset-2 ring-offset-canvas hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary"
+                      />
+                    }
                   >
-                    Keluar
-                  </button>
-                </div>
+                    <Avatar size="lg">
+                      <AvatarFallback className="bg-primary font-bold text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="w-64 border-hairline bg-canvas text-ink"
+                  >
+                    <DropdownMenuLabel className="px-3 py-2">
+                      <span className="block truncate text-sm font-semibold text-ink">
+                        {currentUser.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs font-normal text-ink-muted">
+                        {currentUser.email}
+                      </span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-hairline" />
+                    <DropdownMenuItem
+                      render={<Link href={dashboardUrl} />}
+                      className="cursor-pointer focus:bg-surface-1 focus:text-ink"
+                    >
+                      <LayoutDashboard />
+                      Ke Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={logout}
+                      className="cursor-pointer"
+                    >
+                      <LogOut />
+                      Keluar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <>
                   <Link href="/auth/login" className="text-[14px] font-sans font-bold hover:text-primary transition-none">

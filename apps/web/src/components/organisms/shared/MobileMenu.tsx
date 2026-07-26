@@ -4,9 +4,22 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { X, ArrowRight, Briefcase, Building2, BookOpen, Tag, Sparkles, LucideIcon } from "lucide-react";
+import {
+  X,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  BookOpen,
+  Tag,
+  Sparkles,
+  LucideIcon,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 import gsap from "gsap";
 import { NAV_ITEMS } from "../../../lib/shared/navItems";
+import { useDashboard } from "@/context/DashboardContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -25,8 +38,17 @@ const NAV_META: Record<string, { icon: LucideIcon; sub: string }> = {
 
 export function MobileMenu({ isOpen, onClose, registerLabel, contactLabel }: MobileMenuProps) {
   const pathname = usePathname();
+  const { currentUser, logout } = useDashboard();
   const panelRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
+  const dashboardUrl = currentUser?.role === "hrd" ? "/hrd" : "/candidate";
+  const initials =
+    currentUser?.name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "U";
 
   useEffect(() => {
     if (!panelRef.current || !itemsRef.current) return;
@@ -152,26 +174,65 @@ export function MobileMenu({ isOpen, onClose, registerLabel, contactLabel }: Mob
           </nav>
 
           <div className="mobile-nav-item opacity-0 mt-auto pt-6">
-            <div className="rounded-3xl bg-surface-1 p-5">
-              <p className="text-[15px] font-medium text-ink mb-1">Baru di Direkrut AI?</p>
-              <p className="text-[13px] text-ink-muted leading-[1.5] mb-4">
-                Bikin akun gratis, upload CV, dan biarkan AI nyariin lowongan yang pas buat kamu.
-              </p>
-              <Link
-                href="/auth/register"
-                onClick={onClose}
-                className="btn-primary block w-full text-center mb-2"
-              >
-                {registerLabel}
-              </Link>
-              <Link
-                href="/auth/login"
-                onClick={onClose}
-                className="block w-full text-center text-[14px] font-normal text-ink bg-canvas rounded-full py-3"
-              >
-                Masuk
-              </Link>
-            </div>
+            {currentUser ? (
+              <div className="rounded-3xl bg-surface-1 p-5">
+                <div className="mb-5 flex min-w-0 items-center gap-3">
+                  <Avatar size="lg">
+                    <AvatarFallback className="bg-primary font-bold text-white">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-[15px] font-semibold text-ink">
+                      {currentUser.name}
+                    </p>
+                    <p className="truncate text-[12px] text-ink-muted">
+                      {currentUser.email}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={dashboardUrl}
+                  onClick={onClose}
+                  className="btn-primary mb-2 flex w-full items-center justify-center gap-2 text-center"
+                >
+                  <LayoutDashboard className="size-4" />
+                  Ke Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    onClose();
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-canvas py-3 text-[14px] font-medium text-destructive"
+                >
+                  <LogOut className="size-4" />
+                  Keluar
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-3xl bg-surface-1 p-5">
+                <p className="mb-1 text-[15px] font-medium text-ink">Baru di Direkrut AI?</p>
+                <p className="mb-4 text-[13px] leading-[1.5] text-ink-muted">
+                  Bikin akun gratis, upload CV, dan biarkan AI nyariin lowongan yang pas buat kamu.
+                </p>
+                <Link
+                  href="/auth/register"
+                  onClick={onClose}
+                  className="btn-primary mb-2 block w-full text-center"
+                >
+                  {registerLabel}
+                </Link>
+                <Link
+                  href="/auth/login"
+                  onClick={onClose}
+                  className="block w-full rounded-full bg-canvas py-3 text-center text-[14px] font-normal text-ink"
+                >
+                  Masuk
+                </Link>
+              </div>
+            )}
 
             <div className="flex items-center justify-between mt-5 px-1 text-[13px] text-ink-muted">
               <span>Butuh Bantuan?</span>
