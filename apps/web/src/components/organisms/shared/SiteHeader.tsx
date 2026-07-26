@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { LayoutDashboard, LogOut, Menu } from "lucide-react";
@@ -9,14 +9,6 @@ import { NavLinks } from "../../molecules/shared/NavLinks";
 import { MobileMenu } from "./MobileMenu";
 import { useDashboard } from "@/context/DashboardContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface SiteHeaderProps {
   contactLabel?: string;
@@ -30,6 +22,7 @@ export function SiteHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const { currentUser, logout } = useDashboard();
   const dashboardUrl = currentUser?.role === "hrd" ? "/hrd" : "/candidate";
   const initials =
@@ -46,6 +39,29 @@ export function SiteHeader({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsProfileMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isProfileMenuOpen]);
 
   return (
     <>
@@ -81,55 +97,63 @@ export function SiteHeader({
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-6">
               {currentUser ? (
-                <DropdownMenu
-                  open={isProfileMenuOpen}
-                  onOpenChange={setIsProfileMenuOpen}
-                >
-                  <DropdownMenuTrigger
+                <div ref={profileMenuRef} className="relative">
+                  <button
                     type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={isProfileMenuOpen}
+                    aria-controls="desktop-profile-menu"
                     aria-label={`Buka menu profil ${currentUser.name}`}
                     className="rounded-full outline-none ring-offset-2 ring-offset-canvas hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary"
+                    onClick={() => setIsProfileMenuOpen((open) => !open)}
                   >
                     <Avatar size="lg">
                       <AvatarFallback className="bg-primary font-bold text-white">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={8}
-                    className="w-64 border-hairline bg-canvas text-ink"
-                  >
-                    <DropdownMenuLabel className="px-3 py-2">
-                      <span className="block truncate text-sm font-semibold text-ink">
-                        {currentUser.name}
-                      </span>
-                      <span className="mt-0.5 block truncate text-xs font-normal text-ink-muted">
-                        {currentUser.email}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-hairline" />
-                    <DropdownMenuItem
-                      render={<Link href={dashboardUrl} />}
-                      className="cursor-pointer focus:bg-surface-1 focus:text-ink"
+                  </button>
+
+                  {isProfileMenuOpen && (
+                    <div
+                      id="desktop-profile-menu"
+                      role="menu"
+                      className="absolute right-0 top-full z-[70] mt-2 w-64 overflow-hidden rounded-xl border border-hairline bg-canvas p-1.5 text-ink"
                     >
-                      <LayoutDashboard />
-                      Ke Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        logout();
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <LogOut />
-                      Keluar
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <div className="px-3 py-2">
+                        <span className="block truncate text-sm font-semibold">
+                          {currentUser.name}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs font-normal text-ink-muted">
+                          {currentUser.email}
+                        </span>
+                      </div>
+                      <div className="my-1.5 h-px bg-hairline" />
+                      <Link
+                        href={dashboardUrl}
+                        role="menuitem"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-surface-1 focus-visible:bg-surface-1 focus-visible:outline-none"
+                      >
+                        <LayoutDashboard className="size-4" />
+                        Ke Dashboard
+                      </Link>
+                      <div className="my-1.5 h-px bg-hairline" />
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10 focus-visible:outline-none"
+                      >
+                        <LogOut className="size-4" />
+                        Keluar
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <Link href="/auth/login" className="text-[14px] font-sans font-bold hover:text-primary transition-none">
