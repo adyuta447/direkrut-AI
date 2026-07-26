@@ -79,6 +79,9 @@ export function DataTable({ data, isLoading = false }: { data: Candidate[]; isLo
     [data]
   )
 
+  // TanStack Table intentionally exposes stateful functions that React Compiler
+  // cannot memoize safely. Keeping the table instance un-memoized is expected.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns: candidateColumns,

@@ -17,11 +17,25 @@ export default function WrittenTestPage({ params }: { params: Promise<{ jobId: s
   const [answer, setAnswer] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const videoRef = React.useRef<HTMLVideoElement>(null)
+  const hasSubmittedRef = React.useRef(false)
+
+  const handleSubmit = React.useCallback(async () => {
+    if (hasSubmittedRef.current) return
+    hasSubmittedRef.current = true
+    setIsSubmitting(true)
+    // Simulate submitting test...
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Move to interview
+    router.push(`/interview/${unwrappedParams.jobId}`)
+  }, [router, unwrappedParams.jobId])
 
   React.useEffect(() => {
+    let cameraStream: MediaStream | null = null
+
     // Start camera
     navigator.mediaDevices.getUserMedia({ video: true, audio: false })
       .then((stream) => {
+        cameraStream = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
         }
@@ -43,20 +57,9 @@ export default function WrittenTestPage({ params }: { params: Promise<{ jobId: s
     return () => {
       clearInterval(interval)
       // Stop camera
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
-        stream.getTracks().forEach((track) => track.stop())
-      }
+      cameraStream?.getTracks().forEach((track) => track.stop())
     }
-  }, [])
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
-    // Simulate submitting test...
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    // Move to interview
-    router.push(`/candidate/apply/${unwrappedParams.jobId}/interview`)
-  }
+  }, [handleSubmit])
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)

@@ -58,10 +58,12 @@ di bawah buat cara bacanya.
 
 ## Dokumentasi API
 
-Sumber kebenaran tunggal: [`packages/contracts/openapi.yaml`](packages/contracts/openapi.yaml)
-(OpenAPI 3.0.3), ditulis dari implementasi asli — bukan rencana. Endpoint yang
-belum diimplementasi ditandai eksplisit `[BELUM DIIMPLEMENTASI]` di
-summary-nya dan balikin `501`, gak didiamkan seolah udah kelar.
+Kontrak API baseline tersedia di
+[`packages/contracts/openapi.yaml`](packages/contracts/openapi.yaml)
+(OpenAPI 3.0.3). Endpoint yang belum diimplementasi ditandai eksplisit
+`[BELUM DIIMPLEMENTASI]` di summary-nya dan balikin `501`. Implementasi
+aplikasi bergerak lebih cepat daripada spec; endpoint aplikasi kandidat/HRD
+yang sudah berjalan dirangkum di bawah dan perlu disinkronkan ke OpenAPI.
 
 Raw YAML gak enak dibaca langsung — render interaktif-nya lokal (gak upload
 apa pun):
@@ -77,10 +79,11 @@ npx @redocly/cli lint packages/contracts/openapi.yaml
 ```
 
 **Endpoint yang beneran jalan** (auth JWT, jobs CRUD + cursor pagination +
-Redis cache, CV parsing lewat Groq/Gemini, assessment scoring +
-transkripsi wawancara lewat Groq Whisper) udah dites end-to-end lawan
-database & object storage asli. Subscriptions/payments/notifications/
-vector-search/chat masih stub — detail lengkapnya ada di spec.
+Redis cache, application/prescreen/interview, CV parsing lewat Groq/Gemini,
+assessment scoring, transkripsi wawancara lewat Groq Whisper, dan Chat AI)
+udah dites terhadap layanan serta penyimpanan yang relevan.
+Subscriptions/payments/notifications/vector-search masih stub — detailnya
+ditandai di bawah.
 
 **API yang sudah live** (deploy manual lewat Heroku container registry,
 CI/CD otomatis begitu di-merge ke `prod` — lihat `.github/workflows/`):
@@ -88,9 +91,12 @@ CI/CD otomatis begitu di-merge ke `prod` — lihat `.github/workflows/`):
 | Servis | URL | Health |
 |---|---|---|
 | `apps/api-go` | `https://direkrut-ai-api-go-51c4e232a2fc.herokuapp.com` | `/healthz`, `/readyz` |
-| `apps/ai-engine` | `https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com` | `/healthz`, `/readyz` (internal-only, butuh header `X-Internal-Api-Key`) |
+| `apps/ai-engine` | `https://direkrut-ai-ai-engine-c58d5404c946.herokuapp.com` | `/healthz`, `/readyz` (probe publik; endpoint `/v1/*` butuh `X-Internal-Api-Key`) |
 
-### Daftar endpoint
+Keempat health probe di atas diverifikasi merespons HTTP 200 pada
+26 Juli 2026.
+
+### Endpoint utama
 
 Semua response error (kode 4xx/5xx) di kedua servis pakai amplop yang sama,
 kecuali dicatat lain di tabel:
@@ -113,6 +119,17 @@ kecuali dicatat lain di tabel:
 | PUT | `/v1/jobs/{jobId}` | Bearer (hrd, pemilik) | Update lowongan. |
 | DELETE | `/v1/jobs/{jobId}` | Bearer (hrd, pemilik) | Hapus lowongan (hard delete). |
 | POST | `/v1/jobs/{jobId}/cv-upload-url` | Bearer (candidate) | Presigned URL upload CV langsung ke object storage. |
+| POST | `/v1/applications` | Bearer (candidate) | Mengirim lamaran kandidat. |
+| GET | `/v1/applications` | Bearer | Daftar lamaran sesuai role dan hak akses. |
+| GET | `/v1/applications/{applicationId}` | Bearer | Detail lamaran sesuai hak akses. |
+| PATCH | `/v1/applications/{applicationId}/status` | Bearer (hrd) | Mengubah status/keputusan kandidat. |
+| POST | `/v1/applications/{applicationId}/prescreen/questions` | Bearer (candidate) | Membuat pertanyaan pre-screening. |
+| POST | `/v1/applications/{applicationId}/prescreen/submit` | Bearer (candidate) | Menyimpan jawaban dan hasil pre-screening. |
+| GET | `/v1/applications/{applicationId}/prescreen` | Bearer | Membaca status, skor, dan jawaban pre-screening. |
+| POST | `/v1/applications/{applicationId}/interview/questions` | Bearer (candidate) | Membuat pertanyaan AI Interview setelah lolos pre-screening. |
+| POST | `/v1/applications/{applicationId}/interview/transcribe` | Bearer (candidate) | Menyimpan transkrip jawaban interview. |
+| POST | `/v1/applications/{applicationId}/interview/finalize` | Bearer (candidate) | Menilai dan menyelesaikan AI Interview. |
+| GET | `/v1/applications/{applicationId}/interview` | Bearer | Membaca hasil AI Interview sesuai hak akses. |
 | GET | `/v1/subscriptions/me` | Bearer | **Hardcoded** `{"tier":"free"}`, belum baca DB. |
 | POST | `/v1/subscriptions/upgrade` | Bearer | `[BELUM DIIMPLEMENTASI]` → `501`, body `null`. |
 | POST | `/v1/subscriptions/cancel` | Bearer | `[BELUM DIIMPLEMENTASI]` → `501`, body `null`. |
@@ -130,7 +147,7 @@ kecuali dicatat lain di tabel:
 | POST | `/v1/assessment/transcribe-interview` | Speech-to-text (Groq Whisper) + ringkasan. |
 | POST | `/v1/vector-search/embed` | `[BELUM DIIMPLEMENTASI]` → `501`. |
 | POST | `/v1/vector-search/match` | `[BELUM DIIMPLEMENTASI]` → `501`. |
-| POST | `/v1/chat/stream` | `[BELUM DIIMPLEMENTASI]` — balikin SSE placeholder statis, bukan AI beneran. |
+| POST | `/v1/chat/stream` | Chat AI SSE aktif dengan provider fallback, rate limit, prompt-injection guard, dan pembatasan scope HR. |
 
 ### Contoh request & response
 
@@ -384,6 +401,6 @@ dites lawan Postgres+pgvector & object storage asli, dan live di Heroku.
 `apps/ai-engine`: CV parsing (Groq buat teks, Gemini buat gambar) dan
 assessment (scoring + transkripsi wawancara lewat Groq Whisper) juga beneran
 jalan, di-cache, di-rate-limit. Subscriptions, payments, notifications,
-vector-search, dan chat masih placeholder (`TODO` + `501`) — lihat
+vector-search masih placeholder (`TODO` + `501`) — lihat
 [Dokumentasi API](#dokumentasi-api) buat daftar lengkap mana yang udah &
 belum.

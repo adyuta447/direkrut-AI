@@ -69,8 +69,8 @@ export function SettingsHrdTabAiScoring() {
       setWeights({ ...weights, ...newWeights, isCustom: true })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch (err: any) {
-      setError(err.message || "Gagal menyimpan bobot")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Gagal menyimpan bobot")
     } finally {
       setIsSaving(false)
     }

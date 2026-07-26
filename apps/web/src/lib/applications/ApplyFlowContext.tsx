@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useDashboard } from "@/context/DashboardContext"
-import { getMyProfile, uploadCV } from "@/services/candidateService"
+import { getMyProfile, uploadCV, type CandidateProfile } from "@/services/candidateService"
 import { getJobById } from "@/services/jobService"
 import type { Job } from "@/lib/types"
 
@@ -47,7 +47,7 @@ export function ApplyFlowProvider({ children, jobId }: { children: React.ReactNo
     portfolio: "",
   })
   
-  const [fullProfile, setFullProfile] = React.useState<any>(null)
+  const [fullProfile, setFullProfile] = React.useState<CandidateProfile | null>(null)
   const [hasCv, setHasCv] = React.useState(false)
   const [isLoadingCv, setIsLoadingCv] = React.useState(true)
   const [isUploadingCv, setIsUploadingCv] = React.useState(false)
@@ -63,22 +63,6 @@ export function ApplyFlowProvider({ children, jobId }: { children: React.ReactNo
       cancelled = true
     }
   }, [jobId])
-
-  React.useEffect(() => {
-    setFormData((prev) => {
-      const next = { ...prev }
-      let changed = false
-      if (!prev.email && currentUser?.email) {
-        next.email = currentUser.email
-        changed = true
-      }
-      if (!prev.name && currentUser?.name && !fullProfile?.name) {
-        next.name = currentUser.name
-        changed = true
-      }
-      return changed ? next : prev
-    })
-  }, [currentUser, fullProfile])
 
   React.useEffect(() => {
     let cancelled = false

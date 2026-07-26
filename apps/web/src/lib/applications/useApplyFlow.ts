@@ -40,7 +40,7 @@ export function useApplyFlow(job: Job | undefined) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isProfileComplete])
 
   const handleUploadCv = async (file: File) => {
     setIsUploadingCv(true)

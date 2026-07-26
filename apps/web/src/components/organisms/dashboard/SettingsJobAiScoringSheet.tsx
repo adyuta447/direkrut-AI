@@ -24,7 +24,7 @@ interface SettingsJobAiScoringSheetProps {
 
 export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: SettingsJobAiScoringSheetProps) {
   const [weights, setWeights] = React.useState<ScoringWeightConfig | null>(null)
-  const [isLoading, setIsLoading] = React.useState(true)
+  const [loadedJobId, setLoadedJobId] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
@@ -32,19 +32,19 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
   React.useEffect(() => {
     if (!open || !selectedJob) return
     let cancelled = false
-    setIsLoading(true)
-    setError(null)
     getJobScoringWeights(selectedJob.id)
       .then((data) => {
         if (!cancelled) {
           setWeights(data)
-          setIsLoading(false)
+          setLoadedJobId(selectedJob.id)
+          setError(null)
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message || "Gagal memuat konfigurasi bobot")
-          setIsLoading(false)
+          setWeights(null)
+          setLoadedJobId(selectedJob.id)
+          setError(err instanceof Error ? err.message : "Gagal memuat konfigurasi bobot")
         }
       })
     return () => { cancelled = true }
@@ -79,8 +79,8 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
       setWeights({ ...weights, ...newWeights, isCustom: true })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch (err: any) {
-      setError(err.message || "Gagal menyimpan bobot")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Gagal menyimpan bobot")
     } finally {
       setIsSaving(false)
     }
@@ -99,6 +99,7 @@ export function SettingsJobAiScoringSheet({ open, onOpenChange, selectedJob }: S
     })
   }
 
+  const isLoading = Boolean(open && selectedJob && loadedJobId !== selectedJob.id)
   const total = weights ? (weights.weightSkillMatch + weights.weightExperience + weights.weightEducation + weights.weightResponsibilities + weights.weightAdditional) : 0
 
   return (
