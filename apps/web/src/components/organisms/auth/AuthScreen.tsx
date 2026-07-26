@@ -59,8 +59,13 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const goToDashboard = () =>
+  const goToNextPage = () => {
+    if (!isLogin && role === "hrd") {
+      router.replace("/auth/verification-success");
+      return;
+    }
     router.push(role === "candidate" ? "/candidate" : "/hrd");
+  };
   const uploadCompanyDocsIfAny = async () => {
     const entries: [keyof CompanyDocs, string][] = [
       ["aktaPendirian", "aktaPendirianKey"],
@@ -97,10 +102,14 @@ export function AuthScreen({ mode }: AuthScreenProps) {
         );
         if (role === "hrd") await uploadCompanyDocsIfAny();
       }
-      goToDashboard();
+      goToNextPage();
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : "Gagal masuk. Coba lagi nanti.",
+        err instanceof ApiError
+          ? err.message
+          : isLogin
+            ? "Gagal masuk. Coba lagi nanti."
+            : "Gagal membuat akun. Coba lagi nanti.",
       );
     } finally {
       setIsSubmitting(false);
