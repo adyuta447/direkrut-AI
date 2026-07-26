@@ -1,0 +1,524 @@
+                                        TEAM IDENTITY
+Bagian ini berisi identitas dasar tim dan proposal. Pastikan seluruh informasi ditulis
+konsisten karena akan digunakan dalam proses administrasi, penilaian, dan publikasi
+
+TEAM ID
+S0293
+
+TEAM NAME
+Team Direkrut AI
+
+FINAL SOLUTION TITLE
+Direkrut AI: Ekosistem Rekrutmen End-to-End Berbasis Kecerdasan Buatan untuk Efisiensi
+HRD dan Transparansi Kandidat
+
+PROBLEM STATEMENT
+Peningkatan Produktivitas, Ketahanan Pangan, dan Penciptaan Lapangan Kerja
+
+SUB-PROBLEM STATEMENT
+Digitalisasi Penciptaan Lapangan Kerja
+
+FINAL TEAM COMPOSITION (maks 100 kata)
+Tim Direkrut AI terdiri dari empat anggota aktif:
+
+Raffi Rabbani Widyputra sebagai Ketua, CEO & Product Lead;
+Jan Agra Adyuta Harnowo sebagai CMO & Business Development;
+Randi Adam Arnaldi sebagai CISO; dan
+Alief Athallah Putra sebagai CTO & Infrastructure Lead.
+
+Sejak 2nd submission, pembagian peran disesuaikan untuk memperjelas tanggung jawab
+pada tahap pengembangan dan komersialisasi. Raffi Rabbani Widyputra memimpin arah
+perusahaan dan produk; Jan Agra Adyuta Harnowo menangani pemasaran dan
+pengembangan bisnis; Randi Adam Arnaldi bertanggung jawab atas keamanan informasi
+dan perlindungan data; sementara Alief Athallah Putra memimpin pengembangan teknologi
+dan infrastruktur.
+
+
+FINAL SOLUTION SUMMARY (maks 150 kata)
+
+Direkrut AI adalah platform rekrutmen untuk HRD perusahaan dan pencari kerja yang
+membantu mempercepat screening lamaran serta mengurangi kandidat yang tidak
+memperoleh kepastian atau feedback setelah proses seleksi. Kandidat mengunggah CV dan
+mengikuti AI Interview. Sistem menganalisis data kandidat dan menyajikan hasil dalam
+kategori kualitatif yang disertai alasan pendukung, bukan hanya skor.
+
+HRD meninjau hasil melalui dashboard dan tetap menjadi pengambil keputusan akhir.
+Setelah keputusan ditetapkan, sistem dapat menghasilkan draft feedback berbasis AI yang
+merangkum hasil evaluasi dan area pengembangan kandidat. HRD dapat meninjau,
+mengubah, dan mengirimkan feedback tersebut. Saat ini Direkrut AI berada pada Level 3
+dengan prototype yang dapat digunakan dan telah memperoleh masukan dari praktisi
+teknologi, product designer, serta praktisi HRD. Solusi ini membantu proses seleksi menjadi
+lebih efisien dan transparan, sekaligus memberikan kandidat kepastian dan arahan
+pengembangan.
+
+
+
+PROGRESS & CHANGE LOG (maks 150 kata)
+
+Sejak 2nd submission, Direkrut AI melakukan beberapa perubahan berdasarkan validasi
+praktisi HRD, masukan software engineer, dan evaluasi prototype.
+
+Penilaian AI: Skor angka tetap digunakan sebagai indikator tingkat kecocokan, tetapi
+dilengkapi kategori kualitatif dan alasan pendukung. Perubahan ini dilakukan karena HRD
+membutuhkan perbandingan kandidat, tetapi tetap memerlukan penjelasan yang dapat
+diverifikasi.
+
+Kontrol Keputusan: Sistem diperjelas sebagai alat pendukung keputusan. AI memberikan
+hasil analisis dan rekomendasi, sedangkan keputusan akhir tetap berada pada HRD.
+
+Dashboard: Penggunaan warna yang terlalu dominan dikurangi agar perhatian HRD lebih
+terarah pada data kandidat.
+
+Alur Status: Tahapan kandidat diperjelas agar pengguna mengetahui posisi kandidat dalam
+proses rekrutmen.
+
+Keamanan AI: Sistem menambahkan perlindungan terhadap manipulasi instruksi melalui isi
+CV, berdasarkan evaluasi terhadap risiko penggunaan AI pada dokumen pelamar.
+
+
+
+VALIDATED USER PROBLEM & EVIDENCE (maks 250 kata)
+
+Pengguna utama Direkrut AI adalah HRD perusahaan skala menengah hingga besar serta
+pencari kerja. Permasalahan utama terjadi pada tahap screening awal, ketika HRD harus
+memproses ratusan hingga ribuan lamaran dalam target Service Level Agreement (SLA)
+rekrutmen selama 7–14 hari.
+
+Banyak perusahaan masih mengandalkan screening manual atau Applicant Tracking
+System (ATS) yang menggunakan pencocokan kata kunci sebagai salah satu pendekatan
+utama. Pendekatan ini berpotensi mengeliminasi kandidat yang sebenarnya kompeten
+hanya karena perbedaan istilah pada CV atau tidak memenuhi ambang batas administratif
+tertentu.
+
+Proses tersebut juga menyebabkan inefisiensi. HRD dapat menghabiskan 5–6 jam per hari
+untuk screening CV dan wawancara awal yang berulang, sehingga hanya sebagian kandidat
+yang dapat dievaluasi secara mendalam. Dampaknya, 59% pelamar tidak memperoleh
+feedback setelah proses rekrutmen (Pamungkas, 2025). Di sisi lain, 22,36% pekerja muda
+mengalami job mismatch, yaitu ketidaksesuaian antara tingkat pendidikan dan pekerjaan
+yang diperoleh (Kemnaker RI, 2025).
+Wawancara dengan praktisi HRD perusahaan multinasional menunjukkan bahwa proses
+rekrutmen masih bergantung pada platform pihak ketiga dan belum memiliki sistem AI yang
+mampu mendukung proses end-to-end recruitment.
+
+Melalui proses validasi, kami menemukan bahwa assessment kandidat tidak dapat
+menggunakan satu pendekatan yang sama. Fresh graduate perlu dinilai berdasarkan
+potensi dan attitude, sedangkan profesional berdasarkan pengalaman, kompetensi, dan
+relevansi terhadap kebutuhan posisi.
+
+
+
+End-to-End Use Case and Feature-to-Pain Mapping (maks 300 kata)
+
+Masalah: HRD membutuhkan waktu lama untuk melakukan screening ratusan hingga ribuan
+lamaran secara manual, sehingga banyak pelamar tidak memperoleh status atau umpan
+balik setelah proses seleksi (ghosting).
+
+Fitur Utama: Dasbor Penyaringan Kandidat dan Umpan Balik Kandidat Berbasis Kecerdasan
+Buatan.
+
+Skenario Use Case: Seleksi Kandidat & Pengiriman Feedback.
+
+Kondisi Awal: Masa pendaftaran telah ditutup. Terdapat 500 CV beserta hasil AI Interview
+yang harus diproses, sementara HRD hanya memiliki waktu 3 hari untuk menentukan
+kandidat yang akan melanjutkan ke tahap berikutnya.
+
+Pemicu Penggunaan: HRD membuka Direkrut AI untuk memulai screening awal agar target
+SLA rekrutmen tetap tercapai.
+
+Tindakan Pengguna & Input: HRD memilih lowongan yang akan diproses, misalnya Staf IT –
+Fresh Graduate, kemudian menekan tombol "Mulai Analisis".
+
+Proses Sistem: AI menganalisis CV, hasil AI Interview, pengalaman, keterampilan, dan
+kesesuaian dengan kebutuhan posisi. Penilaian disesuaikan dengan tipe kandidat. Fresh
+graduate lebih dinilai dari potensi, attitude, dan kemampuan belajar, sedangkan profesional
+lebih dinilai dari pengalaman, kompetensi, dan relevansi terhadap posisi. Selanjutnya AI
+mengelompokkan kandidat ke dalam kategori Memenuhi Kriteria, Perlu Dipertimbangkan,
+Perlu Pengembangan, dan Tidak Memenuhi Syarat, lengkap dengan alasan penilaiannya.
+
+Output: Dashboard menampilkan daftar kandidat yang telah diprioritaskan beserta ringkasan
+alasan rekomendasi.
+
+Tindakan Lanjutan: HRD menggunakan hasil rekomendasi AI sebagai bahan pertimbangan,
+kemudian meninjau dan memilih kandidat yang akan melanjutkan ke tahap berikutnya.
+Setelah proses seleksi dan wawancara lanjutan selesai, HRD menetapkan keputusan akhir.
+Untuk kandidat yang belum diterima, HRD dapat memilih kandidat yang akan diberikan
+feedback. Sistem kemudian menghasilkan draft email secara otomatis menggunakan AI,
+yang berisi ringkasan hasil evaluasi dan rekomendasi pengembangan. HRD dapat meninjau,
+mengubah bila diperlukan, dan mengirimkan draft tersebut kepada kandidat.
+Hasil yang Diterima (Outcome): Screening awal dapat dilakukan secara jauh lebih cepat
+dibandingkan proses manual, dengan target pemrosesan 500 kandidat dalam waktu kurang
+dari 30 menit pada konfigurasi deployment yang sesuai. Pelamar yang belum lolos
+menerima feedback yang dipersonalisasi beserta rekomendasi area kompetensi yang perlu
+dikembangkan, yang ke depannya dapat dihubungkan dengan program pelatihan dari mitra
+resmi, sehingga proses rekrutmen menjadi lebih cepat, transparan, dan memberikan
+kesempatan pengembangan bagi pelamar.
+
+
+
+
+Operational Context, Solution Boundary, and Adoption (maks 200 kata)
+
+Lingkungan & Peran Pihak Terlibat: Dalam MVP, Direkrut AI berfokus pada dua pengguna
+utama, yaitu HRD perusahaan sebagai pengguna layanan dan pencari kerja sebagai
+kandidat. Pada tahap pengembangan berikutnya, platform dapat diperluas melalui kerja
+sama dengan mitra pelatihan atau institusi terkait untuk mendukung pengembangan
+kompetensi kandidat.
+
+Batasan Solusi: Direkrut AI membantu proses ekstraksi data CV, pre-screening, AI Interview,
+analisis kandidat, dan pemberian feedback. AI berperan sebagai pendukung pengambilan
+keputusan, sedangkan keputusan akhir mengenai kandidat tetap berada pada HRD atau
+pihak yang berwenang dalam organisasi. Sistem tidak secara otomatis menerima atau
+menolak kandidat tanpa proses tinjauan manusia.
+
+Ketergantungan Sistem: Direkrut AI memanfaatkan Large Language Model (LLM) untuk
+menganalisis data kandidat. Agar biaya operasional tetap efisien, sistem hanya memproses
+informasi yang relevan dan menghasilkan keluaran dalam format terstruktur sehingga
+analisis dapat dilakukan secara cepat, konsisten, dan hemat biaya.
+
+Hambatan Adopsi & Mitigasi: Hasil validasi bersama praktisi HRD menunjukkan bahwa
+tantangan utama adalah rendahnya kepercayaan terhadap AI yang hanya menghasilkan
+skor tanpa alasan yang jelas. Oleh karena itu, Direkrut AI menyajikan hasil analisis dalam
+bentuk skor dan kategori rekomendasi kualitatif yang disertai penjelasan mengenai
+faktor-faktor yang memengaruhi hasil tersebut, sehingga proses seleksi menjadi lebih
+transparan dan mudah dipahami.
+
+
+
+
+Innovation Level
+
+Level 3 – Prototype, Validasi, atau Implementasi Awal, Direkrut AI telah dikembangkan
+sebagai prototype untuk mencoba proses rekrutmen, mulai dari unggah CV, AI Interview,
+analisis kandidat, hingga dashboard HRD. Prototype diuji dan memperoleh masukan dari
+software engineer, product designer, serta praktisi HRD untuk memperbaiki alur, antarmuka,
+dan kesiapan sistem.
+Current Technical Reality, Data, and Integration (maks 300 kata)
+
+Kondisi Pengembangan Saat Ini
+
+Sudah Berfungsi: Sistem utama Direkrut AI telah berjalan dan terintegrasi, meliputi backend
+REST API, AI Engine, database PostgreSQL, Redis Cache, dan object storage. Fitur yang
+telah berfungsi mencakup CV parsing dari file PDF dan gambar, ekstraksi informasi
+menggunakan AI, pre-screening, AI Assessment, AI Interview dengan kamera dan mikrofon
+yang aktif selama sesi, transkripsi jawaban audio, satu kali tangkapan kamera sebagai
+dokumentasi sesi wawancara, serta dashboard HRD.
+
+Masih dalam Simulasi: Fitur pembayaran berlangganan dan Chat AI untuk membantu HRD
+masih berada dalam tahap simulasi.
+
+Sedang    Dikembangkan       (Pengembangan        Berikutnya): Algoritma  Cross-Role
+Recommendation masih dalam tahap pengembangan dan evaluasi. Fitur ini bukan bagian
+dari MVP dan akan dikembangkan sebagai perluasan produk setelah alur utama screening,
+assessment, dan feedback tervalidasi melalui penggunaan nyata.
+
+Direncanakan: Fitur pencarian kandidat berbasis percakapan dan OCR khusus untuk
+meningkatkan akurasi ekstraksi teks dari dokumen hasil scan atau gambar dengan kualitas
+rendah.
+
+Teknologi Inti & Integrasi: Direkrut AI menggunakan arsitektur yang memungkinkan
+penggunaan dan pergantian model AI dari berbagai penyedia melalui API. Model AI
+digunakan sesuai jenis data yang diproses, seperti analisis teks, pemrosesan gambar, dan
+transkripsi audio. Proses AI yang membutuhkan waktu lebih lama dijalankan sebagai
+background job sehingga request utama tidak perlu menunggu seluruh proses selesai.
+
+Data & Keamanan: Sistem memproses data pribadi (PII) seperti nama, kontak, dan riwayat
+hidup, serta data multimedia berupa audio dan gambar. Data disimpan dalam object storage
+yang terpisah dan aksesnya dibatasi berdasarkan kebutuhan sistem.
+
+Untuk keamanan AI, sistem juga menerapkan perlindungan terhadap prompt injection, yaitu
+upaya menyisipkan instruksi berbahaya ke dalam CV atau input pengguna untuk
+memanipulasi hasil pemrosesan AI. Input kandidat diproses secara terstruktur agar instruksi
+yang terdapat di dalam dokumen tidak dianggap sebagai perintah sistem.
+
+
+
+MVP Execution and Deployment Plan (maks 250 kata)
+
+Scope MVP dan Fitur Prioritas: MVP Direkrut AI mencakup proses rekrutmen dari
+pembuatan lowongan, pendaftaran dan unggah CV, ekstraksi informasi CV, pre-screening
+melalui tiga pertanyaan dasar, AI Interview dengan kamera dan mikrofon aktif selama sesi,
+hingga penilaian terstruktur beserta bukti pendukung pada dashboard HRD. Setelah
+wawancara lanjutan, HRD dapat menetapkan keputusan akhir berupa menerima atau
+menolak kandidat. Setelah HRD menetapkan keputusan akhir, sistem dapat menghasilkan
+draft email umpan balik secara otomatis menggunakan AI untuk kandidat yang belum
+diterima. Draft tersebut berisi ringkasan hasil evaluasi dan rekomendasi pengembangan
+yang relevan. HRD tetap memiliki kontrol untuk meninjau dan mengirimkan feedback
+tersebut kepada kandidat.
+
+Fitur di Luar MVP: Fitur rekomendasi posisi lain, Chat AI untuk pencarian atau interaksi
+dengan data kandidat, serta fitur pembayaran belum dimasukkan dalam MVP. Fitur-fitur
+tersebut akan dikembangkan secara bertahap setelah alur inti screening, assessment,
+dashboard HRD, dan candidate feedback tervalidasi melalui penggunaan nyata.
+
+Milestone dan Pelaksanaan: Tahap MVP mencakup penyelesaian fitur seleksi kandidat,
+pengujian integrasi AI, dan uji coba bersama pengguna awal. Pengembangan dan
+pemeliharaan dilakukan oleh tim pengembang Direkrut AI. Aplikasi dijalankan di cloud
+dengan frontend pada Vercel dan backend serta AI pada Heroku. Data kandidat disimpan
+secara terpisah dengan kontrol akses.
+
+Integrasi dan Risiko: Sistem terhubung dengan layanan AI eksternal untuk analisis CV,
+wawancara, dan feedback. Risiko utama meliputi batas penggunaan API, gangguan layanan
+sementara, serta beberapa proses yang berjalan bersamaan. Mitigasinya menggunakan rate
+limiting, retry otomatis, caching hasil analisis, dan pemrosesan terpisah agar aplikasi tetap
+responsif serta data tetap konsisten.
+
+
+
+
+Problem and System Complexity (maks 200 kata)
+
+Kompleksitas Direkrut AI muncul dari banyaknya data dan aturan yang harus
+dipertimbangkan secara bersamaan dalam proses seleksi kandidat. Sistem harus
+mencocokkan informasi dari CV dengan berbagai kebutuhan pekerjaan, seperti
+keterampilan, pengalaman, tanggung jawab, pendidikan, dan kualifikasi tambahan. Setiap
+kebutuhan memiliki tingkat kepentingan yang berbeda, sehingga kandidat tidak cukup dinilai
+hanya berdasarkan ada atau tidaknya kata tertentu di dalam CV.
+
+Kompleksitas semakin meningkat karena setiap kandidat memiliki latar belakang yang
+berbeda. Kandidat professional lebih banyak dinilai berdasarkan relevansi pekerjaan, lama
+pengalaman, dan tanggung jawab yang pernah diemban. Sementara itu, fresh graduate
+dapat dinilai berdasarkan pendidikan, proyek, organisasi, dan pengalaman lain yang
+menunjukkan kemampuan relevan. Sistem juga harus membedakan antara keterampilan
+yang hanya disebutkan, benar-benar digunakan, atau didukung oleh pengalaman yang
+relevan.
+
+Faktor-faktor tersebut saling memengaruhi hasil penilaian karena bukti dalam CV
+menentukan tingkat kecocokan terhadap setiap kebutuhan pekerjaan dan hasil akhirnya
+digunakan untuk menentukan apakah kandidat dapat langsung diproses atau perlu diperiksa
+lebih lanjut. Penilaian manual sulit menjaga konsistensi ketika jumlah kandidat dan variasi
+pekerjaan meningkat, sedangkan pencocokan kata sederhana belum mampu memahami
+konteks dan kekuatan bukti kompetensi secara menyeluruh.
+
+
+
+
+Processing Pipeline and Engineering Depth (maks 250 kata)
+Alur Pemrosesan: Proses dimulai ketika kandidat mengunggah CV. File disimpan di cloud,
+kemudian sistem mengambil informasi penting seperti pendidikan, pengalaman, dan
+keterampilan dari CV untuk diolah menjadi data terstruktur.
+
+Selanjutnya, sistem menentukan cara penilaian berdasarkan tipe kandidat dan kebutuhan
+posisi. Kandidat mengikuti pre-screening dan AI Interview. Jawaban audio diubah menjadi
+teks menggunakan layanan speech-to-text. Selama sesi wawancara, sistem mengambil satu
+tangkapan kamera sebagai dokumentasi bahwa kandidat mengikuti proses wawancara
+secara langsung. Sistem juga menerapkan pembatasan perpindahan tab selama
+wawancara sebagai salah satu mekanisme untuk menjaga integritas proses. AI kemudian
+membandingkan informasi CV dan hasil interview dengan kebutuhan posisi untuk
+menghasilkan rekomendasi beserta alasan pendukung.
+
+Hasil analisis ditampilkan pada dashboard HRD. HRD tetap meninjau hasil tersebut dan
+menentukan tindak lanjut kandidat, termasuk melanjutkan kandidat ke tahap berikutnya atau
+menetapkan keputusan rekrutmen sesuai alur perusahaan. Setelah keputusan dibuat, HRD
+dapat memilih kandidat yang perlu diberikan feedback. Sistem kemudian menghasilkan draft
+feedback menggunakan AI berdasarkan hasil evaluasi kandidat. HRD dapat meninjau dan
+mengirimkan feedback tersebut kepada kandidat.
+
+Kedalaman Rekayasa: Setiap bagian sistem dirancang agar dapat diperbarui atau
+dikembangkan tanpa mengganggu bagian lainnya. Hal ini memudahkan penambahan fitur
+dan penggunaan teknologi AI yang berbeda di masa depan. Proses analisis berjalan di latar
+belakang agar dashboard tetap responsif saat memproses banyak kandidat. Sistem juga
+menggunakan retry untuk menghadapi gangguan sementara dan caching agar hasil yang
+sama tidak diproses berulang kali. Pendekatan ini mendukung integrasi, performa,
+keandalan, dan pengembangan sistem secara bertahap.
+
+
+
+Algorithm or Rule Quality and Decision Transparency (maks 300 kata)
+
+Cara kerja utama Direkrut AI menggunakan Evidence-Based Scoring, yaitu metode yang
+mengubah bukti relevan dari CV dan hasil assessment menjadi skor yang dapat ditelusuri,
+bukan hanya berdasarkan kemiripan kata atau keputusan langsung AI.
+
+Proses dimulai dengan mengekstraksi informasi kandidat dan persyaratan lowongan ke
+dalam data terstruktur. Setiap persyaratan dibandingkan dengan bukti pada CV dan hasil
+assessment, kemudian diklasifikasikan berdasarkan relevansinya, seperti penggunaan
+langsung, pengalaman terkait, bukti parsial, atau informasi yang belum ditemukan. Setiap
+persyaratan memperoleh skor berdasarkan kesesuaian dan kekuatan buktinya.
+
+Skor kemudian dikelompokkan ke dalam lima dimensi: Skill Match (35%), Experience
+Match (25%), Responsibility & Scope (20%), Education & Certification (10%), dan
+Added Value (10%). Setiap dimensi menghasilkan skor 0–100 dan dikombinasikan untuk
+menghasilkan Final Match Score:
+
+Final Match Score = (Skill × 35%) + (Experience × 25%) + (Responsibility & Scope ×
+20%) + (Education & Certification × 10%) + (Added Value × 10%).
+Sebagai contoh, skor 80, 70, 90, 80, dan 60 menghasilkan Final Match Score sebesar 77,5.
+
+Match Score tidak otomatis menentukan rekomendasi. Sistem juga memeriksa eligibility
+criteria atau persyaratan wajib, sehingga keduanya merupakan komponen berbeda.
+Kandidat dengan skor tinggi tetap dapat memerlukan tinjauan HRD apabila persyaratan
+wajib belum memiliki bukti cukup atau tidak terpenuhi secara eksplisit. Hasil pemeriksaan
+tersebut kemudian digunakan bersama Match Score untuk menentukan kategori
+rekomendasi.
+
+Direkrut AI menggunakan satu kerangka penilaian untuk menjaga konsistensi, sementara
+jenis bukti yang diprioritaskan dapat disesuaikan dengan konteks kandidat. Profesional lebih
+banyak dinilai dari pengalaman, relevansi peran, durasi, dan tanggung jawab; sedangkan
+fresh graduate dapat menggunakan proyek, pendidikan, organisasi, magang, dan portofolio
+sebagai bukti kompetensi.
+
+Setiap hasil disertai skor, kategori rekomendasi, alasan, bukti atau kutipan informasi, serta
+persyaratan yang belum ditemukan. HRD dapat memvalidasi dasar penilaian dan tetap
+mengambil keputusan akhir. Kualitas sistem dievaluasi melalui skenario terstruktur,
+pengujian kondisi pengecualian, dan masukan praktisi HRD. Keterbatasannya bergantung
+pada kelengkapan data kandidat dan kemampuan AI memahami konteks.
+
+
+
+
+User Flow, Usability Testing, and Product Iteration (maks 250 kata)
+
+Alur Pengguna: Kandidat mengunggah CV, lalu sistem mengisi data seperti nama,
+pendidikan, pengalaman kerja, keterampilan, dan sertifikasi secara otomatis. Kandidat
+kemudian menjawab tiga pertanyaan pre-screening untuk memberikan gambaran awal
+mengenai kesesuaian dengan posisi yang dilamar, lalu mengikuti AI Interview secara
+langsung dengan kamera dan mikrofon aktif. Jawaban audio ditranskripsikan untuk
+dianalisis, sementara sistem mengambil satu tangkapan kamera sebagai dokumentasi sesi
+wawancara. HRD melihat hasil analisis, transkrip, dan bukti jawaban pada dashboard,
+meninjau kandidat, melakukan wawancara lanjutan, lalu menetapkan keputusan rekrutmen.
+Sistem membantu menyiapkan undangan atau draft feedback sesuai keputusan tersebut,
+yang kemudian dapat ditinjau dan dikirimkan oleh HRD.
+
+Pengujian Prototype: Prototype dievaluasi melalui penggunaan langsung dan wawancara
+dengan software engineer dari salah satu perusahaan e-commerce terbesar di Indonesia,
+software engineer dari salah satu bank besar di Indonesia, product designer dari
+perusahaan teknologi, serta praktisi HRD perusahaan multinasional. Software engineer
+memberikan masukan mengenai arsitektur dan infrastruktur agar sesuai untuk MVP dan
+mudah dikembangkan ketika jumlah pengguna meningkat. Masukan lainnya berfokus pada
+alur aplikasi agar pengguna selalu memahami langkah berikutnya. Product designer
+menyoroti penggunaan warna pada antarmuka agar HRD lebih fokus pada informasi
+kandidat. Praktisi HRD memberikan masukan mengenai kebutuhan fitur yang dapat
+mempermudah proses kerja HRD.
+Hasil dan Iterasi: Berdasarkan masukan tersebut, sistem diperbaiki dengan memperjelas
+langkah berikutnya bagi pengguna, mengurangi penggunaan warna utama yang berlebihan,
+serta menyesuaikan rancangan teknis agar lebih mudah dikembangkan. Hasil AI disajikan
+dalam kategori kualitatif dengan alasan pendukung agar HRD dapat memverifikasi
+rekomendasi dan mengurangi kesalahan keputusan. Selain itu, alur sistem diperjelas untuk
+memastikan AI berfungsi sebagai alat bantu analisis, sementara keputusan akhir tetap
+berada pada HRD.
+
+
+
+
+Team Capability and Execution Ownership (maks 250 kata)
+
+Direkrut AI dibangun oleh empat pendiri dengan pembagian tanggung jawab pada produk,
+bisnis, pemasaran, teknologi, infrastruktur, keamanan, dan perlindungan data.
+
+Raffi Rabbani Widyputra – CEO & Product Lead: Bertanggung jawab atas arah perusahaan,
+strategi produk, kebutuhan pengguna, dan prioritas pengembangan. Hasil kerja meliputi
+perancangan fitur berdasarkan masukan pengguna dan validasi masalah rekrutmen melalui
+wawancara dengan praktisi HRD. Kompetensinya didukung pengalaman memimpin divisi
+pengembangan perangkat lunak di organisasi kampus.
+
+Jan Agra Adyuta Harnowo – CMO & Business Development: Bertanggung jawab atas
+strategi pemasaran, pengembangan bisnis, dan hubungan dengan calon pengguna serta
+mitra. Hasil kerja meliputi penyusunan strategi akuisisi pengguna dan pengembangan
+peluang kerja sama.
+
+Randi Adam Arnaldi – CISO: Bertanggung jawab atas keamanan informasi dan
+perlindungan data pengguna. Hasil kerja meliputi penyusunan aturan keamanan data
+kandidat dan penerapan langkah perlindungan dalam sistem. Kompetensinya didukung
+pengalaman di bidang keamanan siber.
+
+Alief Athallah Putra – CTO & Infrastructure Lead: Bertanggung jawab atas pengembangan
+teknologi, aplikasi, dan infrastruktur Direkrut AI. Hasil kerja meliputi pembangunan frontend,
+backend, serta infrastruktur utama platform agar dapat terus dikembangkan dan ditingkatkan
+kapasitasnya.
+
+Keputusan utama dibahas bersama berdasarkan data dan kebutuhan pengguna. Raffi
+Rabbani Widyputra menjadi owner untuk penentuan prioritas dan milestone pengembangan
+berikutnya.
+
+
+
+
+Continuation Readiness (maks 200 kata)
+
+Dalam 6–12 bulan setelah hackathon, Direkrut AI akan menjalankan pengembangan secara
+bertahap, dimulai dari satu mitra uji coba sebelum memperluas penggunaan.
+
+Bulan 1–3 – Uji Coba Terbatas: Mendapatkan satu perusahaan mitra melalui jaringan
+kampus atau mitra industri dan menjalankan Direkrut AI pada kebutuhan rekrutmen yang
+terbatas. Raffi Rabbani Widyputra memimpin hubungan dengan pengguna dan arah bisnis,
+Jan Agra Adyuta Harnowo menyiapkan strategi pendekatan dan pengembangan mitra,
+sedangkan Randi Adam Arnaldi memastikan keamanan dan perlindungan data selama uji
+coba.
+
+Bulan 4–6 – Evaluasi dan Penyempurnaan: Mengumpulkan masukan dari HRD dan
+kandidat, mengukur hasil penggunaan, lalu memperbaiki produk berdasarkan kebutuhan
+nyata. Alief Athallah Putra memimpin pengembangan aplikasi, AI, dan infrastruktur, dengan
+arahan produk dari Raffi Rabbani Widyputra.
+
+Bulan 7–12 – Perluasan Bertahap: Jika uji coba menunjukkan manfaat yang jelas,
+penggunaan diperluas ke divisi atau perusahaan lain dalam jaringan mitra yang sama
+sebelum memasuki pasar yang lebih luas.
+
+Seluruh anggota berkomitmen menyediakan waktu rutin setiap minggu untuk
+pengembangan, pemeliharaan, validasi, dan kemitraan. Keberlanjutan dijaga melalui
+evaluasi berkala dan perbaikan berdasarkan penggunaan nyata. Tim masih membutuhkan
+akses ke lebih banyak perusahaan dan praktisi HRD, yang akan diperoleh melalui jaringan
+kampus, mitra industri, komunitas profesional, dan hubungan langsung dengan calon
+pengguna.
+
+
+
+
+Quantified Value, Business Model, and ROI (maks 300 kata)
+
+Direkrut AI digunakan oleh tim HR perusahaan swasta dan instansi pemerintah untuk
+mempercepat screening kandidat dan memperoleh informasi yang lebih terstruktur. Pencari
+kerja menerima manfaat berupa proses seleksi yang lebih cepat, informasi hasil yang lebih
+jelas, serta feedback pengembangan tanpa biaya. Pihak yang membayar adalah
+perusahaan atau instansi pengguna melalui model SaaS B2B Freemium berdasarkan
+jumlah kandidat yang diproses: Pro Rp300.000/bulan untuk 100 kandidat, Pro Plus
+Rp1.500.000 untuk 500 kandidat, dan Max Rp5.000.000 untuk 2.000 kandidat. Model ini
+dapat diperluas melalui direct sales B2B/B2G.
+
+Pendanaan awal berasal dari modal mandiri tim pendiri dan hadiah kompetisi tanpa
+pengurangan kepemilikan saham. Investasi awal sebesar Rp44 juta digunakan untuk
+pengembangan MVP dan legalitas. Biaya utama meliputi gaji tim, cloud hosting, API AI,
+marketing, keamanan data, dan operasional. Total OPEX lima tahun diproyeksikan sebesar
+Rp1,75 miliar, dengan total revenue Rp2,74 miliar dan arus kas bersih kumulatif sekitar
+Rp745 juta.
+
+Asumsi utama meliputi pertumbuhan revenue tahunan 50%, 40%, 30%, dan 25%, jumlah
+kandidat meningkat dari 638 menjadi 2.177 per tahun, serta biaya AI sekitar Rp185 per
+kandidat. Dengan gross margin sekitar 75%, model bisnis tetap memiliki efisiensi biaya saat
+penggunaan meningkat.
+
+Berdasarkan proyeksi lima tahun, NPV mencapai Rp481,1 juta, IRR 220,4%, Payback
+Period 0,47 tahun, Profitability Index 11,93, dan ROI 1.694%. Analisis sensitivitas
+menunjukkan NPV tetap positif pada penurunan revenue hingga 20%. Rincian perhitungan
+tersedia dalam lampiran spreadsheet.
+
+
+
+
+Adoption, Growth Strategy, and Competitive Moat (maks 250 kata)
+
+Strategi Pengguna dan Mitra Awal: Direkrut AI akan memulai dengan mendapatkan satu
+mitra uji coba, baik perusahaan maupun institusi yang terhubung dengan jaringan kampus.
+Jika akses langsung ke perusahaan besar belum tersedia, tim akan memanfaatkan jaringan
+kampus, mitra industri, dan komunitas profesional untuk mendapatkan mitra pertama. Uji
+coba difokuskan pada kebutuhan rekrutmen yang terbatas agar tim dapat mengukur
+manfaat, mengumpulkan feedback HRD dan kandidat, serta memperbaiki produk
+berdasarkan penggunaan nyata.
+
+Tahapan Pertumbuhan: Setelah berhasil digunakan oleh satu mitra, Direkrut AI akan
+memperluas penerapan ke divisi atau perusahaan lain dalam jaringan yang sama. Strategi
+ini memungkinkan produk memperoleh pengalaman dan masukan yang lebih banyak
+sebelum memasuki pasar yang lebih luas. Setelah penggunaan dalam satu jaringan terbukti
+berhasil, ekspansi dilanjutkan ke perusahaan lain secara nasional, kemudian ke pasar
+internasional.
+
+Keunggulan Utama: Direkrut AI tidak berusaha bersaing sebagai portal lowongan umum,
+tetapi berfokus pada membantu perusahaan mengelola proses seleksi dan memberikan
+feedback kepada kandidat. Keunggulannya terletak pada penyesuaian penilaian untuk fresh
+graduate dan profesional, serta rekomendasi kualitatif yang disertai alasan dan bukti
+pendukung yang dapat ditinjau oleh HRD.
+
+Bukti Ketertarikan: Prototype telah memperoleh masukan dari praktisi HRD, software
+engineer, dan product designer yang digunakan untuk memperbaiki kebutuhan pengguna,
+alur, antarmuka, dan kesiapan pengembangan produk.
+
