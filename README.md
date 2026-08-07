@@ -5,10 +5,6 @@ independen, plus kontrak API dan infra buat development lokal.
 
 ## Arsitektur
 
-Direkrut AI dibangun di atas arsitektur modular berlapis yang memisahkan
-logika bisnis dari logika kecerdasan buatan untuk memaksimalkan performa
-dan skalabilitas.
-
 **Lapisan frontend** (`apps/web`) menggunakan Next.js yang melayani dua
 antarmuka dalam satu codebase — portal publik kandidat dan dashboard privat
 HRD. Server-side rendering memastikan halaman lowongan terindeks mesin
