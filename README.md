@@ -57,9 +57,10 @@ below for how to read it.
 
 The baseline contract lives in
 [`packages/contracts/openapi.yaml`](packages/contracts/openapi.yaml)
-(OpenAPI 3.0.3). Anything not built yet is tagged `[BELUM DIIMPLEMENTASI]` in
-its summary and returns `501`. Be aware that the apps have outrun the spec: the
-candidate and HRD endpoints that already ship are summarized below and still
+(OpenAPI 3.0.3). Most endpoints that are not built yet are tagged `[BELUM DIIMPLEMENTASI]` in
+its summary and return `501`.
+
+Be aware that the apps have outrun the spec: the candidate and HRD endpoints that already ship are summarized below and still
 need to be folded back into the OpenAPI file.
 
 Raw YAML is painful to read, so render it locally instead (nothing gets
