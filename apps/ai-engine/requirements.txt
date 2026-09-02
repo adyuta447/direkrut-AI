@@ -22,7 +22,7 @@ pydantic-settings==2.6.1
 boto3==1.35.61
 
 # Ekstraksi teks PDF buat CV parsing -- pure Python, gak butuh system dep
-pypdf==6.14.0
+pypdf==6.16.1
 
 # Serving classifier kategori CV lokal (model ONNX hasil fine-tune di Colab,
 # lihat ml/train_cv_classifier.py + app/routers/cv_classifier.py). SENGAJA
